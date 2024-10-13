@@ -6,15 +6,15 @@ set(CMAKE_CXX_STANDARD 20)
 include_directories(.)
 
 add_executable(KNDB
-        Table.cpp
-        Table.hpp
-        main.cpp
-        Pager.cpp
-        Pager.hpp
-        Btree.cpp
-        Btree.hpp
-        HeapFileManager.cpp
-        HeapFileManager.hpp
+        backend/Table.cpp
+        backend/Table.hpp
+        backend/main.cpp
+        backend/Pager.cpp
+        backend/Pager.hpp
+        backend/Btree.cpp
+        backend/Btree.hpp
+        backend/HeapFileManager.cpp
+        backend/HeapFileManager.hpp
         constants.hpp
-        Schema.cpp
-        Schema.hpp)
+        backend/Schema.cpp
+        backend/Schema.hpp)

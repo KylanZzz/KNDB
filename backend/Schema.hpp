@@ -5,9 +5,9 @@
 #ifndef KNDB_SCHEMA_HPP
 #define KNDB_SCHEMA_HPP
 
-#include <Pager.hpp>
-#include <HeapFileManager.hpp>
-#include <Table.hpp>
+#include "backend/Pager.hpp"
+#include "backend/HeapFileManager.hpp"
+#include "Table.hpp"
 
 using std::byte;
 using variants = std::variant<int, char, bool>;

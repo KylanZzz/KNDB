@@ -3,9 +3,9 @@
 //
 
 #include <iostream>
-#include <Schema.hpp>
-#include <Pager.hpp>
-#include <HeapFileManager.hpp>
+#include "Schema.hpp"
+#include "Pager.hpp"
+#include "backend/HeapFileManager.hpp"
 
 int main () {
     Pager pager;

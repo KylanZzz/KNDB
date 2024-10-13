@@ -6,10 +6,10 @@
 #define KNDB_TABLE_HPP
 
 #include <vector>
-#include <Pager.hpp>
-#include <HeapFileManager.hpp>
-#include <constants.hpp>
-#include <Btree.hpp>
+#include "backend/Pager.hpp"
+#include "backend/HeapFileManager.hpp"
+#include "constants.hpp"
+#include "backend/Btree.hpp"
 
 using std::byte;
 using variants = std::variant<int, char, bool>;

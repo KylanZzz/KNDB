@@ -9,6 +9,9 @@
 
 class Pager {
 public:
+    Pager() {
+        std::cout << "constructed pager" << std::endl;
+    }
 private:
 
 };

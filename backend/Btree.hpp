@@ -6,9 +6,9 @@
 #define KNDB_BTREE_HPP
 
 #include <vector>
-#include <Pager.hpp>
-#include <HeapFileManager.hpp>
-#include <constants.hpp>
+#include "Pager.hpp"
+#include "HeapFileManager.hpp"
+#include "constants.hpp"
 
 using std::byte;
 using variants = std::variant<int, char, bool>;
