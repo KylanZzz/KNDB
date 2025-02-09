@@ -7,8 +7,12 @@
 
 #include <cstdio>
 
-namespace Constants {
+namespace cnsts { // constants
     constexpr size_t PG_SZ = 4096;
+    constexpr size_t CACHE_SZ = 10;
+
+
+
 }
 
 #endif //KNDB_CONSTANTS_HPP
