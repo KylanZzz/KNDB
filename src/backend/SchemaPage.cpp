@@ -3,6 +3,7 @@
 //
 
 #include "SchemaPage.hpp"
+#include "utility.hpp"
 
 /*
 Info needed to be stored:
@@ -11,20 +12,19 @@ Info needed to be stored:
         - # Types in table
         - Table types
             - IE: string, int, string
-        - Table PageNo
+        - Table pageID
 
 Format:
     size_t # Tables --- string name1 ---
     size_t # types --- size_t type1 ---
     size_t type2 --- size_t type3 ---
-    size_t table1PageNo --- string name2
+    size_t table1PageId --- string name2
     --- size_t # types --- size_t type1
     --- size_t type 2 --- size_t
-    table2PageNo --- etc.
+    table2PageId --- etc.
 
 */
-SchemaPage::SchemaPage(ByteVec &bytes, size_t pageNo) {
-    m_pageNo = pageNo;
+SchemaPage::SchemaPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
 
     size_t offset = 0;
 
@@ -32,7 +32,7 @@ SchemaPage::SchemaPage(ByteVec &bytes, size_t pageNo) {
     size_t page_type_id;
     memcpy(&page_type_id, bytes.data() + offset, db_sizeof<size_t>());
     if (page_type_id != get_page_type_id<SchemaPage>())
-        throw std::runtime_error("page_type_id does not match the page type");
+        throw std::runtime_error("page_type_id does not match any valid page type");
     offset += db_sizeof<size_t>();
 
     // deserialize # of tables
@@ -59,13 +59,13 @@ SchemaPage::SchemaPage(ByteVec &bytes, size_t pageNo) {
             tab_desc.types.push_back(type_id_to_variant(type_id));
         }
 
-        memcpy(&tab_desc.pageNo, bytes.data() + offset, db_sizeof<size_t>());
+        memcpy(&tab_desc.pageID, bytes.data() + offset, db_sizeof<size_t>());
         offset += db_sizeof<size_t>();
 
         m_tables.push_back(tab_desc);
     }
     
-    if (offset > constants::PG_SZ) {
+    if (offset > cts::PG_SZ) {
         throw std::runtime_error("Schema Page has exceeded size of one page");
     }
 }
@@ -79,6 +79,8 @@ vector<variants> SchemaPage::getTableTypes(string table_name) {
             return m_tables[i].types;
         }
     }
+
+    throw std::invalid_argument("Table name does not exist in schema");
 }
 
 vector<string> SchemaPage::getTableNames() {
@@ -93,13 +95,13 @@ size_t SchemaPage::getNumTables() {
     return m_tables.size();
 }
 
-size_t SchemaPage::getTablePageNo(string table_name) {
+size_t SchemaPage::getTablePageId(std::string table_name) {
     std::transform(table_name.begin(), table_name.end(), table_name.begin(),
                    [](unsigned char c) { return std::toupper(c); });
 
     for (int i = 0; i < m_tables.size(); ++i) {
         if (m_tables[i].name == table_name) {
-            return m_tables[i].pageNo;
+            return m_tables[i].pageID;
         }
     }
 
@@ -136,12 +138,12 @@ void SchemaPage::to_bytes(ByteVec& vec) {
             offset += db_sizeof<size_t>();
         }
 
-        memcpy(vec.data() + offset, &tab_desc.pageNo, db_sizeof<size_t>());
+        memcpy(vec.data() + offset, &tab_desc.pageID, db_sizeof<size_t>());
         offset += db_sizeof<size_t>();
     }
 }
 
-void SchemaPage::addTable(string name, vector<variants> types, size_t pageNo) {
+void SchemaPage::addTable(string name, vector<variants> types, size_t pageID) {
     std::transform(name.begin(), name.end(), name.begin(),
                    [](unsigned char c) { return std::toupper(c); });
 
@@ -151,7 +153,7 @@ void SchemaPage::addTable(string name, vector<variants> types, size_t pageNo) {
         }
     }
 
-    m_tables.emplace_back(std::move(name), std::move(types), pageNo);
+    m_tables.push_back({std::move(name), std::move(types), pageID});
 }
 
 void SchemaPage::removeTable(string targ_name) {

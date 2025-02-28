@@ -5,14 +5,16 @@
 #ifndef KNDB_SCHEMAPAGE_HPP
 #define KNDB_SCHEMAPAGE_HPP
 
-#include "Page.hpp"
 #include <vector>
 
+#include "Page.hpp"
+
 using variants = std::variant<int, char, bool, std::string>;
+using std::byte;
+using std::vector;
 using ByteVec = std::vector<std::byte>;
 using ByteVecPtr = std::unique_ptr<ByteVec>;
 using std::string;
-using std::vector;
 
 /**
  * @class SchemaPage
@@ -26,9 +28,9 @@ public:
     /**
      * @brief Constructs a SchemaPage from a byte vector.
      * @param bytes The byte vector containing schema data.
-     * @param pageNo The on-disk page number of this schema page.
+     * @param pageID The on-disk page number of this schema page.
      */
-    SchemaPage(ByteVec& bytes, size_t pageNo);
+    SchemaPage(ByteVec &bytes, size_t pageID);
 
     /**
      * @brief Gets the list of types in a specific table.
@@ -54,15 +56,15 @@ public:
      * @param table_name The name of the table (case insensitive).
      * @return The page number of the table.
      */
-    size_t getTablePageNo(string table_name);
+    size_t getTablePageId(string table_name);
 
     /**
      * @brief Creates a new table in the schema.
      * @param name The name of the table.
      * @param types The types of the table columns.
-     * @param pageNo The page number of the table.
+     * @param pageID The page number of the table.
      */
-    void addTable(string name, vector<variants> types, size_t pageNo);
+    void addTable(string name, vector<variants> types, size_t pageID);
 
     /**
      * @brief Removes a table from the schema.
@@ -70,14 +72,13 @@ public:
      */
     void removeTable(string name);
 
-    size_t getPageNo() override {return m_pageNo;}
-    void to_bytes(ByteVec& vec) override;
+    void to_bytes(ByteVec &vec) override;
 
 private:
     struct table_descriptor {
         string name;
         vector<variants> types;
-        size_t pageNo;
+        size_t pageID;
     };
 
     vector<table_descriptor> m_tables;
