@@ -83,29 +83,15 @@ vector<variants> SchemaPage::getTableTypes(string table_name) {
     throw std::invalid_argument("Table name does not exist in schema");
 }
 
-vector<string> SchemaPage::getTableNames() {
-    vector<string> names(getNumTables());
-    for (int i = 0; i < getNumTables(); ++i) {
-        names[i] = m_tables[i].name;
-    }
-    return names;
-}
-
 size_t SchemaPage::getNumTables() {
     return m_tables.size();
 }
 
-size_t SchemaPage::getTablePageId(std::string table_name) {
-    std::transform(table_name.begin(), table_name.end(), table_name.begin(),
-                   [](unsigned char c) { return std::toupper(c); });
-
-    for (int i = 0; i < m_tables.size(); ++i) {
-        if (m_tables[i].name == table_name) {
-            return m_tables[i].pageID;
-        }
-    }
-
-    throw std::invalid_argument("Table does not exist in schema");
+unordered_map<string, size_t> SchemaPage::getTables() {
+    unordered_map<string, size_t> res;
+    for (const auto& table: m_tables)
+        res[table.name] = table.pageID;
+    return res;
 }
 
 void SchemaPage::to_bytes(ByteVec& vec) {

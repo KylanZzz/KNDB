@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "Page.hpp"
+#include "unordered_map"
 
 using variants = std::variant<int, char, bool, std::string>;
 using std::byte;
@@ -15,6 +16,7 @@ using std::vector;
 using ByteVec = std::vector<std::byte>;
 using ByteVecPtr = std::unique_ptr<ByteVec>;
 using std::string;
+using std::unordered_map;
 
 /**
  * @class SchemaPage
@@ -40,23 +42,16 @@ public:
     vector<variants> getTableTypes(string table_name);
 
     /**
-     * @brief Gets the names of all tables in the schema.
-     * @return A list of table names.
-     */
-    vector<string> getTableNames();
-
-    /**
      * @brief Gets the total number of tables in the schema.
      * @return The number of tables.
      */
     size_t getNumTables();
 
     /**
-     * @brief Gets the page number of a specific table.
-     * @param table_name The name of the table (case insensitive).
-     * @return The page number of the table.
+     * @brief Gets list of all tables in schema.
+     * @return Map of table names to pageID of table metadata page.
      */
-    size_t getTablePageId(string table_name);
+    unordered_map<string, size_t> getTables();
 
     /**
      * @brief Creates a new table in the schema.
