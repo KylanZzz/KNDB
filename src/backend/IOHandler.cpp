@@ -36,11 +36,11 @@ size_t IOHandler::createNewBlock() {
     return m_blocks - 1;
 }
 
-void IOHandler::writeBlock(void *arr, size_t pageID) {
-    if (pageID >= m_blocks)
-        throw std::runtime_error("pageID out of bounds");
+void IOHandler::writeBlock(void *arr, size_t BlockNo) {
+    if (BlockNo >= m_blocks)
+        throw std::runtime_error("BlockNo out of bounds");
 
-    if (pwrite(m_fd, arr, cts::PG_SZ, pageID * cts::PG_SZ) == -1)
+    if (pwrite(m_fd, arr, cts::PG_SZ, BlockNo * cts::PG_SZ) == -1)
         throw std::runtime_error("error while writing file");
 
     //TODO: usually we should not flush after every write;
@@ -48,11 +48,11 @@ void IOHandler::writeBlock(void *arr, size_t pageID) {
     fsync(m_fd);
 }
 
-void IOHandler::readBlock(void *arr, size_t pageID) {
-    if (pageID >= m_blocks)
-        throw std::runtime_error("pageID out of bounds");
+void IOHandler::readBlock(void *arr, size_t BlockNo) {
+    if (BlockNo >= m_blocks)
+        throw std::runtime_error("BlockNo out of bounds");
 
-    if (pread(m_fd, arr, cts::PG_SZ, pageID * cts::PG_SZ) == -1)
+    if (pread(m_fd, arr, cts::PG_SZ, BlockNo * cts::PG_SZ) == -1)
         throw std::runtime_error("error while writing file");
 }
 

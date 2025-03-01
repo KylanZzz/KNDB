@@ -36,7 +36,7 @@ public:
 
     /**
      * @brief Creates a new block in the file.
-     * @return The page ID of the newly created block (0-indexed).
+     * @return The Block No of the newly created block (0-indexed).
      *
      * Expands the file by appending an empty block.
      */
@@ -45,20 +45,20 @@ public:
     /**
      * @brief Writes data to a block in the file.
      * @param arr Pointer to the data to be written.
-     * @param pageID The ID of the block to write to (0-indexed).
+     * @param BlockNo The ID of the block to write to (0-indexed).
      *
      * Uses low-level system calls to write data to the specified block.
      */
-    void writeBlock(void *arr, size_t pageID);
+    void writeBlock(void *arr, size_t BlockNo);
 
     /**
      * @brief Reads data from a block in the file.
      * @param arr Pointer to the buffer where data will be read into.
-     * @param pageID The ID of the block to read from (0-indexed).
+     * @param BlockNo The ID of the block to read from (0-indexed).
      *
      * Uses low-level system calls to read data from the specified block.
      */
-    void readBlock(void *arr, size_t pageID);
+    void readBlock(void *arr, size_t BlockNo);
 
     ~IOHandler();
 

@@ -10,9 +10,13 @@
 
 class FSMPage : public Page {
 public:
-    FSMPage(ByteVec &bytes, size_t pageID);
+    FSMPage(size_t PageID, ByteVec &bytes);
+
+    FSMPage(size_t PageID);
 
     bool isFree(size_t idx);
+
+    bool hasNextPage();
 
     size_t getSpaceLeft();
 
@@ -20,12 +24,21 @@ public:
 
     void freeBit(size_t idx);
 
+    size_t findNextFree();
+
     size_t getNextPageID();
+
+    void setNextPageID(size_t PageID);
 
     void to_bytes(ByteVec &vec) override;
 
 private:
-    ByteVec m_bitmap;
+
+    static constexpr size_t NO_NEXT_PAGE = std::numeric_limits<size_t>::max();
+
+    std::vector<u_int8_t> m_bitmap;
+    size_t m_nextPageID;
+    size_t m_freeBlocks;
 };
 
 

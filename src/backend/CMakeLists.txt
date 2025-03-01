@@ -1,4 +1,4 @@
-add_library(backend_lib STATIC
+add_library(backend STATIC
         Table.cpp
         Table.hpp
         Pager.cpp
@@ -18,4 +18,4 @@ add_library(backend_lib STATIC
         FSMPage.hpp
 )
 
-target_include_directories(backend_lib PUBLIC ${CMAKE_SOURCE_DIR}/src/backend)
+target_include_directories(backend PUBLIC ${CMAKE_SOURCE_DIR}/src/backend)

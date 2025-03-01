@@ -35,6 +35,12 @@ public:
     SchemaPage(ByteVec &bytes, size_t pageID);
 
     /**
+     * Constructs an empty SchemaPage. Represents an empty
+     * schema with no tables or data.
+     */
+    SchemaPage(size_t pageID);
+
+    /**
      * @brief Gets the list of types in a specific table.
      * @param table_name The name of the table (case insensitive).
      * @return A list of variants representing the types.

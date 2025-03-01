@@ -6,6 +6,7 @@
 #define KNDB_UTILITY_HPP
 
 #include "SchemaPage.hpp"
+#include "FSMPage.hpp"
 
 using variants = std::variant<int, char, bool, std::string>;
 using std::byte;
@@ -77,6 +78,11 @@ inline size_t get_page_type_id() {
 template <>
 inline size_t get_page_type_id<SchemaPage>() {
     return 1;
+}
+
+template <>
+inline size_t get_page_type_id<FSMPage>() {
+    return 2;
 }
 
 

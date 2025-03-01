@@ -2,6 +2,8 @@
 // Created by Kylan Chen on 12/20/24.
 //
 
+#include <cassert>
+
 #include "SchemaPage.hpp"
 #include "utility.hpp"
 
@@ -70,9 +72,11 @@ SchemaPage::SchemaPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     }
 }
 
+SchemaPage::SchemaPage(size_t pageID) : Page(pageID) { }
+
 vector<variants> SchemaPage::getTableTypes(string table_name) {
-    std::transform(table_name.begin(), table_name.end(), table_name.begin(),
-                   [](unsigned char c) { return std::toupper(c); });
+    if (table_name.length() + 1 > db_sizeof<string>())
+        throw std::runtime_error("Name is too long");
 
     for (int i = 0; i < m_tables.size(); ++i) {
         if (m_tables[i].name == table_name) {
@@ -95,6 +99,8 @@ unordered_map<string, size_t> SchemaPage::getTables() {
 }
 
 void SchemaPage::to_bytes(ByteVec& vec) {
+    assert(vec.size() == cts::PG_SZ);
+
     size_t offset = 0;
 
     // serialize page_type_id
@@ -130,8 +136,8 @@ void SchemaPage::to_bytes(ByteVec& vec) {
 }
 
 void SchemaPage::addTable(string name, vector<variants> types, size_t pageID) {
-    std::transform(name.begin(), name.end(), name.begin(),
-                   [](unsigned char c) { return std::toupper(c); });
+    if (name.length() + 1 > db_sizeof<string>())
+        throw std::runtime_error("Name is too long");
 
     for (int i = 0; i < m_tables.size(); ++i) {
         if (m_tables[i].name == name) {
@@ -143,8 +149,8 @@ void SchemaPage::addTable(string name, vector<variants> types, size_t pageID) {
 }
 
 void SchemaPage::removeTable(string targ_name) {
-    std::transform(targ_name.begin(), targ_name.end(), targ_name.begin(),
-                   [](unsigned char c) { return std::toupper(c); });
+    if (targ_name.length() + 1 > db_sizeof<string>())
+        throw std::runtime_error("Name is too long");
 
     for (int i = 0; i < m_tables.size(); ++i) {
         if (m_tables[i].name == targ_name) {
@@ -153,5 +159,5 @@ void SchemaPage::removeTable(string targ_name) {
         }
     }
 
-    throw std::invalid_argument("targ_name: " + targ_name + " was not found in tables list");
+    throw std::invalid_argument("target name was not found in tables list");
 }
