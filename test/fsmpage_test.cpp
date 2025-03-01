@@ -9,7 +9,8 @@
 
 TEST(FSMPageTest, NewlyCreatedPageIsAllFree) {
     FSMPage page(1);
-    for (size_t i = 0; i < page.getSpaceLeft(); ++i) {
+    ASSERT_FALSE(page.isFree(0));
+    for (size_t i = 1; i < page.getSpaceLeft(); ++i) {
         ASSERT_TRUE(page.isFree(i));
     }
 }
@@ -29,7 +30,7 @@ TEST(FSMPageTest, FreeingABitMakesItFreeAgain) {
 
 TEST(FSMPageTest, OutOfBoundsCheckThrowsException) {
     FSMPage page(1);
-    ASSERT_THROW(page.isFree(page.getSpaceLeft()), std::invalid_argument);
+    ASSERT_THROW(page.isFree(page.getBlocksInPage()), std::invalid_argument);
 }
 
 TEST(FSMPageTest, DefaultPageHasNoNextPage) {
@@ -51,7 +52,7 @@ TEST(FSMPageTest, SerializationPreservesNextPage) {
     ByteVec serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
-    FSMPage deserialized(1, serialized);
+    FSMPage deserialized(serialized, 1);
     ASSERT_TRUE(deserialized.hasNextPage());
     ASSERT_EQ(deserialized.getNextPageID(), 99);
 }
@@ -76,22 +77,21 @@ TEST(FSMPageTest, SerializationPreservesAllocatedBits) {
     ByteVec serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
-    FSMPage deserialized(1, serialized);
+    FSMPage deserialized(serialized, 1);
     ASSERT_FALSE(deserialized.isFree(7));
     ASSERT_FALSE(deserialized.isFree(15));
 }
 
 TEST(FSMPageTest, FindNextFreeReturnsFirstAvailableBit) {
     FSMPage page(1);
-    page.allocBit(0);
-    ASSERT_EQ(page.findNextFree(), 1);
+    page.allocBit(1);
+    ASSERT_EQ(page.findNextFree(), 2);
 }
 
 TEST(FSMPageTest, FindNextFreeThrowsIfNoFreeBits) {
     FSMPage page(1);
 
-    int n = page.getSpaceLeft();
-    for (size_t i = 0; i < n; ++i) {
+    for (size_t i = 1; i < page.getBlocksInPage(); ++i) {
         page.allocBit(i);
     }
     ASSERT_EQ(0, page.getSpaceLeft());
@@ -100,36 +100,34 @@ TEST(FSMPageTest, FindNextFreeThrowsIfNoFreeBits) {
 
 TEST(FSMPageTest, SerializationPreservesFindNextFree) {
     FSMPage original(1);
-    original.allocBit(0);
     original.allocBit(1);
+    original.allocBit(2);
 
     ByteVec serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
-    FSMPage deserialized(1, serialized);
-    ASSERT_EQ(deserialized.findNextFree(), 2);
+    FSMPage deserialized(serialized, 1);
+    ASSERT_EQ(deserialized.findNextFree(), 3);
 }
 
 TEST(FSMPageTest, AllocateAllBitsThenFreeAndReallocate) {
     FSMPage page(1);
 
     // Allocate all bits
-    int n1 = page.getSpaceLeft();
-    for (size_t i = 0; i < n1; ++i) {
+    for (size_t i = 1; i < page.getBlocksInPage(); ++i) {
         page.allocBit(i);
         ASSERT_FALSE(page.isFree(i));
     }
     ASSERT_THROW(page.findNextFree(), std::invalid_argument);
 
     // Free all bits
-    for (size_t i = 0; i < n1; ++i) {
+    for (size_t i = 1; i < page.getBlocksInPage(); ++i) {
         page.freeBit(i);
         ASSERT_TRUE(page.isFree(i));
     }
 
     // Reallocate all bits again
-    int n2 = page.getSpaceLeft();
-    for (size_t i = 0; i < n2; ++i) {
+    for (size_t i = 1; i < page.getBlocksInPage(); ++i) {
         page.allocBit(i);
         ASSERT_FALSE(page.isFree(i));
     }
@@ -139,31 +137,28 @@ TEST(FSMPageTest, SerializationPreservesFullAllocationCycle) {
     FSMPage original(1);
 
     // Allocate all bits
-    int n = original.getSpaceLeft();
-    for (size_t i = 0; i < original.getSpaceLeft(); ++i) {
+    for (size_t i = 1; i < original.getBlocksInPage(); ++i) {
         original.allocBit(i);
     }
 
     ByteVec serialized(cts::PG_SZ);
     original.toBytes(serialized);
-    FSMPage deserialized(1, serialized);
+    FSMPage deserialized(serialized, 1);
 
-    int n2 = deserialized.getSpaceLeft();
-    for (size_t i = 0; i < n2; ++i) {
+    for (size_t i = 1; i < original.getBlocksInPage(); ++i) {
         ASSERT_FALSE(deserialized.isFree(i));
     }
 
     // Free all bits
-    for (size_t i = 0; i < n2; ++i) {
+    for (size_t i = 1; i < original.getBlocksInPage(); ++i) {
         deserialized.freeBit(i);
     }
 
     ByteVec reserialized(cts::PG_SZ);
     deserialized.toBytes(reserialized);
-    FSMPage reloaded(1, reserialized);
+    FSMPage reloaded(reserialized, 1);
 
-    int n3 = reloaded.getSpaceLeft();
-    for (size_t i = 0; i < n3; ++i) {
+    for (size_t i = 1; i < original.getBlocksInPage(); ++i) {
         ASSERT_TRUE(reloaded.isFree(i));
     }
 }

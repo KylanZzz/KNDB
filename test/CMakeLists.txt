@@ -13,7 +13,6 @@ add_executable(backend_test
         test_main.cpp
         fsmpage_test.cpp
         schemapage_test.cpp
-        freespacemap_test.cpp
 )
 
 # Link against backend library

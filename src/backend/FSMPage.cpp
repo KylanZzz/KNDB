@@ -25,7 +25,7 @@
 //----------------------------------------
 //----------------------------------------
 
-FSMPage::FSMPage(size_t pageID, ByteVec &bytes) : Page(pageID) {
+FSMPage::FSMPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     size_t offset = 0;
 
     // check if page type is correct
@@ -53,6 +53,7 @@ FSMPage::FSMPage(size_t pageID) : Page(pageID) {
     m_nextPageID = NO_NEXT_PAGE;
     m_bitmap.resize(cts::PG_SZ - db_sizeof<size_t>() * 3);
     m_freeBlocks = m_bitmap.size() * 8;
+    allocBit(0);
 }
 
 void FSMPage::allocBit(size_t idx) {

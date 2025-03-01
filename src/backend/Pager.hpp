@@ -14,7 +14,6 @@
 #include "utility.hpp"
 #include "IOHandler.hpp"
 #include "Page.hpp"
-#include "FreeSpaceMap.hpp"
 
 using std::vector;
 using ByteVec = std::vector<std::byte>;
@@ -33,10 +32,8 @@ public:
     /**
      * @brief Constructs a Pager.
      * @param ioHandler handles disk I/O requests.
-     * @param fsm keeps track of free pages in the db file.
      */
-    Pager(IOHandler &ioHandler, FreeSpaceMap &fsm) : m_ioHandler(ioHandler),
-    m_fsm(fsm) {};
+    Pager(IOHandler &ioHandler);
 
     /**
      * @brief Retrieves a page.
@@ -68,8 +65,11 @@ public:
     ~Pager();
 
 private:
+    void freePageBit(size_t pageID);
+    size_t allocPageBit();
+    void initFSMPage(size_t pageID);
+
     IOHandler &m_ioHandler;
-    FreeSpaceMap &m_fsm;
 
     // TODO: LRU cache using implementation here: https://leetcode.com/problems/lru-cache/
     //      - but use template for key and val, and make sure val is a unique_ptr<val> instead

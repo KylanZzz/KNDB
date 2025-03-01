@@ -24,7 +24,7 @@ public:
      * @param pageID The ID of the page.
      * @param bytes serialized data
      */
-    FSMPage(size_t pageID, ByteVec &bytes);
+    FSMPage(ByteVec &bytes, size_t pageID);
 
     /**
     * @brief Constructs a new, empty FSMPage.

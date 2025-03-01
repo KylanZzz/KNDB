@@ -12,8 +12,6 @@ add_library(backend STATIC
         SchemaPage.cpp
         IOHandler.cpp
         IOHandler.hpp
-        FreeSpaceMap.cpp
-        FreeSpaceMap.hpp
         FSMPage.cpp
         FSMPage.hpp
 )

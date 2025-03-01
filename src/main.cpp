@@ -2,30 +2,28 @@
 // Created by Kylan Chen on 10/13/24.
 //
 #include <iostream>
+#include <fstream>
 
 #include "Pager.hpp"
+#include "SchemaPage.hpp"
 
 using std::cout;
 using std::endl;
 
+#define DEBUG(msg) cout << "DEBUG: " << msg << endl
+
 int main() {
-    FSMPage page(0);
-    cout << page.getSpaceLeft() << endl;
-    page.allocBit(2);
-    cout << page.getSpaceLeft() << endl;
+    std::ofstream file("kylan_test_file.db", std::ios::trunc);
+    file.close();
 
-    ByteVec vec(cts::PG_SZ);
-    page.toBytes(vec);
-    FSMPage page2(0, vec);
-    cout << page2.getSpaceLeft() << endl;
+    IOHandler ioHandler("kylan_test_file.db");
+    DEBUG(ioHandler.getNumBlocks());
+    Pager pager(ioHandler);
+    DEBUG(ioHandler.getNumBlocks());
 
-    for (int i = 0; i < 32575; i++) {
-        int next = page2.findNextFree();
-        page2.allocBit(next);
-    }
+    auto sPage = pager.createNewPage<SchemaPage>();
 
-    cout << page2.getSpaceLeft() << endl;
-
+    DEBUG(ioHandler.getNumBlocks());
 
     return 0;
 }
