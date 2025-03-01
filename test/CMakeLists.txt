@@ -8,7 +8,12 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 # Now simply link against gtest or gtest_main as needed. Eg
-add_executable(backend_test iohandler_test.cpp test_main.cpp)
+add_executable(backend_test
+        iohandler_test.cpp
+        test_main.cpp
+        fsmpage_test.cpp
+        schemapage_test.cpp
+)
 
 # Link against backend library
 target_link_libraries(backend_test gtest_main backend)

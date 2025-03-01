@@ -25,7 +25,7 @@
 //----------------------------------------
 //----------------------------------------
 
-FSMPage::FSMPage(size_t PageID, ByteVec &bytes) : Page(PageID) {
+FSMPage::FSMPage(size_t pageID, ByteVec &bytes) : Page(pageID) {
     size_t offset = 0;
 
     // check if page type is correct
@@ -49,7 +49,7 @@ FSMPage::FSMPage(size_t PageID, ByteVec &bytes) : Page(PageID) {
     offset += m_bitmap.size();
 }
 
-FSMPage::FSMPage(size_t PageID) : Page(PageID) {
+FSMPage::FSMPage(size_t pageID) : Page(pageID) {
     m_nextPageID = NO_NEXT_PAGE;
     m_bitmap.resize(cts::PG_SZ - db_sizeof<size_t>() * 3);
     m_freeBlocks = m_bitmap.size() * 8;
@@ -57,7 +57,7 @@ FSMPage::FSMPage(size_t PageID) : Page(PageID) {
 
 void FSMPage::allocBit(size_t idx) {
     if (!isFree(idx))
-        throw std::runtime_error("that bit is already in use");
+        throw std::invalid_argument("that bit is already in use");
 
     assert(m_freeBlocks-- > 0);
 
@@ -65,6 +65,9 @@ void FSMPage::allocBit(size_t idx) {
 }
 
 bool FSMPage::isFree(size_t idx) {
+    if (idx >= (m_bitmap.size() * 8))
+        throw std::invalid_argument("idx is out of bounds");
+
     return !(m_bitmap[idx / 8] & 1 << (idx % 8));
 }
 
@@ -72,7 +75,7 @@ size_t FSMPage::findNextFree() {
     for (int i = 0; i < m_bitmap.size() * 8; i++)
         if (isFree(i)) return i;
 
-    throw std::runtime_error("There are no more free nodes");
+    throw std::invalid_argument("There are no more free nodes");
 }
 
 size_t FSMPage::getSpaceLeft() {
@@ -81,7 +84,7 @@ size_t FSMPage::getSpaceLeft() {
 
 void FSMPage::freeBit(size_t idx) {
     if (isFree(idx))
-        throw std::runtime_error("that bit is already free");
+        throw std::invalid_argument("that bit is already free");
 
     assert(m_freeBlocks++ <= m_bitmap.size() * 8);
 
@@ -93,12 +96,12 @@ bool FSMPage::hasNextPage() {
 }
 
 size_t FSMPage::getNextPageID() {
-    if (!hasNextPage()) throw std::runtime_error("Has no next page");
+    if (!hasNextPage()) throw std::invalid_argument("Has no next page");
     return m_nextPageID;
 }
 
-void FSMPage::setNextPageID(size_t PageID) {
-    m_nextPageID = PageID;
+void FSMPage::setNextPageID(size_t pageID) {
+    m_nextPageID = pageID;
 }
 
 void FSMPage::to_bytes(ByteVec &vec) {

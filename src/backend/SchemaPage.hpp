@@ -82,6 +82,12 @@ private:
         size_t pageID;
     };
 
+    // calculates the amount of free space (in bytes) that the page has left
+    size_t freeSpace();
+
+    // calculates total amount of space (in bytes) a table takes up
+    inline size_t tableSpaceUsed(table_descriptor tab_desc);
+
     vector<table_descriptor> m_tables;
 };
 
