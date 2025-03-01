@@ -20,8 +20,8 @@ namespace cts { // constants
     constexpr size_t CACHE_SZ = 10;
     constexpr size_t STR_SZ = 32;
 
-    constexpr size_t SCHEMA_PAGE_NO = 0;
-    constexpr size_t FSM_PAGE_NO = 1;
+    constexpr size_t FSM_PAGE_NO = 0;
+    constexpr size_t SCHEMA_PAGE_NO = 1;
 }
 
 template <typename T>

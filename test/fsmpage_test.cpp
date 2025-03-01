@@ -49,7 +49,7 @@ TEST(FSMPageTest, SerializationPreservesNextPage) {
     original.setNextPageID(99);
 
     ByteVec serialized(cts::PG_SZ);
-    original.to_bytes(serialized);
+    original.toBytes(serialized);
 
     FSMPage deserialized(1, serialized);
     ASSERT_TRUE(deserialized.hasNextPage());
@@ -74,7 +74,7 @@ TEST(FSMPageTest, SerializationPreservesAllocatedBits) {
     original.allocBit(15);
 
     ByteVec serialized(cts::PG_SZ);
-    original.to_bytes(serialized);
+    original.toBytes(serialized);
 
     FSMPage deserialized(1, serialized);
     ASSERT_FALSE(deserialized.isFree(7));
@@ -104,7 +104,7 @@ TEST(FSMPageTest, SerializationPreservesFindNextFree) {
     original.allocBit(1);
 
     ByteVec serialized(cts::PG_SZ);
-    original.to_bytes(serialized);
+    original.toBytes(serialized);
 
     FSMPage deserialized(1, serialized);
     ASSERT_EQ(deserialized.findNextFree(), 2);
@@ -145,7 +145,7 @@ TEST(FSMPageTest, SerializationPreservesFullAllocationCycle) {
     }
 
     ByteVec serialized(cts::PG_SZ);
-    original.to_bytes(serialized);
+    original.toBytes(serialized);
     FSMPage deserialized(1, serialized);
 
     int n2 = deserialized.getSpaceLeft();
@@ -159,7 +159,7 @@ TEST(FSMPageTest, SerializationPreservesFullAllocationCycle) {
     }
 
     ByteVec reserialized(cts::PG_SZ);
-    deserialized.to_bytes(reserialized);
+    deserialized.toBytes(reserialized);
     FSMPage reloaded(1, reserialized);
 
     int n3 = reloaded.getSpaceLeft();

@@ -34,7 +34,7 @@ TEST(SchemaPageTest, SerializationPreservesTables) {
     original.addTable("Orders", {int(), bool()}, 10);
 
     ByteVec serialized(cts::PG_SZ);
-    original.to_bytes(serialized);
+    original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);
     ASSERT_EQ(deserialized.getNumTables(), 2);
@@ -49,7 +49,7 @@ TEST(SchemaPageTest, AddRemoveTablesWithSerialization) {
     original.removeTable("Users");
 
     ByteVec serialized(cts::PG_SZ);
-    original.to_bytes(serialized);
+    original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);
     ASSERT_EQ(deserialized.getNumTables(), 1);
@@ -58,7 +58,6 @@ TEST(SchemaPageTest, AddRemoveTablesWithSerialization) {
     ASSERT_THROW(deserialized.getTables().at("Users"), std::out_of_range);
 }
 
-
 TEST(SchemaPageTest, SerializeAfterAddingAndRemovingSameTable) {
     SchemaPage original(1);
     original.addTable("TempTable", {int(), bool()}, 50);
@@ -66,7 +65,7 @@ TEST(SchemaPageTest, SerializeAfterAddingAndRemovingSameTable) {
     original.addTable("TempTable", {std::string(), char()}, 60);
 
     ByteVec serialized(cts::PG_SZ);
-    original.to_bytes(serialized);
+    original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);
     ASSERT_EQ(deserialized.getNumTables(), 1);
@@ -116,7 +115,7 @@ TEST(SchemaPageTest, AddingTableBeyondCapacityThrows) {
 TEST(SchemaPageTest, SerializationPreservesEmptySchema) {
     SchemaPage original(1);
     ByteVec serialized(cts::PG_SZ);
-    original.to_bytes(serialized);
+    original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);
     ASSERT_EQ(deserialized.getNumTables(), 0);
@@ -133,7 +132,7 @@ TEST(SchemaPageTest, SerializationWithMultipleOperations) {
     original.addTable("Customers", {int(), std::string()}, 20);
 
     ByteVec serialized(cts::PG_SZ);
-    original.to_bytes(serialized);
+    original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);
     ASSERT_EQ(deserialized.getNumTables(), 2);

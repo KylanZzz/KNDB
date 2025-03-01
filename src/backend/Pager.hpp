@@ -14,7 +14,6 @@
 #include "utility.hpp"
 #include "IOHandler.hpp"
 #include "Page.hpp"
-#include "SchemaPage.hpp"
 #include "FreeSpaceMap.hpp"
 
 using std::vector;
@@ -36,7 +35,8 @@ public:
      * @param ioHandler handles disk I/O requests.
      * @param fsm keeps track of free pages in the db file.
      */
-    Pager(IOHandler &ioHandler, FreeSpaceMap &fsm) : m_ioHandler(ioHandler), m_fsm(fsm) {};
+    Pager(IOHandler &ioHandler, FreeSpaceMap &fsm) : m_ioHandler(ioHandler),
+    m_fsm(fsm) {};
 
     /**
      * @brief Retrieves a page.

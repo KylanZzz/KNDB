@@ -73,7 +73,7 @@ public:
      */
     void removeTable(string name);
 
-    void to_bytes(ByteVec &vec) override;
+    void toBytes(ByteVec &vec) override;
 
 private:
     struct table_descriptor {

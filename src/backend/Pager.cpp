@@ -51,7 +51,7 @@ Pager::~Pager() {
     // write everything in cache to disk
     ByteVec temp(cts::PG_SZ);
     for (const auto &page_ptr: m_cache) {
-        page_ptr->to_bytes(temp);
+        page_ptr->toBytes(temp);
         m_ioHandler.writeBlock((void *) temp.data(), page_ptr->getPageID());
     }
 }

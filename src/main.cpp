@@ -15,7 +15,7 @@ int main() {
     cout << page.getSpaceLeft() << endl;
 
     ByteVec vec(cts::PG_SZ);
-    page.to_bytes(vec);
+    page.toBytes(vec);
     FSMPage page2(0, vec);
     cout << page2.getSpaceLeft() << endl;
 

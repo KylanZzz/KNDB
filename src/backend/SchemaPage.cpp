@@ -122,7 +122,7 @@ inline size_t SchemaPage::tableSpaceUsed(table_descriptor tab_desc) {
     * db_sizeof<size_t>();
 }
 
-void SchemaPage::to_bytes(ByteVec& vec) {
+void SchemaPage::toBytes(ByteVec& vec) {
     assert(vec.size() == cts::PG_SZ);
 
     size_t offset = 0;

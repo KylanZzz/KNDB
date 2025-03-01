@@ -104,7 +104,11 @@ void FSMPage::setNextPageID(size_t pageID) {
     m_nextPageID = pageID;
 }
 
-void FSMPage::to_bytes(ByteVec &vec) {
+size_t FSMPage::getBlocksInPage() {
+    return (cts::PG_SZ - db_sizeof<size_t>() * 3) * 8;
+}
+
+void FSMPage::toBytes(ByteVec &vec) {
     assert(vec.size() == cts::PG_SZ);
 
     size_t offset = 0;

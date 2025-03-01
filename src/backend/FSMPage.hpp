@@ -100,7 +100,14 @@ public:
      */
     void setNextPageID(size_t pageID);
 
-    void to_bytes(ByteVec &vec) override;
+    /**
+     * @brief Get the max number of blocks that a single FSMPage can represent.
+     *
+     * @return The number of blocks (or pages).
+     */
+    size_t getBlocksInPage();
+
+    void toBytes(ByteVec &vec) override;
 
 private:
 

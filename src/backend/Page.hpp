@@ -40,7 +40,7 @@ public:
      * @brief Serializes the page into a byte vector.
      * @param vec The byte vector to store serialized data.
      */
-    virtual void to_bytes(ByteVec &vec) = 0;
+    virtual void toBytes(ByteVec &vec) = 0;
 
     virtual ~Page() = default;
 };
