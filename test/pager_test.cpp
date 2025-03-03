@@ -68,8 +68,8 @@ TEST_F(PagerTest, SchemaPageTablePersistenceAfterPagerDestruction) {
         pageID = schemaPage.getPageID();
 
         // Add tables to SchemaPage
-        schemaPage.addTable("Users", {int(), std::string()}, 5);
-        schemaPage.addTable("Orders", {bool(), char()}, 10);
+        schemaPage.addTable("Users", 5);
+        schemaPage.addTable("Orders", 10);
 
         // Store expected table mapping
         expectedTables = schemaPage.getTables();
@@ -94,8 +94,8 @@ TEST_F(PagerTest, GetPageReturnsSameDataOnRepeatedCalls) {
         auto& schemaPage = pager.createNewPage<SchemaPage>();
         pageID = schemaPage.getPageID();
 
-        schemaPage.addTable("Users", {int(), std::string()}, 5);
-        schemaPage.addTable("Orders", {bool(), char()}, 10);
+        schemaPage.addTable("Users", 5);
+        schemaPage.addTable("Orders", 10);
 
         expectedTables = schemaPage.getTables();
 
@@ -261,32 +261,6 @@ TEST_F(PagerTest, FreePagesInReverseOrder) {
     }
 }
 
-TEST_F(PagerTest, SchemaPageTableTypesPersistAfterDestruction) {
-    IOHandler ioHandler("testfile.db");
-
-    size_t pageID;
-    vector<variants> expectedTypes;
-    vector<variants> expectedTypes2;
-
-    {
-        Pager pager(ioHandler);
-        auto& schemaPage = pager.createNewPage<SchemaPage>();
-        pageID = schemaPage.getPageID();
-
-        // Add table with specific types
-        expectedTypes = {int(), bool(), std::string()};
-        expectedTypes2 = {int(), bool(), float(), string(), string()};
-        schemaPage.addTable("Users", expectedTypes, 5);
-        schemaPage.addTable("Players", expectedTypes2, 5);
-    }
-
-    Pager newPager(ioHandler);
-    auto& reloadedSchemaPage = newPager.getPage<SchemaPage>(pageID);
-
-    ASSERT_EQ(reloadedSchemaPage.getTableTypes("Users"), expectedTypes);
-    ASSERT_EQ(reloadedSchemaPage.getTableTypes("Players"), expectedTypes2);
-}
-
 TEST_F(PagerTest, SchemaPageNumTablesPersistsAfterDestruction) {
     IOHandler ioHandler("testfile.db");
 
@@ -298,8 +272,8 @@ TEST_F(PagerTest, SchemaPageNumTablesPersistsAfterDestruction) {
         auto& schemaPage = pager.createNewPage<SchemaPage>();
         pageID = schemaPage.getPageID();
 
-        schemaPage.addTable("Users", {int(), std::string()}, 5);
-        schemaPage.addTable("Orders", {bool(), char()}, 10);
+        schemaPage.addTable("Users", 5);
+        schemaPage.addTable("Orders", 10);
 
         expectedTableCount = schemaPage.getNumTables();
     }
@@ -319,8 +293,8 @@ TEST_F(PagerTest, SchemaPageRemainsEmptyAfterRemovingAllTables) {
         auto& schemaPage = pager.createNewPage<SchemaPage>();
         pageID = schemaPage.getPageID();
 
-        schemaPage.addTable("Users", {int(), std::string()}, 5);
-        schemaPage.addTable("Orders", {bool(), char()}, 10);
+        schemaPage.addTable("Users", 5);
+        schemaPage.addTable("Orders", 10);
 
         schemaPage.removeTable("Users");
         schemaPage.removeTable("Orders");
@@ -335,37 +309,6 @@ TEST_F(PagerTest, SchemaPageRemainsEmptyAfterRemovingAllTables) {
     ASSERT_TRUE(reloadedSchemaPage.getTables().empty());
 }
 
-TEST_F(PagerTest, SchemaPageModificationsPersistAfterDestruction) {
-    IOHandler ioHandler("testfile.db");
-    size_t pageID;
-
-    {
-        Pager pager(ioHandler);
-        auto& schemaPage = pager.createNewPage<SchemaPage>();
-        pageID = schemaPage.getPageID();
-
-        schemaPage.addTable("Users", {int(), std::string()}, 5);
-    }
-
-    // Reconstruct Pager and modify the existing table
-    {
-        Pager pager(ioHandler);
-        auto& schemaPage = pager.getPage<SchemaPage>(pageID);
-
-        schemaPage.removeTable("Users");
-        schemaPage.addTable("Users", {bool(), float()}, 5);
-    }
-
-    // Reconstruct again to verify changes persisted
-    Pager newPager(ioHandler);
-    auto& reloadedSchemaPage = newPager.getPage<SchemaPage>(pageID);
-
-    auto types = reloadedSchemaPage.getTableTypes("Users");
-    ASSERT_EQ(types.size(), 2);
-    ASSERT_TRUE(std::holds_alternative<bool>(types[0]));
-    ASSERT_TRUE(std::holds_alternative<float>(types[1]));
-}
-
 TEST_F(PagerTest, SchemaPageHandlesLargeStringNames) {
     IOHandler ioHandler("testfile.db");
     size_t pageID;
@@ -376,7 +319,7 @@ TEST_F(PagerTest, SchemaPageHandlesLargeStringNames) {
         auto& schemaPage = pager.createNewPage<SchemaPage>();
         pageID = schemaPage.getPageID();
 
-        schemaPage.addTable(longTableName, {std::string(), std::string()}, 5);
+        schemaPage.addTable(longTableName, 5);
     }
 
     Pager newPager(ioHandler);

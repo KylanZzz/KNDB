@@ -47,6 +47,8 @@ FSMPage::FSMPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     m_bitmap.resize(cts::PG_SZ - offset);
     memcpy(m_bitmap.data(), bytes.data() + offset, m_bitmap.size());
     offset += m_bitmap.size();
+
+    assert(offset <= cts::PG_SZ);
 }
 
 FSMPage::FSMPage(size_t pageID) : Page(pageID) {

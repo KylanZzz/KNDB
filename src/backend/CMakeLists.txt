@@ -16,6 +16,8 @@ add_library(backend STATIC
         FSMPage.hpp
         kndb_types.hpp
         constants.hpp
+        TablePage.cpp
+        TablePage.hpp
 )
 
 target_include_directories(backend PUBLIC ${CMAKE_SOURCE_DIR}/src/backend)

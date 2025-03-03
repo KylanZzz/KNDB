@@ -30,13 +30,6 @@ public:
     SchemaPage(ByteVec &bytes, size_t pageID);
 
     /**
-     * @brief Gets the list of types in a specific table.
-     * @param table_name The name of the table (case insensitive).
-     * @return A list of variants representing the types.
-     */
-    vector<variants> getTableTypes(string table_name);
-
-    /**
      * @brief Gets the total number of tables in the schema.
      * @return The number of tables.
      */
@@ -54,7 +47,7 @@ public:
      * @param types The types of the table columns.
      * @param pageID The page number of the table.
      */
-    void addTable(string name, vector<variants> types, size_t pageID);
+    void addTable(string name, size_t pageID);
 
     /**
      * @brief Removes a table from the schema.
@@ -67,15 +60,11 @@ public:
 private:
     struct table_descriptor {
         string name;
-        vector<variants> types;
         size_t pageID;
     };
 
     // calculates the amount of free space (in bytes) that the page has left
     size_t freeSpace();
-
-    // calculates total amount of space (in bytes) a table takes up
-    inline size_t tableSpaceUsed(table_descriptor tab_desc);
 
     vector<table_descriptor> m_tables;
 };

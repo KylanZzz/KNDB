@@ -23,7 +23,8 @@ Pager::Pager(IOHandler &ioHandler) : m_ioHandler(ioHandler) {
     // db has just been created, we need to init first FSM page
     if (m_ioHandler.getNumBlocks() == 0) {
         // create FSMPage
-        assert(m_ioHandler.createNewBlock() == cts::FSM_PAGE_NO);
+        int pgid = m_ioHandler.createNewBlock();
+        assert(pgid == cts::FSM_PAGE_NO);
         initFSMPage(cts::FSM_PAGE_NO);
 
         // create SchemaPage
@@ -170,7 +171,8 @@ size_t Pager::allocPageBit() {
         currPage->allocBit(localIdx);
         // need to create new block
         if ((idx * FSMPage::getBlocksInPage()) + localIdx == m_ioHandler.getNumBlocks()) {
-            assert(m_ioHandler.createNewBlock() == ((idx * FSMPage::getBlocksInPage()) + localIdx));
+            size_t id = m_ioHandler.createNewBlock();
+            assert(id == ((idx * FSMPage::getBlocksInPage()) + localIdx));
         }
         return (idx * FSMPage::getBlocksInPage()) + localIdx;
     }
@@ -187,7 +189,9 @@ size_t Pager::allocPageBit() {
 
     int localIdx = currPage->findNextFree();
     currPage->allocBit(localIdx);
-    assert(m_ioHandler.createNewBlock() == (++idx * FSMPage::getBlocksInPage() + localIdx));
+    int new_id = m_ioHandler.createNewBlock();
+    idx++;
+    assert(new_id == (idx * FSMPage::getBlocksInPage() + localIdx));
     return (idx * FSMPage::getBlocksInPage()) + localIdx;
 }
 

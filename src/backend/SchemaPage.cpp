@@ -46,50 +46,36 @@ SchemaPage::SchemaPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
         table_descriptor tab_desc;
 
         // we use c_str as a buffer, then convert to a std::string internally
-        // because std::string has weird behavior when copying .data() directly
+        // because std::string has weird behavior when copying from .data() directly
         char c_str[db_sizeof<string>()];
-        memcpy(c_str, bytes.data() + offset, db_sizeof<string>() - 1);
+        memcpy(c_str, bytes.data() + offset, db_sizeof<string>());
         tab_desc.name = string(c_str);
         offset += db_sizeof<string>();
-
-        size_t num_types;
-        memcpy(&num_types, bytes.data() + offset, db_sizeof<size_t>());
-        offset += db_sizeof<size_t>();
-
-        // deserialize list of types in table
-        size_t type_id;
-        for (int j = 0; j < num_types; ++j) {
-            memcpy(&type_id, bytes.data() + offset, db_sizeof<size_t>());
-            offset += db_sizeof<size_t>();
-            tab_desc.types.push_back(type_id_to_variant(type_id));
-        }
 
         memcpy(&tab_desc.pageID, bytes.data() + offset, db_sizeof<size_t>());
         offset += db_sizeof<size_t>();
 
         m_tables.push_back(tab_desc);
     }
-    
-    if (offset > cts::PG_SZ) {
-        throw std::runtime_error("Schema Page has exceeded size of one page");
-    }
+
+    assert (offset <= cts::PG_SZ);
 }
 
-vector<variants> SchemaPage::getTableTypes(string table_name) {
-    if (table_name.length() + 1 > db_sizeof<string>())
-        throw std::invalid_argument("Name is too long");
-
-    if (table_name.empty())
-        throw std::invalid_argument("Name cannot be empty");
-
-    for (int i = 0; i < m_tables.size(); ++i) {
-        if (m_tables[i].name == table_name) {
-            return m_tables[i].types;
-        }
-    }
-
-    throw std::invalid_argument("Table name does not exist in schema");
-}
+//vector<variants> SchemaPage::getTableTypes(string table_name) {
+//    if (table_name.length() + 1 > db_sizeof<string>())
+//        throw std::invalid_argument("Name is too long");
+//
+//    if (table_name.empty())
+//        throw std::invalid_argument("Name cannot be empty");
+//
+//    for (int i = 0; i < m_tables.size(); ++i) {
+//        if (m_tables[i].name == table_name) {
+//            return m_tables[i].types;
+//        }
+//    }
+//
+//    throw std::invalid_argument("Table name does not exist in schema");
+//}
 
 size_t SchemaPage::getNumTables() {
     return m_tables.size();
@@ -109,14 +95,11 @@ size_t SchemaPage::freeSpace() {
 
     // table info
     for (const auto& table: m_tables) {
-        used += tableSpaceUsed(table);
+        used += db_sizeof<string>();
+        used += db_sizeof<size_t>();
     }
 
     return cts::PG_SZ - used;
-}
-
-inline size_t SchemaPage::tableSpaceUsed(table_descriptor tab_desc) {
-    return db_sizeof<string>() + db_sizeof<size_t>() + (tab_desc.types.size() * db_sizeof<size_t>());
 }
 
 void SchemaPage::toBytes(ByteVec& vec) {
@@ -135,28 +118,16 @@ void SchemaPage::toBytes(ByteVec& vec) {
     offset += db_sizeof<size_t>();
 
     // serialize each table
-    for (int i = 0; i < num_tables; ++i) {
-        const auto& tab_desc = m_tables[i];
-        memcpy(vec.data() + offset, tab_desc.name.data(), tab_desc.name.length() + 1);
+    for (const auto& tab_desc: m_tables) {
+        memcpy(vec.data() + offset, tab_desc.name.data(), db_sizeof<string>());
         offset += db_sizeof<string>();
-
-        size_t num_types = tab_desc.types.size();
-        memcpy(vec.data() + offset, &num_types, db_sizeof<size_t>());
-        offset += db_sizeof<size_t>();
-
-        // serialize list of types in each table
-        for (int j = 0; j < num_types; ++j) {
-            size_t type_id = variant_to_type_id(tab_desc.types[j]);
-            memcpy(vec.data() + offset, &type_id, db_sizeof<size_t>());
-            offset += db_sizeof<size_t>();
-        }
 
         memcpy(vec.data() + offset, &tab_desc.pageID, db_sizeof<size_t>());
         offset += db_sizeof<size_t>();
     }
 }
 
-void SchemaPage::addTable(string name, vector<variants> types, size_t pageID) {
+void SchemaPage::addTable(string name, size_t pageID) {
     if (name.length() + 1 > db_sizeof<string>())
         throw std::invalid_argument("Name is too long");
 
@@ -170,9 +141,9 @@ void SchemaPage::addTable(string name, vector<variants> types, size_t pageID) {
     }
 
     // check if we have enough space to store table
-    table_descriptor new_table{std::move(name), std::move(types), pageID};
+    table_descriptor new_table{std::move(name), pageID};
 
-    if (freeSpace() < tableSpaceUsed(new_table))
+    if (freeSpace() < db_sizeof<string>() + db_sizeof<size_t>())
         throw std::runtime_error("Not enough space in page to add table");
 
     m_tables.push_back(std::move(new_table));

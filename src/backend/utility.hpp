@@ -9,6 +9,7 @@
 #include "FSMPage.hpp"
 #include "kndb_types.hpp"
 #include "constants.hpp"
+#include "TablePage.hpp"
 
 using namespace kndb_types;
 
@@ -16,8 +17,20 @@ template<typename T>
 inline size_t db_sizeof() { return sizeof(T); }
 
 template<>
-inline size_t db_sizeof<std::string>() {
-    return cts::STR_SZ;
+inline size_t db_sizeof<std::string>() { return cts::STR_SZ; }
+
+template<typename T>
+inline size_t db_sizeof(T &) { return db_sizeof<T>(); }
+
+inline size_t db_sizeof(vector<variants> &vec) {
+    size_t res = 0;
+    for (const auto &var: vec) {
+        std::visit([&res](auto &&arg) {
+            using T = std::decay_t<decltype(arg)>;
+            res += db_sizeof<T>();
+        }, var);
+    }
+    return res;
 }
 
 namespace variant_conversion_id {
@@ -28,7 +41,7 @@ namespace variant_conversion_id {
 
 namespace page_type_conversion_id {
     enum {
-        SCHEMA_PAGE, FSM_PAGE
+        SCHEMA_PAGE, FSM_PAGE, TABLE_PAGE
     };
 }
 
@@ -93,5 +106,31 @@ inline size_t get_page_type_id<FSMPage>() {
     return page_type_conversion_id::FSM_PAGE;
 }
 
+template<>
+inline size_t get_page_type_id<TablePage>() {
+    return page_type_conversion_id::TABLE_PAGE;
+}
+
+template <typename T>
+inline void serialize(ByteVec& dest, size_t offset, const T& val) {
+    memcpy(dest.data() + offset, &val, db_sizeof<T>());
+}
+
+template <>
+inline void serialize<string>(ByteVec& dest, size_t offset, const string& val) {
+    memcpy(dest.data() + offset, val.data(), db_sizeof<string>());
+}
+
+template <typename T>
+inline void deserialize(ByteVec& dest, size_t offset, T& val) {
+    memcpy(&val, dest.data() + offset, db_sizeof<T>());
+}
+
+template <>
+inline void deserialize<string>(ByteVec& dest, size_t offset, string& val) {
+    char arr[db_sizeof<string>()];
+    memcpy(arr, dest.data() + offset, db_sizeof<string>());
+    val = string(arr);
+}
 
 #endif //KNDB_UTILITY_HPP

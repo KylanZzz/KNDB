@@ -7,6 +7,7 @@
 #include "Pager.hpp"
 #include "SchemaPage.hpp"
 #include "FSMPage.hpp"
+#include "utility.hpp"
 
 using std::cout;
 using std::endl;
@@ -25,6 +26,9 @@ int main() {
     auto sPage = pager.createNewPage<FSMPage>();
 
     DEBUG(ioHandler.getNumBlocks());
+
+    vector<variants> vec{int(), char(), string(), string(), int(), double()};
+    DEBUG(db_sizeof(vec));
 
     return 0;
 }
