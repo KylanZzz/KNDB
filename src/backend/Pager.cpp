@@ -3,22 +3,43 @@
 //
 
 #include <cassert>
+
 #include "Pager.hpp"
+#include "SchemaPage.hpp"
+#include "FSMPage.hpp"
+#include "constants.hpp"
+#include "utility.hpp"
 
 template SchemaPage& Pager::createNewPage<SchemaPage>();
 template FSMPage& Pager::createNewPage<FSMPage>();
 
+template FSMPage& Pager::getPage<FSMPage>(size_t pageID);
+template SchemaPage& Pager::getPage<SchemaPage>(size_t pageID);
+
+template void Pager::freePage<FSMPage>(size_t pageID);
+template void Pager::freePage<SchemaPage>(size_t pageID);
+
 Pager::Pager(IOHandler &ioHandler) : m_ioHandler(ioHandler) {
     // db has just been created, we need to init first FSM page
-    if (m_ioHandler.getNumBlocks() == 0)
+    if (m_ioHandler.getNumBlocks() == 0) {
+        // create FSMPage
+        assert(m_ioHandler.createNewBlock() == cts::FSM_PAGE_NO);
         initFSMPage(cts::FSM_PAGE_NO);
 
-    assert(ioHandler.getNumBlocks() == 1);
+        // create SchemaPage
+        assert(createNewPage<SchemaPage>().getPageID() == cts::SCHEMA_PAGE_NO);
+    }
 }
 
 template<typename T>
-T &Pager::getPage(int pageID) {
+T &Pager::getPage(size_t pageID) {
     static_assert(std::is_base_of<Page, T>::value, "T must be a derived class of Page");
+
+    if (pageID >= m_ioHandler.getNumBlocks())
+        throw std::invalid_argument("pageID out of bounds");
+
+    if (!std::is_same_v<T, FSMPage> && isFree(pageID))
+        throw std::invalid_argument("that page is not being used right now");
 
     // check if page is in cache
     for (auto &pagePtr: m_cache) {
@@ -38,6 +59,18 @@ T &Pager::getPage(int pageID) {
     return dynamic_cast<T &>(*m_cache.back());
 }
 
+bool Pager::isFree(size_t pageID) {
+    FSMPage* currPage = &getPage<FSMPage>(cts::FSM_PAGE_NO);
+    size_t pageIdx = pageID / FSMPage::getBlocksInPage();
+    for (int i = 0; i < pageIdx; i++) {
+        if (!currPage->hasNextPage())
+            throw std::runtime_error("FSMPage has no next page");
+        currPage = &getPage<FSMPage>(currPage->getNextPageID());
+    }
+    size_t localIdx = pageID % FSMPage::getBlocksInPage();
+    return currPage->isFree(localIdx);
+}
+
 template<typename T>
 T &Pager::createNewPage() {
     static_assert(std::is_base_of<Page, T>::value, "T must be a derived class of Page");
@@ -46,7 +79,12 @@ T &Pager::createNewPage() {
 
     // create new block in db file
     size_t new_page_no = allocPageBit();
-    m_ioHandler.readBlock((void *) vec.data(), new_page_no);
+
+    if (m_ioHandler.getNumBlocks() > cts::MAX_BLOCKS)
+        throw std::runtime_error("Database has reached block limit.");
+
+    // we DONT copy data from ioHandler in case the page contains junk data
+    // m_ioHandler.readBlock((void *) vec.data(), new_page_no);
 
     // fill first bytes with correct page_id_type
     size_t page_type_id = get_page_type_id<T>();
@@ -60,15 +98,29 @@ T &Pager::createNewPage() {
 }
 
 template<typename T>
-void Pager::freePage(int pageID) {
+void Pager::freePage(size_t pageID) {
     static_assert(std::is_base_of<Page, T>::value, "T must be a derived class of Page");
 
-    // potentially set the page to all 0s for safety
+    if (pageID >= m_ioHandler.getNumBlocks())
+        throw std::invalid_argument("Invalid pageID");
+
+    // TODO: this is inefficient since we don't really need to wipe the page,
+    //  but doing this for safety.
     ByteVec temp(cts::PG_SZ, byte(0));
     m_ioHandler.writeBlock((void *) temp.data(), pageID);
 
-    // use freeSpaceMap to free page
+    // mark page as free in bitmap
     freePageBit(pageID);
+
+    // remove from cache
+    int idx = 0;
+    for (int i = 0; i < m_cache.size(); i++) {
+        if (m_cache[i]->getPageID() == pageID) {
+            idx = i;
+            break;
+        }
+    }
+    m_cache.erase(m_cache.begin() + idx);
 }
 
 void Pager::freePageBit(size_t pageID) {
@@ -78,26 +130,28 @@ void Pager::freePageBit(size_t pageID) {
         throw std::invalid_argument("pageID is out of bounds");
 
     //1. calculate which FSMPageId the target pageID is in
-    FSMPage currPage = getPage<FSMPage>(cts::FSM_PAGE_NO);
-    size_t blocksPerPage = currPage.getBlocksInPage();
+    FSMPage* currPage = &getPage<FSMPage>(cts::FSM_PAGE_NO);
+    size_t blocksPerPage = FSMPage::getBlocksInPage();
 
     //2. get page(maybe using linked-list style search), set the bit to 0
     // the FSMPage (node) that contains the page we want to free
     // 0-indexed
     int nodeNo = pageID / blocksPerPage;
     for (int i = 0; i < nodeNo; i++) {
-        currPage = getPage<FSMPage>(currPage.getNextPageID());
+        if (!currPage->hasNextPage())
+            throw std::runtime_error("FSMPage has no next page");
+        currPage = &getPage<FSMPage>(currPage->getNextPageID());
     }
 
     int localIdx = pageID % blocksPerPage;
-    if (currPage.isFree(localIdx))
+    if (currPage->isFree(localIdx))
         throw std::invalid_argument("page is already free, cannot free");
-    currPage.freeBit(localIdx);
+    currPage->freeBit(localIdx);
 }
 
 
 size_t Pager::allocPageBit() {
-    FSMPage currPage = getPage<FSMPage>(cts::FSM_PAGE_NO);
+    FSMPage* currPage = &getPage<FSMPage>(cts::FSM_PAGE_NO);
 
     //1. if current there is free bit in bitmap:
     //    - return next free bit in bitmap and set bit to 1
@@ -105,17 +159,20 @@ size_t Pager::allocPageBit() {
     //    - start from first page of FSM bitmap, keep going
     //     until you find a page with a free bitmap
     int idx = 0;
-    while (currPage.getSpaceLeft() == 0 && currPage.hasNextPage()) {
-        idx += currPage.getBlocksInPage();
-        currPage = getPage<FSMPage>(currPage.getNextPageID());
+    while (currPage->getSpaceLeft() == 0 && currPage->hasNextPage()) {
+        idx++;
+        currPage = &getPage<FSMPage>(currPage->getNextPageID());
     }
 
     // free bitmap has been found
-    if (currPage.getSpaceLeft() > 0) {
-        size_t localIdx= currPage.findNextFree();
-        currPage.allocBit(localIdx);
-        assert(m_ioHandler.createNewBlock() == (idx + localIdx));
-        return idx + localIdx;
+    if (currPage->getSpaceLeft() > 0) {
+        size_t localIdx= currPage->findNextFree();
+        currPage->allocBit(localIdx);
+        // need to create new block
+        if ((idx * FSMPage::getBlocksInPage()) + localIdx == m_ioHandler.getNumBlocks()) {
+            assert(m_ioHandler.createNewBlock() == ((idx * FSMPage::getBlocksInPage()) + localIdx));
+        }
+        return (idx * FSMPage::getBlocksInPage()) + localIdx;
     }
 
     //3. else you go through all of FSM pages and find no free bitmap
@@ -124,18 +181,17 @@ size_t Pager::allocPageBit() {
     //    - instantiate new page with free bitmap (set first bit to 1, since
     //      first page is for bitmap)
     size_t newPageID = m_ioHandler.createNewBlock();
-    currPage.setNextPageID(newPageID);
+    currPage->setNextPageID(newPageID);
     initFSMPage(newPageID);
-    currPage = getPage<FSMPage>(newPageID);
+    currPage = &getPage<FSMPage>(newPageID);
 
-    int localIdx = currPage.findNextFree();
-    currPage.allocBit(localIdx);
-    assert(m_ioHandler.createNewBlock() == (idx + localIdx));
-    return idx + localIdx;
+    int localIdx = currPage->findNextFree();
+    currPage->allocBit(localIdx);
+    assert(m_ioHandler.createNewBlock() == (++idx * FSMPage::getBlocksInPage() + localIdx));
+    return (idx * FSMPage::getBlocksInPage()) + localIdx;
 }
 
 void Pager::initFSMPage(size_t pageID) {
-    assert(m_ioHandler.createNewBlock() == pageID);
     FSMPage firstPage(pageID);
     ByteVec bytes(cts::PG_SZ);
     firstPage.toBytes(bytes);

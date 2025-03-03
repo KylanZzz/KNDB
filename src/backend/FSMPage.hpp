@@ -6,6 +6,7 @@
 #define KNDB_FSMPAGE_HPP
 
 #include "Page.hpp"
+#include "constants.hpp"
 
 /**
  * @class FSMPage
@@ -105,7 +106,7 @@ public:
      *
      * @return The number of blocks (or pages).
      */
-    size_t getBlocksInPage();
+    static size_t getBlocksInPage() { return (cts::PG_SZ - sizeof(size_t) * 3) * 8; }
 
     void toBytes(ByteVec &vec) override;
 

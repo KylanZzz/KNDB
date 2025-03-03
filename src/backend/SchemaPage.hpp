@@ -9,14 +9,9 @@
 
 #include "Page.hpp"
 #include "unordered_map"
+#include "kndb_types.hpp"
 
-using variants = std::variant<int, char, bool, std::string>;
-using std::byte;
-using std::vector;
-using ByteVec = std::vector<std::byte>;
-using ByteVecPtr = std::unique_ptr<ByteVec>;
-using std::string;
-using std::unordered_map;
+using namespace kndb_types;
 
 /**
  * @class SchemaPage
@@ -35,12 +30,6 @@ public:
     SchemaPage(ByteVec &bytes, size_t pageID);
 
     /**
-     * Constructs an empty SchemaPage. Represents an empty
-     * schema with no tables or data.
-     */
-    SchemaPage(size_t pageID);
-
-    /**
      * @brief Gets the list of types in a specific table.
      * @param table_name The name of the table (case insensitive).
      * @return A list of variants representing the types.
@@ -57,7 +46,7 @@ public:
      * @brief Gets list of all tables in schema.
      * @return Map of table names to pageID of table metadata page.
      */
-    unordered_map<string, size_t> getTables();
+    std::unordered_map<string, size_t> getTables();
 
     /**
      * @brief Creates a new table in the schema.

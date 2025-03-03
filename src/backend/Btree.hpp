@@ -10,10 +10,6 @@
 #include "Pager.hpp"
 #include "utility.hpp"
 
-using std::byte;
-using variants = std::variant<int, char, bool, std::string>;
-using std::vector;
-
 class Btree {
 public:
     Btree(vector<variants> types, size_t rootPageId, Pager &pgr) : pager(pgr) {};

@@ -11,12 +11,12 @@
 #include <iostream>
 #include <type_traits>
 
-#include "utility.hpp"
 #include "IOHandler.hpp"
 #include "Page.hpp"
+#include "kndb_types.hpp"
 
-using std::vector;
-using ByteVec = std::vector<std::byte>;
+using namespace kndb_types;
+
 using PagePtr = std::unique_ptr<Page>;
 
 /**
@@ -31,43 +31,82 @@ public:
 
     /**
      * @brief Constructs a Pager.
+     *
      * @param ioHandler handles disk I/O requests.
      */
     Pager(IOHandler &ioHandler);
 
     /**
      * @brief Retrieves a page.
-     * @tparam T type of page that is expected to be returned. This type must be a subclass of class Page
-     *           and have a constructor that takes in a ByteVec& and page number.
+     *
+     * @tparam T type of page that is expected to be returned.  This type
+     * must be a subclass of class Page and have a constructor that takes in a
+     * ByteVec& and page number.
+     *
      * @param pageID the requested page's id.
-     * @return the requested page.
+     *
+     * Note: This function call is non-owning and the page is not guaranteed to
+     * still exist after out of scope. The returned page is meant to be used
+     * immediately after and not stored elsewhere. Ownership of the page is
+     * exclusive to the pager, which may destruct it at any time. The timing
+     * of page writes to disk is also not deterministically defined. In other
+     * words, the pager will flush pages to disk as it sees fit and users of
+     * this class should not rely on specific write timings.
+     *
+     * @throw std::invalid_argument if the pageID is out of bounds or if the
+     * page is not currently used right now (freed).
+     *
+     * @throw std::runtime_error if the pageID does not correspond with the
+     * correct page type T. IE: If a page with ID 3 has been constructed with
+     * createPage of type Btree Page, you can only call getPage(3) with type
+     * Btree page from now on. if you dont, it will throw a runtime error.
+     *
+     * @return a reference to the requested page.
      */
     template<typename T>
-    T &getPage(int pageID);
+    T &getPage(size_t pageID);
 
     /**
-     * @brief Creates a new page.
-     * @tparam T type of page that you would like to create. This type must be a subclass of class Page
-     *           and have a constructor that takes in a ByteVec& and page number.
+     * @brief Creates a new page
+     *
+     * @tparam T type of page that you would like to create. This type must
+     * be a subclass of class Page and have a constructor that takes in a
+     * ByteVec& and page number.
+     *
+     * @throws std::runtime_error if the max page limit has been reached.
+     *
      * @return the new page that was created.
+     *
+     * Note: The returned page will ALWAYS be 0-initialized besides the start
+     * of the page, which contains the page_type_id.
      */
     template<typename T>
     T &createNewPage();
 
     /**
      * @brief Frees a page
+     *
      * @tparam T The type of the page that is expected.
+     *
      * @param pageID the page id to be freed.
+     *
+     * @throw std::invalid_argument if the pageID is out of bounds or if the
+     * page is already freed.
      */
     template<typename T>
-    void freePage(int pageID);
+    void freePage(size_t pageID);
 
+    /**
+     * All pages are guaranteed to be written
+     */
     ~Pager();
 
 private:
+    // helper functions to manipulate the free space bitmap
     void freePageBit(size_t pageID);
     size_t allocPageBit();
     void initFSMPage(size_t pageID);
+    bool isFree(size_t pageID);
 
     IOHandler &m_ioHandler;
 

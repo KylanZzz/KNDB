@@ -37,7 +37,7 @@ SchemaPage::SchemaPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     offset += db_sizeof<size_t>();
 
     // deserialize # of tables
-    size_t num_tables = 0;
+    size_t num_tables;
     memcpy(&num_tables, bytes.data() + offset, db_sizeof<size_t>());
     offset += db_sizeof<size_t>();
 
@@ -75,8 +75,6 @@ SchemaPage::SchemaPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     }
 }
 
-SchemaPage::SchemaPage(size_t pageID) : Page(pageID) { }
-
 vector<variants> SchemaPage::getTableTypes(string table_name) {
     if (table_name.length() + 1 > db_sizeof<string>())
         throw std::invalid_argument("Name is too long");
@@ -97,8 +95,8 @@ size_t SchemaPage::getNumTables() {
     return m_tables.size();
 }
 
-unordered_map<string, size_t> SchemaPage::getTables() {
-    unordered_map<string, size_t> res;
+std::unordered_map<string, size_t> SchemaPage::getTables() {
+    std::unordered_map<string, size_t> res;
     for (const auto& table: m_tables)
         res[table.name] = table.pageID;
     return res;
@@ -118,8 +116,7 @@ size_t SchemaPage::freeSpace() {
 }
 
 inline size_t SchemaPage::tableSpaceUsed(table_descriptor tab_desc) {
-    return db_sizeof<string>() + db_sizeof<size_t>() + tab_desc.types.size()
-    * db_sizeof<size_t>();
+    return db_sizeof<string>() + db_sizeof<size_t>() + (tab_desc.types.size() * db_sizeof<size_t>());
 }
 
 void SchemaPage::toBytes(ByteVec& vec) {

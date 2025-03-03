@@ -10,7 +10,9 @@
 #include <cstddef>
 #include <iostream>
 
-using ByteVec = std::vector<std::byte>;
+#include "kndb_types.hpp"
+
+using namespace kndb_types;
 
 /**
  * @class Page

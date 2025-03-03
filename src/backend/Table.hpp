@@ -7,18 +7,21 @@
 
 #include <vector>
 #include "Pager.hpp"
-#include "utility.hpp"
 #include "Btree.hpp"
+#include "kndb_types.hpp"
+
+using namespace kndb_types;
 
 class Table {
 public:
-    Table(std::string tableName, vector<variants> types, Pager& pgr, size_t tablePageId) {
+    Table(string tableName, vector<variants> types, Pager& pgr, size_t
+    tablePageId) {
         size_t rootPageId = 1;
         auto btree = Btree(types, rootPageId, pgr);
     };
 
 private:
-    std::string name;
+    string name;
 };
 
 

@@ -8,10 +8,6 @@
 #include "Pager.hpp"
 #include "Table.hpp"
 
-using std::byte;
-using variants = std::variant<int, char, bool, std::string>;
-using std::vector;
-
 class Schema {
 public:
     Schema(Pager& pgr, size_t metaInfoPageId) : pager(pgr) {};

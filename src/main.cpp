@@ -6,6 +6,7 @@
 
 #include "Pager.hpp"
 #include "SchemaPage.hpp"
+#include "FSMPage.hpp"
 
 using std::cout;
 using std::endl;
@@ -21,7 +22,7 @@ int main() {
     Pager pager(ioHandler);
     DEBUG(ioHandler.getNumBlocks());
 
-    auto sPage = pager.createNewPage<SchemaPage>();
+    auto sPage = pager.createNewPage<FSMPage>();
 
     DEBUG(ioHandler.getNumBlocks());
 

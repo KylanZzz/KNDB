@@ -5,33 +5,47 @@
 #include <gtest/gtest.h>
 
 #include "SchemaPage.hpp"
+#include "kndb_types.hpp"
+#include "constants.hpp"
 #include "utility.hpp"
 
-TEST(SchemaPageTest, NewlyCreatedSchemaHasNoTables) {
-    SchemaPage schema(1);
+using namespace kndb_types;
+
+struct SchemaPageTest : testing::Test {
+    std::unique_ptr<std::vector<std::byte>> vec;
+    SchemaPageTest() {
+        vec = std::make_unique<std::vector<std::byte>>();
+        vec->resize(cts::PG_SZ);
+        size_t a = page_type_conversion_id::SCHEMA_PAGE;
+        memcpy(vec->data(), &a, sizeof(size_t));
+    }
+};
+
+TEST_F(SchemaPageTest, NewlyCreatedSchemaHasNoTables) {
+    SchemaPage schema(*vec, 1);
     ASSERT_EQ(schema.getNumTables(), 0);
     ASSERT_TRUE(schema.getTables().empty());
 }
 
-TEST(SchemaPageTest, AddTableIncreasesTableCount) {
-    SchemaPage schema(1);
-    schema.addTable("Users", {int(), std::string()}, 5);
+TEST_F(SchemaPageTest, AddTableIncreasesTableCount) {
+    SchemaPage schema(*vec, 1);
+    schema.addTable("Users", {int(), std::string(), float()}, 5);
     ASSERT_EQ(schema.getNumTables(), 1);
     ASSERT_EQ(schema.getTables().at("Users"), 5);
 }
 
-TEST(SchemaPageTest, RemoveTableDecreasesTableCount) {
-    SchemaPage schema(1);
-    schema.addTable("Users", {int(), std::string()}, 5);
+TEST_F(SchemaPageTest, RemoveTableDecreasesTableCount) {
+    SchemaPage schema(*vec, 1);
+    schema.addTable("Users", {int(), std::string(), double()}, 5);
     schema.removeTable("Users");
     ASSERT_EQ(schema.getNumTables(), 0);
     ASSERT_TRUE(schema.getTables().empty());
 }
 
-TEST(SchemaPageTest, SerializationPreservesTables) {
-    SchemaPage original(1);
-    original.addTable("Users", {int(), std::string()}, 5);
-    original.addTable("Orders", {int(), bool()}, 10);
+TEST_F(SchemaPageTest, SerializationPreservesTables) {
+    SchemaPage original(*vec, 1);
+    original.addTable("Users", {int(), std::string(), float()}, 5);
+    original.addTable("Orders", {int(), bool(), double()}, 10);
 
     ByteVec serialized(cts::PG_SZ);
     original.toBytes(serialized);
@@ -42,10 +56,10 @@ TEST(SchemaPageTest, SerializationPreservesTables) {
     ASSERT_EQ(deserialized.getTables().at("Orders"), 10);
 }
 
-TEST(SchemaPageTest, AddRemoveTablesWithSerialization) {
-    SchemaPage original(1);
-    original.addTable("Users", {int(), std::string()}, 5);
-    original.addTable("Orders", {int(), bool()}, 10);
+TEST_F(SchemaPageTest, AddRemoveTablesWithSerialization) {
+    SchemaPage original(*vec, 1);
+    original.addTable("Users", {int(), std::string(), float()}, 5);
+    original.addTable("Orders", {int(), bool(), double()}, 10);
     original.removeTable("Users");
 
     ByteVec serialized(cts::PG_SZ);
@@ -58,11 +72,11 @@ TEST(SchemaPageTest, AddRemoveTablesWithSerialization) {
     ASSERT_THROW(deserialized.getTables().at("Users"), std::out_of_range);
 }
 
-TEST(SchemaPageTest, SerializeAfterAddingAndRemovingSameTable) {
-    SchemaPage original(1);
-    original.addTable("TempTable", {int(), bool()}, 50);
+TEST_F(SchemaPageTest, SerializeAfterAddingAndRemovingSameTable) {
+    SchemaPage original(*vec, 1);
+    original.addTable("TempTable", {int(), bool(), float()}, 50);
     original.removeTable("TempTable");
-    original.addTable("TempTable", {std::string(), char()}, 60);
+    original.addTable("TempTable", {std::string(), char(), double()}, 60);
 
     ByteVec serialized(cts::PG_SZ);
     original.toBytes(serialized);
@@ -70,50 +84,51 @@ TEST(SchemaPageTest, SerializeAfterAddingAndRemovingSameTable) {
     SchemaPage deserialized(serialized, 1);
     ASSERT_EQ(deserialized.getNumTables(), 1);
     ASSERT_EQ(deserialized.getTables().at("TempTable"), 60);
-    ASSERT_EQ(deserialized.getTableTypes("TempTable").size(), 2);
+    ASSERT_EQ(deserialized.getTableTypes("TempTable").size(), 3);
     ASSERT_TRUE(std::holds_alternative<std::string>(deserialized.getTableTypes("TempTable")[0]));
     ASSERT_TRUE(std::holds_alternative<char>(deserialized.getTableTypes("TempTable")[1]));
+    ASSERT_TRUE(std::holds_alternative<double>(deserialized.getTableTypes("TempTable")[2]));
 }
 
-TEST(SchemaPageTest, AddTableThrowsIfNameExists) {
-    SchemaPage schema(1);
-    schema.addTable("Products", {std::string(), char()}, 15);
-    ASSERT_THROW(schema.addTable("Products", {int(), bool()}, 20), std::invalid_argument);
+TEST_F(SchemaPageTest, AddTableThrowsIfNameExists) {
+    SchemaPage schema(*vec, 1);
+    schema.addTable("Products", {std::string(), char(), float()}, 15);
+    ASSERT_THROW(schema.addTable("Products", {int(), bool(), double()}, 20), std::invalid_argument);
 }
 
-TEST(SchemaPageTest, AddTableWithEmptyNameThrows) {
-    SchemaPage schema(1);
-    ASSERT_THROW(schema.addTable("", {int(), std::string()}, 5), std::invalid_argument);
+TEST_F(SchemaPageTest, AddTableWithEmptyNameThrows) {
+    SchemaPage schema(*vec, 1);
+    ASSERT_THROW(schema.addTable("", {int(), std::string(), float()}, 5), std::invalid_argument);
 }
 
-TEST(SchemaPageTest, AddTableWithMaxAndExceedingNameLength) {
-    SchemaPage schema(1);
+TEST_F(SchemaPageTest, AddTableWithMaxAndExceedingNameLength) {
+    SchemaPage schema(*vec, 1);
     std::string maxLengthName(31, 'A'); // 31 characters, should work
     std::string tooLongName(32, 'B');   // 32 characters, should throw
 
-    schema.addTable(maxLengthName, {int(), std::string()}, 5);
+    schema.addTable(maxLengthName, {int(), std::string(), double()}, 5);
     ASSERT_EQ(schema.getTables().size(), 1);
 
-    ASSERT_THROW(schema.addTable(tooLongName, {int(), std::string()}, 6), std::invalid_argument);
+    ASSERT_THROW(schema.addTable(tooLongName, {int(), std::string(), float()}, 6), std::invalid_argument);
 }
 
-TEST(SchemaPageTest, AddingTableBeyondCapacityThrows) {
-    SchemaPage schema(1);
+TEST_F(SchemaPageTest, AddingTableBeyondCapacityThrows) {
+    SchemaPage schema(*vec, 1);
     size_t used_space = 16; // Initial schema space
     size_t max_space = cts::PG_SZ;
 
     size_t pageID = 5;
-    while (used_space + 32 + 8 + (3 * 8) <= max_space) {
-        schema.addTable("Table" + std::to_string(pageID), {int(), bool(), std::string()}, pageID);
-        used_space += 32 + 8 + (3 * 8); // 32 (name) + 8 (pageID) + 8 bytes per type
+    while (used_space + 32 + 8 + (4 * 8) <= max_space) {
+        schema.addTable("Table" + std::to_string(pageID), {int(), bool(), std::string(), double()}, pageID);
+        used_space += 32 + 8 + (4 * 8); // 32 (name) + 8 (pageID) + 8 bytes per type
         ++pageID;
     }
 
-    ASSERT_THROW(schema.addTable("OverflowTable", {int(), char()}, pageID), std::runtime_error);
+    ASSERT_THROW(schema.addTable("OverflowTable", {int(), char(), float()}, pageID), std::runtime_error);
 }
 
-TEST(SchemaPageTest, SerializationPreservesEmptySchema) {
-    SchemaPage original(1);
+TEST_F(SchemaPageTest, SerializationPreservesEmptySchema) {
+    SchemaPage original(*vec, 1);
     ByteVec serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
@@ -122,14 +137,14 @@ TEST(SchemaPageTest, SerializationPreservesEmptySchema) {
     ASSERT_TRUE(deserialized.getTables().empty());
 }
 
-TEST(SchemaPageTest, SerializationWithMultipleOperations) {
-    SchemaPage original(1);
-    original.addTable("Users", {int(), std::string()}, 5);
-    original.addTable("Orders", {int(), bool()}, 10);
+TEST_F(SchemaPageTest, SerializationWithMultipleOperations) {
+    SchemaPage original(*vec, 1);
+    original.addTable("Users", {int(), std::string(), float()}, 5);
+    original.addTable("Orders", {int(), bool(), double()}, 10);
     original.removeTable("Users");
-    original.addTable("Products", {char(), bool()}, 15);
+    original.addTable("Products", {char(), bool(), float()}, 15);
     original.removeTable("Orders");
-    original.addTable("Customers", {int(), std::string()}, 20);
+    original.addTable("Customers", {int(), std::string(), double()}, 20);
 
     ByteVec serialized(cts::PG_SZ);
     original.toBytes(serialized);
@@ -141,4 +156,24 @@ TEST(SchemaPageTest, SerializationWithMultipleOperations) {
     ASSERT_EQ(deserialized.getTables().at("Customers"), 20);
     ASSERT_THROW(deserialized.getTables().at("Users"), std::out_of_range);
     ASSERT_THROW(deserialized.getTables().at("Orders"), std::out_of_range);
+}
+
+TEST_F(SchemaPageTest, RepeatedAddAndRemoveWorksWithVaryingTypes) {
+    SchemaPage schema(*vec, 1);
+
+    std::vector<variants> possibleTypes = {int(), float(), double(), std::string(), char(), bool()};
+
+    for (int i = 0; i < 1000; i++) {
+        std::vector<variants> tableTypes;
+        size_t numTypes = (i % 30) + 1;  // Vary number of types between 1 and 30
+
+        for (size_t j = 0; j < numTypes; j++) {
+            tableTypes.push_back(possibleTypes[(i + j) % possibleTypes.size()]);
+        }
+
+        schema.addTable("Users", tableTypes, 5);
+        schema.removeTable("Users");
+    }
+
+    SUCCEED();
 }

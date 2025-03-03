@@ -30,7 +30,7 @@ TEST(FSMPageTest, FreeingABitMakesItFreeAgain) {
 
 TEST(FSMPageTest, OutOfBoundsCheckThrowsException) {
     FSMPage page(1);
-    ASSERT_THROW(page.isFree(page.getBlocksInPage()), std::invalid_argument);
+    ASSERT_THROW(page.isFree(FSMPage::getBlocksInPage()), std::invalid_argument);
 }
 
 TEST(FSMPageTest, DefaultPageHasNoNextPage) {
@@ -91,7 +91,7 @@ TEST(FSMPageTest, FindNextFreeReturnsFirstAvailableBit) {
 TEST(FSMPageTest, FindNextFreeThrowsIfNoFreeBits) {
     FSMPage page(1);
 
-    for (size_t i = 1; i < page.getBlocksInPage(); ++i) {
+    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         page.allocBit(i);
     }
     ASSERT_EQ(0, page.getSpaceLeft());
@@ -114,20 +114,20 @@ TEST(FSMPageTest, AllocateAllBitsThenFreeAndReallocate) {
     FSMPage page(1);
 
     // Allocate all bits
-    for (size_t i = 1; i < page.getBlocksInPage(); ++i) {
+    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         page.allocBit(i);
         ASSERT_FALSE(page.isFree(i));
     }
     ASSERT_THROW(page.findNextFree(), std::invalid_argument);
 
     // Free all bits
-    for (size_t i = 1; i < page.getBlocksInPage(); ++i) {
+    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         page.freeBit(i);
         ASSERT_TRUE(page.isFree(i));
     }
 
     // Reallocate all bits again
-    for (size_t i = 1; i < page.getBlocksInPage(); ++i) {
+    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         page.allocBit(i);
         ASSERT_FALSE(page.isFree(i));
     }
@@ -137,7 +137,7 @@ TEST(FSMPageTest, SerializationPreservesFullAllocationCycle) {
     FSMPage original(1);
 
     // Allocate all bits
-    for (size_t i = 1; i < original.getBlocksInPage(); ++i) {
+    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         original.allocBit(i);
     }
 
@@ -145,12 +145,12 @@ TEST(FSMPageTest, SerializationPreservesFullAllocationCycle) {
     original.toBytes(serialized);
     FSMPage deserialized(serialized, 1);
 
-    for (size_t i = 1; i < original.getBlocksInPage(); ++i) {
+    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         ASSERT_FALSE(deserialized.isFree(i));
     }
 
     // Free all bits
-    for (size_t i = 1; i < original.getBlocksInPage(); ++i) {
+    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         deserialized.freeBit(i);
     }
 
@@ -158,7 +158,7 @@ TEST(FSMPageTest, SerializationPreservesFullAllocationCycle) {
     deserialized.toBytes(reserialized);
     FSMPage reloaded(reserialized, 1);
 
-    for (size_t i = 1; i < original.getBlocksInPage(); ++i) {
+    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         ASSERT_TRUE(reloaded.isFree(i));
     }
 }

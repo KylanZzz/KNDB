@@ -7,82 +7,90 @@
 
 #include "SchemaPage.hpp"
 #include "FSMPage.hpp"
+#include "kndb_types.hpp"
+#include "constants.hpp"
 
-using variants = std::variant<int, char, bool, std::string>;
-using std::byte;
-using std::vector;
-using ByteVec = std::vector<std::byte>;
-using ByteVecPtr = std::unique_ptr<ByteVec>;
-using std::string;
+using namespace kndb_types;
 
-namespace cts { // constants
-    constexpr size_t PG_SZ = 4096;
-    constexpr size_t CACHE_SZ = 10;
-    constexpr size_t STR_SZ = 32;
-
-    constexpr size_t FSM_PAGE_NO = 0;
-    constexpr size_t SCHEMA_PAGE_NO = 1;
-}
-
-template <typename T>
+template<typename T>
 inline size_t db_sizeof() { return sizeof(T); }
 
-template <>
+template<>
 inline size_t db_sizeof<std::string>() {
     return cts::STR_SZ;
 }
 
+namespace variant_conversion_id {
+    enum {
+        CHAR, INT, BOOL, STRING, FLOAT, DOUBLE
+    };
+}
+
+namespace page_type_conversion_id {
+    enum {
+        SCHEMA_PAGE, FSM_PAGE
+    };
+}
+
 inline variants type_id_to_variant(size_t type_id) {
-    switch (type_id){
-        case 1:
+    switch (type_id) {
+        case variant_conversion_id::CHAR:
             return char();
-        case 2:
+        case variant_conversion_id::INT:
             return int();
-        case 3:
+        case variant_conversion_id::BOOL:
             return bool();
-        case 4:
+        case variant_conversion_id::STRING:
             return std::string();
+        case variant_conversion_id::FLOAT:
+            return float();
+        case variant_conversion_id::DOUBLE:
+            return double();
         default:
             throw std::runtime_error("Invalid type id");
     }
 }
 
 inline size_t variant_to_type_id(variants v) {
-    size_t res = -1;
+    size_t res = std::numeric_limits<size_t>::max();
 
-    std::visit([&res](auto&& arg) {
+    std::visit([&res](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, char>){
-            res = 1;
+        if constexpr (std::is_same_v<T, char>) {
+            res = variant_conversion_id::CHAR;
         } else if constexpr (std::is_same_v<T, int>) {
-            res = 2;
+            res = variant_conversion_id::INT;
         } else if constexpr (std::is_same_v<T, bool>) {
-            res = 3;
+            res = variant_conversion_id::BOOL;
         } else if constexpr (std::is_same_v<T, std::string>) {
-            res = 4;
+            res = variant_conversion_id::STRING;
+        } else if constexpr (std::is_same_v<T, double>) {
+            res = variant_conversion_id::DOUBLE;
+        } else if constexpr (std::is_same_v<T, float>) {
+            res = variant_conversion_id::FLOAT;
         }
     }, v);
 
-    if (res == -1) {
+    if (res == std::numeric_limits<size_t>::max()) {
         throw std::runtime_error("Unsupported variant; cannot convert to type id");
     }
 
     return res;
 }
 
-template <typename T>
+template<typename T>
 inline size_t get_page_type_id() {
     throw std::runtime_error("Unsupported page type id");
 }
 
-template <>
+template<>
 inline size_t get_page_type_id<SchemaPage>() {
-    return 1;
+    return page_type_conversion_id::SCHEMA_PAGE;
 }
 
-template <>
+template<>
 inline size_t get_page_type_id<FSMPage>() {
-    return 2;
+    return page_type_conversion_id::FSM_PAGE;
 }
 
 
