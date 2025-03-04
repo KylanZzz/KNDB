@@ -14,14 +14,36 @@ using namespace kndb_types;
 
 class Table {
 public:
-    Table(string tableName, vector<variants> types, Pager& pgr, size_t
-    tablePageId) {
-        size_t rootPageId = 1;
-        auto btree = Btree(types, rootPageId, pgr);
-    };
+    // this assumes that table already exists
+    Table(string tableName, Pager& pgr, size_t tablePageId);
+
+    // this is creating a new table
+    Table(string tableName, Pager& pgr, size_t tablePageId, vector<variants> types);
+
+    // deletes itself
+    void dropTable();
+
+    // get name of table
+    string getName();
+
+    size_t getNumTuples();
+
+    //CRUD
+    void createTuple(vector<variants> values);
+
+    vector<variants> readTuple(variants key);
+
+    void updateTuple(vector<variants> values);
+
+    void deleteTuple(variants key);
+
+    vector<variants> getTypes();
 
 private:
-    string name;
+    Pager& m_pager;
+    std::unique_ptr<Btree> m_btree;
+    string m_name;
+    size_t m_tablePageID;
 };
 
 

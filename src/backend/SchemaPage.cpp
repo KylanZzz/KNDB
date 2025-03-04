@@ -61,22 +61,6 @@ SchemaPage::SchemaPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     assert (offset <= cts::PG_SZ);
 }
 
-//vector<variants> SchemaPage::getTableTypes(string table_name) {
-//    if (table_name.length() + 1 > db_sizeof<string>())
-//        throw std::invalid_argument("Name is too long");
-//
-//    if (table_name.empty())
-//        throw std::invalid_argument("Name cannot be empty");
-//
-//    for (int i = 0; i < m_tables.size(); ++i) {
-//        if (m_tables[i].name == table_name) {
-//            return m_tables[i].types;
-//        }
-//    }
-//
-//    throw std::invalid_argument("Table name does not exist in schema");
-//}
-
 size_t SchemaPage::getNumTables() {
     return m_tables.size();
 }

@@ -23,6 +23,26 @@ TEST_F(PagerTest, ConstructPagerCreatesSchemaPage) {
     IOHandler ioHandler("testfile.db");
     Pager pager(ioHandler);
     ASSERT_NO_THROW(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO));
+    ASSERT_EQ(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).getNumTables(), 0);
+    std::unordered_map<string, size_t> mp;
+    ASSERT_EQ(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).getTables(), mp);
+    ASSERT_EQ(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).getPageID(), cts::SCHEMA_PAGE_NO);
+}
+
+TEST_F(PagerTest, SchemaPageWorksAfterSerializing) {
+    {
+        IOHandler ioHandler("testfile.db");
+        Pager pager(ioHandler);
+        pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).addTable("MyTable", 3);
+        pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).addTable("AnotherTable", 4);
+    }
+
+    IOHandler ioHandler("testfile.db");
+    Pager pager(ioHandler);
+    ASSERT_EQ(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).getNumTables(), 2);
+    auto tables = pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).getTables();
+    std::unordered_map<string, size_t> expected = {{"MyTable", 3}, {"AnotherTable", 4}};
+    ASSERT_EQ(tables, expected);
 }
 
 TEST_F(PagerTest, CreateNewPageAllocatesUniquePageID) {
@@ -214,7 +234,7 @@ TEST_F(PagerTest, FreeAllPagesAndReallocate) {
         Pager pager(ioHandler);
 
         // Allocate a bunch of pages
-        for (size_t i = 0; i < FSMPage::getBlocksInPage() + 500; ++i) {
+        for (size_t i = 0; i < std::min(FSMPage::getBlocksInPage() + 500, cts::MAX_BLOCKS - 100); ++i) {
             auto& schemaPage = pager.createNewPage<SchemaPage>();
             firstBatch.push_back(schemaPage.getPageID());
         }
@@ -225,7 +245,7 @@ TEST_F(PagerTest, FreeAllPagesAndReallocate) {
         }
 
         // Allocate again and ensure IDs are still valid
-        for (size_t i = 0; i < FSMPage::getBlocksInPage() + 500; ++i) {
+        for (size_t i = 0; i < std::min(FSMPage::getBlocksInPage() + 500, cts::MAX_BLOCKS - 100); ++i) {
             auto& schemaPage = pager.createNewPage<SchemaPage>();
             secondBatch.push_back(schemaPage.getPageID());
         }

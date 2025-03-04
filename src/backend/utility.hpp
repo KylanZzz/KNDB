@@ -111,26 +111,4 @@ inline size_t get_page_type_id<TablePage>() {
     return page_type_conversion_id::TABLE_PAGE;
 }
 
-template <typename T>
-inline void serialize(ByteVec& dest, size_t offset, const T& val) {
-    memcpy(dest.data() + offset, &val, db_sizeof<T>());
-}
-
-template <>
-inline void serialize<string>(ByteVec& dest, size_t offset, const string& val) {
-    memcpy(dest.data() + offset, val.data(), db_sizeof<string>());
-}
-
-template <typename T>
-inline void deserialize(ByteVec& dest, size_t offset, T& val) {
-    memcpy(&val, dest.data() + offset, db_sizeof<T>());
-}
-
-template <>
-inline void deserialize<string>(ByteVec& dest, size_t offset, string& val) {
-    char arr[db_sizeof<string>()];
-    memcpy(arr, dest.data() + offset, db_sizeof<string>());
-    val = string(arr);
-}
-
 #endif //KNDB_UTILITY_HPP

@@ -20,7 +20,7 @@ template void Pager::freePage<FSMPage>(size_t pageID);
 template void Pager::freePage<SchemaPage>(size_t pageID);
 
 Pager::Pager(IOHandler &ioHandler) : m_ioHandler(ioHandler) {
-    // db has just been created, we need to init first FSM page
+    // db has just been created, we need to init first FSM page & schema page
     if (m_ioHandler.getNumBlocks() == 0) {
         // create FSMPage
         int pgid = m_ioHandler.createNewBlock();
@@ -28,7 +28,8 @@ Pager::Pager(IOHandler &ioHandler) : m_ioHandler(ioHandler) {
         initFSMPage(cts::FSM_PAGE_NO);
 
         // create SchemaPage
-        assert(createNewPage<SchemaPage>().getPageID() == cts::SCHEMA_PAGE_NO);
+        size_t spgid = createNewPage<SchemaPage>().getPageID();
+        assert(spgid == cts::SCHEMA_PAGE_NO);
     }
 }
 

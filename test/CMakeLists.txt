@@ -14,6 +14,7 @@ add_executable(backend_test
         fsmpage_test.cpp
         schemapage_test.cpp
         pager_test.cpp
+        tablepage_test.cpp
 )
 
 # Link against backend library

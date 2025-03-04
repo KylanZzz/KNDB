@@ -18,6 +18,8 @@ add_library(backend STATIC
         constants.hpp
         TablePage.cpp
         TablePage.hpp
+        BtreePage.cpp
+        BtreePage.hpp
 )
 
 target_include_directories(backend PUBLIC ${CMAKE_SOURCE_DIR}/src/backend)
