@@ -24,12 +24,12 @@ using namespace kndb_types;
 class Schema {
 public:
     /**
-     * Constructs a Schema with a reference to a pager. It assumes that a SchemaPage has already
-     * been constructed with pageID SCHEMA_PAGE_NO.
+     * Constructs a schema from an SchemaPage.
      *
+     * @param schemaPageID the pageID that contains the information for the Schema.
      * @param pgr The pager.
      */
-    Schema(Pager& pgr);
+    Schema(Pager& pgr, size_t schemaPageID);
 
     /**
      * Creates a table in the Schema.
@@ -115,6 +115,7 @@ private:
 
     Pager& m_pager;
     vector<std::unique_ptr<Table>> m_tables;
+    size_t m_schemaPageID;
 };
 
 

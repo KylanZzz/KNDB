@@ -10,14 +10,14 @@
 #define T_PAGE m_pager.getPage<TablePage>(m_tablePageID)
 
 // this assumes that table already exists
-Table::Table(string tableName, Pager &pgr, size_t tablePageId) : m_pager(pgr), m_tablePageID
-        (tablePageId), m_name(std::move(tableName)) {}
+Table::Table(string name, Pager &pgr, size_t tablePageId) : m_pager(pgr), m_tablePageID
+        (tablePageId), m_name(name) {}
 
 // this is creating a new table
-Table::Table(string tableName, Pager &pgr, size_t tablePageId, vector<variants> types) :
-m_pager(pgr), m_name(std::move(tableName)), m_tablePageID(tablePageId) {
+Table::Table(string name, Pager &pgr, size_t tablePageId, vector<variants> types) :
+        m_pager(pgr), m_tablePageID(tablePageId), m_name(name) {
 
-    m_btree = std::make_unique<Btree>(types, m_tablePageID, pgr);
+    m_btree = std::make_unique<Btree>(types, m_pager.createNewPage<BtreePage>().getPageID(), pgr);
 
     // initialize tablePage
     T_PAGE.init(types, m_btree->getRootPageID());

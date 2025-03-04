@@ -14,16 +14,16 @@ using namespace kndb_types;
 
 class Table {
 public:
-    // this assumes that table already exists
-    Table(string tableName, Pager& pgr, size_t tablePageId);
+    // Constructs a Table from an existing TablePage
+    Table(string name, Pager& pgr, size_t tablePageId);
 
-    // this is creating a new table
-    Table(string tableName, Pager& pgr, size_t tablePageId, vector<variants> types);
+    // Constructs a new Table with the given TablePage and list of types. It assumes that
+    // TablePage has been created but NOT initialized yet.
+    Table(string name, Pager& pgr, size_t tablePageId, vector<variants> types);
 
     // deletes itself
     void dropTable();
 
-    // get name of table
     string getName();
 
     size_t getNumTuples();
@@ -42,8 +42,8 @@ public:
 private:
     Pager& m_pager;
     std::unique_ptr<Btree> m_btree;
-    string m_name;
     size_t m_tablePageID;
+    string m_name;
 };
 
 

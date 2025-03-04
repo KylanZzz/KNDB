@@ -3,13 +3,11 @@
 //
 
 #include "Schema.hpp"
-#include "constants.hpp"
 #include "BtreePage.hpp"
 
-#define S_PAGE m_pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO)
+#define S_PAGE m_pager.getPage<SchemaPage>(m_schemaPageID)
 
-Schema::Schema(Pager &pgr) : m_pager(pgr) {
-
+Schema::Schema(Pager &pgr, size_t schemaPageID) : m_pager(pgr), m_schemaPageID(schemaPageID) {
     // add existing tables
     for (const auto &[name, pageID]: S_PAGE.getTables())
         m_tables.emplace_back(std::make_unique<Table>(name, m_pager, pageID));
@@ -60,8 +58,8 @@ void Schema::dropTable(string name) {
 
 vector<string> Schema::getTableNames() {
     vector<string> res;
-    for (auto &table: m_tables)
-        res.push_back(table->getName());
+    for (auto &table: S_PAGE.getTables())
+        res.push_back(table.first);
     return res;
 }
 
