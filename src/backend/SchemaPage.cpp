@@ -30,21 +30,21 @@ SchemaPage::SchemaPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     size_t offset = 0;
 
     size_t page_type_id, num_tables;
-    serialize(page_type_id, bytes, offset);
+    deserialize(page_type_id, bytes, offset);
 
     // check if page type is correct
     if (page_type_id != get_page_type_id<SchemaPage>())
         throw std::runtime_error("page_type_id does not match any valid page type");
 
     // deserialize # of tables
-    serialize(num_tables, bytes, offset);
+    deserialize(num_tables, bytes, offset);
 
     // deserialize each table individually
     for (int i = 0; i < num_tables; ++i) {
         table_descriptor tab_desc;
 
-        serialize(tab_desc.name, bytes, offset);
-        serialize(tab_desc.pageID, bytes, offset);
+        deserialize(tab_desc.name, bytes, offset);
+        deserialize(tab_desc.pageID, bytes, offset);
 
         m_tables.push_back(tab_desc);
     }
@@ -86,17 +86,17 @@ void SchemaPage::toBytes(ByteVec &vec) {
 
     // deserialize page_type_id
     size_t page_type_id = get_page_type_id<SchemaPage>();
-    deserialize(page_type_id, vec, offset);
+    serialize(page_type_id, vec, offset);
 
     // deserialize # of tables
     size_t num_tables = m_tables.size();
-    deserialize(num_tables, vec, offset);
+    serialize(num_tables, vec, offset);
 
     // deserialize each table
     for (const auto &tab_desc: m_tables) {
-        deserialize(tab_desc.name, vec, offset);
+        serialize(tab_desc.name, vec, offset);
 
-        deserialize(tab_desc.pageID, vec, offset);
+        serialize(tab_desc.pageID, vec, offset);
     }
 }
 
@@ -107,8 +107,8 @@ void SchemaPage::addTable(string name, size_t pageID) {
     if (name.empty())
         throw std::invalid_argument("Name cannot be empty");
 
-    for (int i = 0; i < m_tables.size(); ++i) {
-        if (m_tables[i].name == name) {
+    for (auto & m_table : m_tables) {
+        if (m_table.name == name) {
             throw std::invalid_argument("Table name already exists");
         }
     }
@@ -122,7 +122,7 @@ void SchemaPage::addTable(string name, size_t pageID) {
     m_tables.push_back(std::move(new_table));
 }
 
-void SchemaPage::removeTable(string targ_name) {
+void SchemaPage::removeTable(const string& targ_name) {
     if (targ_name.length() + 1 > db_sizeof<string>())
         throw std::invalid_argument("Name is too long");
 

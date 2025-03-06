@@ -121,7 +121,8 @@ TEST_F(SchemaPageTest, AddingTableBeyondCapacityThrows) {
 
     size_t pageID = 5;
     while (used_space + 32 + 8 <= max_space) {
-        schema.addTable("Table" + std::to_string(pageID), pageID++);
+        schema.addTable("Table" + std::to_string(pageID), pageID);
+        pageID++;
         used_space += 32 + 8; // 32 (name) + 8 (pageID)
     }
 

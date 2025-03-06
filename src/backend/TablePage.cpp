@@ -11,30 +11,30 @@ TablePage::TablePage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     size_t offset = 0;
 
     size_t page_type_id, num_types, type_id;
-    serialize(page_type_id, bytes, offset);
+    deserialize(page_type_id, bytes, offset);
 
     // check if page type is correct
     if (page_type_id != get_page_type_id<TablePage>())
         throw std::runtime_error("page_type_id does not match page type");
 
     // deserialize # of types
-    serialize(num_types, bytes, offset);
+    deserialize(num_types, bytes, offset);
 
     // page has not been initialized yet, since tuples cannot be empty
     if (num_types == 0)
         throw std::runtime_error("Page has not been initialized yet, has no types");
 
-    // serialize types
+    // deserialize types
     for (int j = 0; j < num_types; ++j) {
-        serialize(type_id, bytes, offset);
+        deserialize(type_id, bytes, offset);
         m_types.push_back(type_id_to_variant(type_id));
     }
 
     // deserialize btree page id
-    serialize(m_btreePageID, bytes, offset);
+    deserialize(m_btreePageID, bytes, offset);
 
     // deserialize numTuples
-    serialize(m_numTuples, bytes, offset);
+    deserialize(m_numTuples, bytes, offset);
 
     assert(offset <= cts::PG_SZ);
 }
@@ -81,23 +81,23 @@ void TablePage::toBytes(ByteVec &vec) {
 
     // serialize page_type_id
     size_t page_type_id = get_page_type_id<TablePage>();
-    deserialize(page_type_id, vec, offset);
+    serialize(page_type_id, vec, offset);
 
     // serialize # of types
     size_t numTypes = m_types.size();
-    deserialize(numTypes, vec, offset);
+    serialize(numTypes, vec, offset);
 
     // serialize list of types in each table
     for (int j = 0; j < numTypes; ++j) {
         size_t type_id = variant_to_type_id(m_types[j]);
-        deserialize(type_id, vec, offset);
+        serialize(type_id, vec, offset);
     }
 
     // serialize btree page id
-    deserialize(m_btreePageID, vec, offset);
+    serialize(m_btreePageID, vec, offset);
 
     // serialize num tuples
-    deserialize(m_numTuples, vec, offset);
+    serialize(m_numTuples, vec, offset);
 
     assert (offset <= cts::PG_SZ);
 }

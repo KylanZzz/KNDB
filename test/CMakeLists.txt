@@ -16,6 +16,7 @@ add_executable(backend_test
         pager_test.cpp
         tablepage_test.cpp
         utility_test.cpp
+        btreepage_test.cpp
 )
 
 # Link against backend library

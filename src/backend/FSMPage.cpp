@@ -29,17 +29,17 @@ FSMPage::FSMPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     size_t offset = 0;
 
     size_t page_type_id;
-    serialize(page_type_id, bytes, offset);
+    deserialize(page_type_id, bytes, offset);
 
     // check if page type is correct
     if (page_type_id != get_page_type_id<FSMPage>())
         throw std::runtime_error("page_type_id does not match page type");
 
     // deserialize next Page id
-    serialize(m_nextPageID, bytes, offset);
+    deserialize(m_nextPageID, bytes, offset);
 
     // deserialize free blocks count
-    serialize(m_freeBlocks, bytes, offset);
+    deserialize(m_freeBlocks, bytes, offset);
 
     // rest of the page is for bitmap
     m_bitmap.resize(cts::PG_SZ - offset);
@@ -112,13 +112,13 @@ void FSMPage::toBytes(ByteVec &vec) {
 
     // serialize page_type_id
     size_t page_type_id = get_page_type_id<FSMPage>();
-    deserialize(page_type_id, vec, offset);
+    serialize(page_type_id, vec, offset);
 
     // serialize next page ID
-    deserialize(m_nextPageID, vec, offset);
+    serialize(m_nextPageID, vec, offset);
 
     // serialize free blocks count
-    deserialize(m_freeBlocks, vec, offset);
+    serialize(m_freeBlocks, vec, offset);
 
     // serialize bitmap
     memcpy(vec.data() + offset, m_bitmap.data(), m_bitmap.size());

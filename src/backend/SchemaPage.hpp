@@ -60,7 +60,7 @@ public:
      * @brief Removes a table from the schema.
      * @param name The name of the table to remove.
      */
-    void removeTable(string name);
+    void removeTable(const string& name);
 
     void toBytes(ByteVec &vec) override;
 

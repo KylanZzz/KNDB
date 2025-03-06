@@ -121,42 +121,42 @@ inline size_t get_page_type_id<BtreeNodePage>() {
 }
 
 template<typename T>
-inline void serialize(T &src, const ByteVec &bytes, size_t &offset) {
+inline void deserialize(T &src, const ByteVec &bytes, size_t &offset) {
     memcpy(&src, bytes.data() + offset, db_sizeof<T>());
     offset += db_sizeof<T>();
 }
 
-inline void serialize(string &src, const ByteVec &bytes, size_t &offset) {
+inline void deserialize(string &src, const ByteVec &bytes, size_t &offset) {
     char buf[db_sizeof<std::string>()];
     memcpy(buf, bytes.data() + offset, db_sizeof<std::string>());
     src = string(buf);
     offset += db_sizeof<std::string>();
 }
 
-inline void serialize(variants &src, const ByteVec &bytes, size_t &offset, const variants &type) {
+inline void deserialize(variants &src, const ByteVec &bytes, size_t &offset, const variants &type) {
     std::visit([&bytes, &offset, &src](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         T buf;
-        serialize(buf, bytes, offset);
+        deserialize(buf, bytes, offset);
         src = buf;
     }, type);
 }
 
 template<typename T>
-inline void deserialize(const T &val, ByteVec &bytes, size_t &offset) {
+inline void serialize(const T &val, ByteVec &bytes, size_t &offset) {
     memcpy(bytes.data() + offset, &val, db_sizeof<T>());
     offset += db_sizeof<T>();
 }
 
-inline void deserialize(const std::string &val, ByteVec &bytes, size_t &offset) {
+inline void serialize(const std::string &val, ByteVec &bytes, size_t &offset) {
     memcpy(bytes.data() + offset, val.data(), db_sizeof<std::string>());
     offset += db_sizeof<std::string>();
 }
 
-inline void deserialize(const variants &val, ByteVec &bytes, size_t &offset) {
+inline void serialize(const variants &val, ByteVec &bytes, size_t &offset) {
     std::visit([&bytes, &offset](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
-        deserialize(arg, bytes, offset);
+        serialize(arg, bytes, offset);
     }, val);
 }
 

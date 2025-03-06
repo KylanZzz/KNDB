@@ -26,7 +26,7 @@ TEST(UtilityTest, serializationOfVariantsWork) {
     ByteVec vec(1000);
     vector<variants> list = {3, "Kylan", "Apple", double(4.1323), 'a', float(3.14159)};
     for (const auto& item: list) {
-        deserialize(item, vec, offset);
+        serialize(item, vec, offset);
     }
 
     offset = 0;
@@ -34,7 +34,7 @@ TEST(UtilityTest, serializationOfVariantsWork) {
     vector<variants> res;
     for (const auto& type: types) {
         variants temp;
-        serialize(temp, vec, offset, type);
+        deserialize(temp, vec, offset, type);
         res.push_back(temp);
     }
 

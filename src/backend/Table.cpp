@@ -23,7 +23,7 @@ Table::Table(string name, Pager &pgr, size_t tablePageId) : m_pager(pgr), m_tabl
 
         // new btree node has no parent ptr
         m_pager.createNewPage<BtreeNodePage>(minDeg, cts::SIZE_T_OUT_OF_BOUNDS, true, true,
-                                             T_PAGE.getTypes());
+                                             T_PAGE.getTypes(), T_PAGE.getTypes()[0]);
     }
 
     m_btree = std::make_unique<Btree>(T_PAGE.getTypes(), T_PAGE.getBtreePageID(), pgr);
