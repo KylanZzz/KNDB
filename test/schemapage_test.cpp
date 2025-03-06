@@ -22,20 +22,20 @@ struct SchemaPageTest : testing::Test {
 };
 
 TEST_F(SchemaPageTest, NewlyCreatedSchemaHasNoTables) {
-    SchemaPage schema(*vec, 1);
+    SchemaPage schema(1);
     ASSERT_EQ(schema.getNumTables(), 0);
     ASSERT_TRUE(schema.getTables().empty());
 }
 
 TEST_F(SchemaPageTest, AddTableIncreasesTableCount) {
-    SchemaPage schema(*vec, 1);
+    SchemaPage schema(1);
     schema.addTable("Users", 5);
     ASSERT_EQ(schema.getNumTables(), 1);
     ASSERT_EQ(schema.getTables().at("Users"), 5);
 }
 
 TEST_F(SchemaPageTest, RemoveTableDecreasesTableCount) {
-    SchemaPage schema(*vec, 1);
+    SchemaPage schema(1);
     schema.addTable("Users", 5);
     schema.removeTable("Users");
     ASSERT_EQ(schema.getNumTables(), 0);
@@ -43,7 +43,7 @@ TEST_F(SchemaPageTest, RemoveTableDecreasesTableCount) {
 }
 
 TEST_F(SchemaPageTest, SerializationPreservesTables) {
-    SchemaPage original(*vec, 1);
+    SchemaPage original(1);
     original.addTable("Users", 5);
     original.addTable("Orders", 10);
 
@@ -57,7 +57,7 @@ TEST_F(SchemaPageTest, SerializationPreservesTables) {
 }
 
 TEST_F(SchemaPageTest, AddRemoveTablesWithSerialization) {
-    SchemaPage original(*vec, 1);
+    SchemaPage original(1);
     original.addTable("Users", 5);
     original.addTable("Orders", 10);
     original.removeTable("Users");
@@ -73,7 +73,7 @@ TEST_F(SchemaPageTest, AddRemoveTablesWithSerialization) {
 }
 
 TEST_F(SchemaPageTest, SerializeAfterAddingAndRemovingSameTable) {
-    SchemaPage original(*vec, 1);
+    SchemaPage original(1);
     original.addTable("TempTable", 50);
     original.removeTable("TempTable");
     original.addTable("TempTable", 60);
@@ -87,18 +87,18 @@ TEST_F(SchemaPageTest, SerializeAfterAddingAndRemovingSameTable) {
 }
 
 TEST_F(SchemaPageTest, AddTableThrowsIfNameExists) {
-    SchemaPage schema(*vec, 1);
+    SchemaPage schema(1);
     schema.addTable("Products", 15);
     ASSERT_THROW(schema.addTable("Products", 20), std::invalid_argument);
 }
 
 TEST_F(SchemaPageTest, AddTableWithEmptyNameThrows) {
-    SchemaPage schema(*vec, 1);
+    SchemaPage schema(1);
     ASSERT_THROW(schema.addTable("", 5), std::invalid_argument);
 }
 
 TEST_F(SchemaPageTest, AddTableWithMaxAndExceedingNameLength) {
-    SchemaPage schema(*vec, 1);
+    SchemaPage schema(1);
     std::string maxLengthName(31, 'A'); // 31 characters, should work
     std::string tooLongName(32, 'B');   // 32 characters, should throw
 
@@ -115,7 +115,7 @@ TEST_F(SchemaPageTest, AddTableWithMaxAndExceedingNameLength) {
 }
 
 TEST_F(SchemaPageTest, AddingTableBeyondCapacityThrows) {
-    SchemaPage schema(*vec, 1);
+    SchemaPage schema(1);
     size_t used_space = 16; // Initial schema space
     size_t max_space = cts::PG_SZ;
 
@@ -130,7 +130,7 @@ TEST_F(SchemaPageTest, AddingTableBeyondCapacityThrows) {
 }
 
 TEST_F(SchemaPageTest, SerializationPreservesEmptySchema) {
-    SchemaPage original(*vec, 1);
+    SchemaPage original(1);
     ByteVec serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
@@ -140,7 +140,7 @@ TEST_F(SchemaPageTest, SerializationPreservesEmptySchema) {
 }
 
 TEST_F(SchemaPageTest, SerializationWithMultipleOperations) {
-    SchemaPage original(*vec, 1);
+    SchemaPage original(1);
     original.addTable("Users", 5);
     original.addTable("Orders", 10);
     original.removeTable("Users");

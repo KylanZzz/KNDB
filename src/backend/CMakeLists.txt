@@ -1,7 +1,6 @@
 add_library(backend STATIC
         Table.cpp
         Table.hpp
-        Pager.cpp
         Pager.hpp
         Btree.cpp
         Btree.hpp
@@ -18,8 +17,8 @@ add_library(backend STATIC
         constants.hpp
         TablePage.cpp
         TablePage.hpp
-        BtreePage.cpp
-        BtreePage.hpp
+        BtreeNodePage.cpp
+        BtreeNodePage.hpp
 )
 
 target_include_directories(backend PUBLIC ${CMAKE_SOURCE_DIR}/src/backend)

@@ -3,7 +3,7 @@
 //
 
 #include "Schema.hpp"
-#include "BtreePage.hpp"
+#include "BtreeNodePage.hpp"
 
 #define S_PAGE m_pager.getPage<SchemaPage>(m_schemaPageID)
 
@@ -24,14 +24,13 @@ void Schema::createTable(string name, vector<variants> types) {
         if (table->getName() == name)
             throw std::invalid_argument("Table with that name already exists");
 
-    size_t tabID = m_pager.createNewPage<TablePage>().getPageID();
+    size_t tabID = m_pager.createNewPage<TablePage>(types, cts::SIZE_T_OUT_OF_BOUNDS).getPageID();
     S_PAGE.addTable(name, tabID);
 
     m_tables.emplace_back(std::make_unique<Table>(
             name,
             m_pager,
-            tabID,
-            types
+            tabID
     ));
 }
 
@@ -71,25 +70,17 @@ void Schema::removeTuple(string table, variants key) {
 }
 
 void Schema::updateTuple(string table, vector<variants> values) {
-    for (auto &tab: m_tables) {
-        if (tab->getName() == table) {
-            if (!sameTypes(values, tab->getTypes()))
-                throw std::invalid_argument("Incorrect types provided as values");
+    for (auto &tab: m_tables)
+        if (tab->getName() == table)
             return tab->updateTuple(values);
-        }
-    }
 
     throw std::invalid_argument("Table name not found in schema.");
 }
 
 void Schema::insertTuple(string table, vector<variants> values) {
-    for (auto &tab: m_tables) {
-        if (tab->getName() == table) {
-            if (!sameTypes(values, tab->getTypes()))
-                throw std::invalid_argument("Incorrect types provided as values");
+    for (auto &tab: m_tables)
+        if (tab->getName() == table)
             return tab->createTuple(values);
-        }
-    }
 
     throw std::invalid_argument("Table name not found in schema.");
 }
@@ -104,6 +95,8 @@ vector<variants> Schema::getTuple(string table, variants key) {
 size_t Schema::getNumTuples(string table) {
     for (auto &tab: m_tables)
         if (tab->getName() == table) return tab->getNumTuples();
+
+    throw std::invalid_argument("Table name not found in schema.");
 }
 
 bool Schema::sameTypes(vector<variants> vec1, vector<variants> vec2) {

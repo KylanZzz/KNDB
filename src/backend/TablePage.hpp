@@ -15,18 +15,27 @@
 class TablePage : public Page {
 public:
     /**
-     * Creates a TablePage from a byte vector.
+     * Loads a TablePage from a byte vector.
      * @param bytes The byte vector containing table data.
      * @param pageID The on-disk page number of this table page.
      */
     TablePage(ByteVec &bytes, size_t pageID);
 
     /**
+     * Creates an empty TablePage.
+     * @param types List of types that this table contains.
+     * @param btreePageID The root node pageID of the btree that stores this table's data.
+     * @param pageID The on-disk page number of this table page.
+     * @throws std::invalid_argument if list of types is empty or too long.
+     */
+    TablePage(const vector<variants>& types, size_t btreePageID, size_t pageID);
+
+    /**
      * Get the types that this table stores.
      * @throws std::runtime_error if the TablePage has not been initialized yet.
      * @return A list of all the types.
      */
-    vector<variants> getTypes();
+    const vector<variants>& getTypes();
 
     /**
      * @throws std::runtime_error if the TablePage has not been initialized yet.
@@ -53,15 +62,6 @@ public:
     void removeTuple();
 
     /**
-     * Initializes this table page to contain a given list of types and btree root node pageID.
-     * @param types the list of types that this table page represents.
-     * @throws std::runtime_error if the TablePage has already been initialized.
-     * @throws std::invalid_argument if list of types is empty or too long.
-     * @param btreePageID the pageID of the btree root node which contains this table's data.
-     */
-    void init(const vector<variants> &types, size_t btreePageID);
-
-    /**
      * Changes the page ID of the table's btree root.
      * @param btreePageID the new page ID.
      */
@@ -73,7 +73,6 @@ private:
     vector<variants> m_types;
     size_t m_btreePageID;
     size_t m_numTuples;
-    bool m_isInit{false};
 };
 
 

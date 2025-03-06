@@ -29,31 +29,22 @@ Format:
 SchemaPage::SchemaPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     size_t offset = 0;
 
+    size_t page_type_id, num_tables;
+    serialize(page_type_id, bytes, offset);
+
     // check if page type is correct
-    size_t page_type_id;
-    memcpy(&page_type_id, bytes.data() + offset, db_sizeof<size_t>());
     if (page_type_id != get_page_type_id<SchemaPage>())
         throw std::runtime_error("page_type_id does not match any valid page type");
-    offset += db_sizeof<size_t>();
 
     // deserialize # of tables
-    size_t num_tables;
-    memcpy(&num_tables, bytes.data() + offset, db_sizeof<size_t>());
-    offset += db_sizeof<size_t>();
+    serialize(num_tables, bytes, offset);
 
     // deserialize each table individually
     for (int i = 0; i < num_tables; ++i) {
         table_descriptor tab_desc;
 
-        // we use c_str as a buffer, then convert to a std::string internally
-        // because std::string has weird behavior when copying from .data() directly
-        char c_str[db_sizeof<string>()];
-        memcpy(c_str, bytes.data() + offset, db_sizeof<string>());
-        tab_desc.name = string(c_str);
-        offset += db_sizeof<string>();
-
-        memcpy(&tab_desc.pageID, bytes.data() + offset, db_sizeof<size_t>());
-        offset += db_sizeof<size_t>();
+        serialize(tab_desc.name, bytes, offset);
+        serialize(tab_desc.pageID, bytes, offset);
 
         m_tables.push_back(tab_desc);
     }
@@ -61,13 +52,15 @@ SchemaPage::SchemaPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     assert (offset <= cts::PG_SZ);
 }
 
+SchemaPage::SchemaPage(size_t pageID) : Page(pageID), m_tables(0) {}
+
 size_t SchemaPage::getNumTables() {
     return m_tables.size();
 }
 
 std::unordered_map<string, size_t> SchemaPage::getTables() {
     std::unordered_map<string, size_t> res;
-    for (const auto& table: m_tables)
+    for (const auto &table: m_tables)
         res[table.name] = table.pageID;
     return res;
 }
@@ -78,36 +71,32 @@ size_t SchemaPage::freeSpace() {
     used += db_sizeof<size_t>(); // # tables
 
     // table info
-    for (const auto& table: m_tables) {
-        used += db_sizeof<string>();
-        used += db_sizeof<size_t>();
+    for (const auto &table: m_tables) {
+        used += db_sizeof<>(table.name);
+        used += db_sizeof<>(table.pageID);
     }
 
     return cts::PG_SZ - used;
 }
 
-void SchemaPage::toBytes(ByteVec& vec) {
+void SchemaPage::toBytes(ByteVec &vec) {
     assert(vec.size() == cts::PG_SZ);
 
     size_t offset = 0;
 
-    // serialize page_type_id
+    // deserialize page_type_id
     size_t page_type_id = get_page_type_id<SchemaPage>();
-    memcpy(vec.data() + offset, &page_type_id, db_sizeof<size_t>());
-    offset += db_sizeof<size_t>();
+    deserialize(page_type_id, vec, offset);
 
-    // serialize # of tables
+    // deserialize # of tables
     size_t num_tables = m_tables.size();
-    memcpy(vec.data() + offset, &num_tables, db_sizeof<size_t>());
-    offset += db_sizeof<size_t>();
+    deserialize(num_tables, vec, offset);
 
-    // serialize each table
-    for (const auto& tab_desc: m_tables) {
-        memcpy(vec.data() + offset, tab_desc.name.data(), db_sizeof<string>());
-        offset += db_sizeof<string>();
+    // deserialize each table
+    for (const auto &tab_desc: m_tables) {
+        deserialize(tab_desc.name, vec, offset);
 
-        memcpy(vec.data() + offset, &tab_desc.pageID, db_sizeof<size_t>());
-        offset += db_sizeof<size_t>();
+        deserialize(tab_desc.pageID, vec, offset);
     }
 }
 

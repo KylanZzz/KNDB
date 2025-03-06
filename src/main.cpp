@@ -8,6 +8,7 @@
 #include "SchemaPage.hpp"
 #include "FSMPage.hpp"
 #include "utility.hpp"
+#include "Schema.hpp"
 
 using std::cout;
 using std::endl;
@@ -15,20 +16,23 @@ using std::endl;
 #define DEBUG(msg) cout << "DEBUG: " << msg << endl
 
 int main() {
-    std::ofstream file("kylan_test_file.db", std::ios::trunc);
+    std::ofstream file(cts::DATABASE_NAME, std::ios::trunc);
     file.close();
 
-    IOHandler ioHandler("kylan_test_file.db");
-    DEBUG(ioHandler.getNumBlocks());
+    IOHandler ioHandler(cts::DATABASE_NAME);
     Pager pager(ioHandler);
-    DEBUG(ioHandler.getNumBlocks());
 
-    auto sPage = pager.createNewPage<FSMPage>();
-
-    DEBUG(ioHandler.getNumBlocks());
-
-    vector<variants> vec{int(), char(), string(), string(), int(), double()};
-    DEBUG(db_sizeof(vec));
+    // Check if db file exists. If not, create one
+    try {
+        pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO);
+    } catch (std::invalid_argument& e) {
+        DEBUG(e.what());
+        DEBUG("Creating schema page for database");
+        if (pager.createNewPage<SchemaPage>().getPageID() != cts::SCHEMA_PAGE_NO)
+            throw std::runtime_error("Error while creating schema page");
+    } catch (std::exception& e) {
+        DEBUG(e.what());
+    }
 
     return 0;
 }

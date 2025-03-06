@@ -14,12 +14,13 @@ using namespace kndb_types;
 
 class Table {
 public:
-    // Constructs a Table from an existing TablePage
+    // Constructs a Table from a TablePage. If there is no corresponding BtreeNode, then it will
+    // initialize one.
     Table(string name, Pager& pgr, size_t tablePageId);
 
-    // Constructs a new Table with the given TablePage and list of types. It assumes that
-    // TablePage has been created but NOT initialized yet.
-    Table(string name, Pager& pgr, size_t tablePageId, vector<variants> types);
+//    // Constructs a new Table with the given TablePage and list of types. It assumes that
+//    // TablePage has been created but NOT initialized yet.
+//    Table(string name, Pager& pgr, size_t tablePageId, vector<variants> types);
 
     // deletes itself
     void dropTable();

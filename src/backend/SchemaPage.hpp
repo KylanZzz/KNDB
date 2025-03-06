@@ -23,11 +23,18 @@ class SchemaPage : public Page {
 public:
 
     /**
-     * @brief Constructs a SchemaPage from a byte vector.
+     * @brief Loads a SchemaPage from a byte vector.
      * @param bytes The byte vector containing schema data.
      * @param pageID The on-disk page number of this schema page.
      */
     SchemaPage(ByteVec &bytes, size_t pageID);
+
+    /**
+     * @brief Creates a new empty SchemaPage.
+     * @param bytes
+     * @param pageID
+     */
+    SchemaPage(size_t pageID);
 
     /**
      * @brief Gets the total number of tables in the schema.

@@ -19,9 +19,23 @@ struct PagerTest : testing::Test {
     }
 };
 
-TEST_F(PagerTest, ConstructPagerCreatesSchemaPage) {
+TEST_F(PagerTest, PagerThrowsWhenNotSchemaPage) {
     IOHandler ioHandler("testfile.db");
     Pager pager(ioHandler);
+    pager.createNewPage<FSMPage>();
+    ASSERT_THROW(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO), std::bad_cast);
+}
+
+TEST_F(PagerTest, PagerThrowsWhenNoSchemaPage) {
+    IOHandler ioHandler("testfile.db");
+    Pager pager(ioHandler);
+    ASSERT_THROW(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO), std::invalid_argument);
+}
+
+TEST_F(PagerTest, PagerCreatesSchemaPage) {
+    IOHandler ioHandler("testfile.db");
+    Pager pager(ioHandler);
+    pager.createNewPage<SchemaPage>();
     ASSERT_NO_THROW(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO));
     ASSERT_EQ(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).getNumTables(), 0);
     std::unordered_map<string, size_t> mp;
@@ -30,17 +44,19 @@ TEST_F(PagerTest, ConstructPagerCreatesSchemaPage) {
 }
 
 TEST_F(PagerTest, SchemaPageWorksAfterSerializing) {
+    size_t schemaPageID;
     {
         IOHandler ioHandler("testfile.db");
         Pager pager(ioHandler);
-        pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).addTable("MyTable", 3);
-        pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).addTable("AnotherTable", 4);
+        schemaPageID = pager.createNewPage<SchemaPage>().getPageID();
+        pager.getPage<SchemaPage>(schemaPageID).addTable("MyTable", 3);
+        pager.getPage<SchemaPage>(schemaPageID).addTable("AnotherTable", 4);
     }
 
     IOHandler ioHandler("testfile.db");
     Pager pager(ioHandler);
-    ASSERT_EQ(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).getNumTables(), 2);
-    auto tables = pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).getTables();
+    ASSERT_EQ(pager.getPage<SchemaPage>(schemaPageID).getNumTables(), 2);
+    auto tables = pager.getPage<SchemaPage>(schemaPageID).getTables();
     std::unordered_map<string, size_t> expected = {{"MyTable", 3}, {"AnotherTable", 4}};
     ASSERT_EQ(tables, expected);
 }
@@ -170,7 +186,7 @@ TEST_F(PagerTest, ThrowsIfExceedsMaxBlocks) {
         Pager pager(ioHandler);
 
         // subtract a hundred or so pages for bitmaps
-        for (size_t i = 0; i < cts::MAX_BLOCKS - (cts::MAX_BLOCKS / FSMPage::getBlocksInPage()) - 2; ++i) {
+        for (size_t i = 0; i < cts::MAX_BLOCKS - (cts::MAX_BLOCKS / FSMPage::getBlocksInPage()) - 1; ++i) {
             auto& schemaPage = pager.createNewPage<SchemaPage>();
             pageIDs.push_back(schemaPage.getPageID());
         }
@@ -347,4 +363,43 @@ TEST_F(PagerTest, SchemaPageHandlesLargeStringNames) {
 
     auto tables = reloadedSchemaPage.getTables();
     ASSERT_TRUE(tables.find(longTableName) != tables.end());
+}
+
+TEST_F(PagerTest, SimpleTablePageWorks) {
+    IOHandler ioHandler("testfile.db");
+    size_t pageID;
+
+    vector<variants> types = {string(), string(), int(), double(), float(), int()};
+    Pager pager(ioHandler);
+    pageID = pager.createNewPage<TablePage>(types, 5).getPageID();
+    ASSERT_EQ(pager.getPage<TablePage>(pageID).getTypes(), types);
+    ASSERT_EQ(pager.getPage<TablePage>(pageID).getPageID(), pageID);
+    ASSERT_EQ(pager.getPage<TablePage>(pageID).getNumTuples(), 0);
+    ASSERT_EQ(pager.getPage<TablePage>(pageID).getBtreePageID(), 5);
+
+    pager.getPage<TablePage>(pageID).setBtreePageID(100);
+    ASSERT_EQ(pager.getPage<TablePage>(pageID).getBtreePageID(), 100);
+    ASSERT_THROW(pager.getPage<TablePage>(pageID).removeTuple(), std::runtime_error);
+}
+
+TEST_F(PagerTest, TablePageWorksWithAddAndRemove) {
+    size_t pageID;
+    vector<variants> types = {string(), string(), int(), double(), float(), int()};
+    {
+        IOHandler ioHandler("testfile.db");
+        Pager pager(ioHandler);
+
+        pageID = pager.createNewPage<TablePage>(types, 5).getPageID();
+        pager.getPage<TablePage>(pageID).addTuple();
+        pager.getPage<TablePage>(pageID).addTuple();
+        pager.getPage<TablePage>(pageID).addTuple();
+    }
+
+    IOHandler ioHandler("testfile.db");
+    Pager pager(ioHandler);
+
+    ASSERT_EQ(pager.getPage<TablePage>(pageID).getNumTuples(), 3);
+    ASSERT_EQ(pager.getPage<TablePage>(pageID).getPageID(), pageID);
+    ASSERT_EQ(pager.getPage<TablePage>(pageID).getBtreePageID(), 5);
+    ASSERT_EQ(pager.getPage<TablePage>(pageID).getTypes(), types);
 }
