@@ -21,21 +21,20 @@ template<>
 inline size_t db_sizeof<std::string>() { return cts::STR_SZ; }
 
 template<typename T>
-inline size_t db_sizeof(T &) { return db_sizeof<T>(); }
+inline size_t db_sizeof(T &&) { return db_sizeof<std::decay_t<T>>(); }
 
-inline size_t db_sizeof(variants &val) {
+inline size_t db_sizeof(variants& val) {
     return std::visit([](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         return db_sizeof<T>();
     }, val);
 }
 
-inline size_t db_sizeof(vector<variants> &vec) {
-    size_t res = 0;
-    for (variants &var: vec) {
-        res += db_sizeof(var);
-    }
-    return res;
+inline size_t db_sizeof(const variants& val) {
+    return std::visit([](auto &&arg) {
+        using T = std::decay_t<decltype(arg)>;
+        return db_sizeof<T>();
+    }, val);
 }
 
 namespace variant_conversion_id {
@@ -50,7 +49,7 @@ namespace page_type_conversion_id {
     };
 }
 
-inline variants type_id_to_variant(size_t type_id) {
+inline variants type_id_to_variant(const size_t type_id) {
     switch (type_id) {
         case variant_conversion_id::CHAR:
             return char();
@@ -69,7 +68,7 @@ inline variants type_id_to_variant(size_t type_id) {
     }
 }
 
-inline size_t variant_to_type_id(variants v) {
+inline size_t variant_to_type_id(const variants& v) {
     size_t res = std::numeric_limits<size_t>::max();
 
     std::visit([&res](auto &&arg) {
@@ -121,20 +120,20 @@ inline size_t get_page_type_id<BtreeNodePage>() {
     return page_type_conversion_id::BTREE_NODE_PAGE;
 }
 
-template <typename T>
-inline void serialize(T& src, const ByteVec& bytes, size_t& offset) {
+template<typename T>
+inline void serialize(T &src, const ByteVec &bytes, size_t &offset) {
     memcpy(&src, bytes.data() + offset, db_sizeof<T>());
     offset += db_sizeof<T>();
 }
 
-inline void serialize(string& src, const ByteVec& bytes, size_t& offset) {
+inline void serialize(string &src, const ByteVec &bytes, size_t &offset) {
     char buf[db_sizeof<std::string>()];
     memcpy(buf, bytes.data() + offset, db_sizeof<std::string>());
     src = string(buf);
     offset += db_sizeof<std::string>();
 }
 
-inline void serialize(variants& src, const ByteVec& bytes, size_t& offset, const variants& type) {
+inline void serialize(variants &src, const ByteVec &bytes, size_t &offset, const variants &type) {
     std::visit([&bytes, &offset, &src](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         T buf;
@@ -143,18 +142,18 @@ inline void serialize(variants& src, const ByteVec& bytes, size_t& offset, const
     }, type);
 }
 
-template <typename T>
-inline void deserialize(const T& val, ByteVec& bytes, size_t& offset) {
+template<typename T>
+inline void deserialize(const T &val, ByteVec &bytes, size_t &offset) {
     memcpy(bytes.data() + offset, &val, db_sizeof<T>());
     offset += db_sizeof<T>();
 }
 
-inline void deserialize(const std::string& val, ByteVec& bytes, size_t& offset) {
+inline void deserialize(const std::string &val, ByteVec &bytes, size_t &offset) {
     memcpy(bytes.data() + offset, val.data(), db_sizeof<std::string>());
     offset += db_sizeof<std::string>();
 }
 
-inline void deserialize(const variants& val, ByteVec& bytes, size_t& offset) {
+inline void deserialize(const variants &val, ByteVec &bytes, size_t &offset) {
     std::visit([&bytes, &offset](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         deserialize(arg, bytes, offset);

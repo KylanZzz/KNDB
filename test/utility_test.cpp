@@ -13,23 +13,12 @@ TEST(UtilityTest, sizeOfVariantsWorks) {
     ASSERT_EQ(db_sizeof(s), sizeof(double));
     s = string();
     ASSERT_EQ(db_sizeof(s), cts::STR_SZ);
-}
 
-TEST(UtilityTest, sizeOfVariantsNonemptyVectorWorks) {
-    vector<variants> vec = {int(), int(), double(), string(), string(), float()};
-    size_t expected = sizeof(int) + sizeof(int) + sizeof(double) + sizeof(float) + cts::STR_SZ +
-            cts::STR_SZ;
-    ASSERT_EQ(db_sizeof(vec), expected);
-}
+    const variants c_s = int();
+    ASSERT_EQ(db_sizeof(c_s), sizeof(int));
 
-TEST(UtilityTest, sizeOfVariantsEmptyVectorWorks) {
-    vector<variants> vec = {};
-    ASSERT_EQ(db_sizeof(vec), 0);
-}
-
-TEST(UtilityTest, sizeOfVariantsSingleElementVectorWorks) {
-    vector<variants> vec = {int()};
-    ASSERT_EQ(db_sizeof(vec), sizeof(int));
+    const variants c_s2 = string();
+    ASSERT_EQ(db_sizeof(c_s2), cts::STR_SZ);
 }
 
 TEST(UtilityTest, serializationOfVariantsWork) {

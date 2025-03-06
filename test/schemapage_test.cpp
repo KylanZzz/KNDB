@@ -121,12 +121,18 @@ TEST_F(SchemaPageTest, AddingTableBeyondCapacityThrows) {
 
     size_t pageID = 5;
     while (used_space + 32 + 8 <= max_space) {
-        schema.addTable("Table" + std::to_string(pageID), pageID);
+        schema.addTable("Table" + std::to_string(pageID), pageID++);
         used_space += 32 + 8; // 32 (name) + 8 (pageID)
-        ++pageID;
     }
 
     ASSERT_THROW(schema.addTable("OverflowTable", pageID), std::runtime_error);
+
+    ByteVec bytes(cts::PG_SZ);
+    schema.toBytes(bytes);
+
+    SchemaPage s2(bytes, 1);
+    ASSERT_EQ(s2.getTables(), schema.getTables());
+    ASSERT_EQ(schema.getNumTables(), s2.getNumTables());
 }
 
 TEST_F(SchemaPageTest, SerializationPreservesEmptySchema) {
