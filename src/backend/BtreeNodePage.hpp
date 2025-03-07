@@ -40,8 +40,7 @@ public:
      * @param key Key associated with this node.
      * @param pageID Page ID of this node.
      */
-    BtreeNodePage(size_t minDeg, size_t parentID, bool is_root, bool is_leaf,
-                  const vector<variants> &types, variants key, size_t pageID);
+    BtreeNodePage(size_t minDeg, size_t parentID, bool is_root, bool is_leaf, size_t pageID);
 
     /**
      * @brief Retrieves child node IDs of this Btree node.
@@ -54,12 +53,6 @@ public:
      * @return A list of key-tuple pairs that represent a row in the database.
      */
     vector<cell> &getCells() { return m_cells; }
-
-    /**
-     * @brief Retrieves the types stored in each tuple.
-     * @return A list of types.
-     */
-    const vector<variants> &getTypes() { return m_types; }
 
     /**
      * @brief Retrieves the parent node ID.
@@ -83,13 +76,13 @@ public:
      * @brief Checks if the node is a leaf.
      * @return Reference to the boolean indicating if the node is a leaf.
      */
-    bool& isLeaf() { return m_leaf; }
+    bool &isLeaf() { return m_leaf; }
 
     /**
      * @brief Checks if the node is the root.
      * @return Reference to the boolean indicating if the node is the root.
      */
-    bool& isRoot() { return m_root; }
+    bool &isRoot() { return m_root; }
 
     /**
      * @brief Serializes the B-tree node into a byte vector.
@@ -102,8 +95,6 @@ private:
     size_t m_parentID;
     bool m_leaf;
     bool m_root;
-    variants m_key;
-    vector<variants> m_types;
     vector<size_t> m_children;
     vector<cell> m_cells;
 };

@@ -51,18 +51,22 @@ BtreeNodePage::BtreeNodePage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     deserialize(numCells, bytes, offset);
     m_cells.resize(numCells);
 
+    if (numCells == 0) return;
+
     // deserialize number of types
     deserialize(numTypes, bytes, offset);
 
     // deserialize key type
+    variants key;
     deserialize(key_type_id, bytes, offset);
-    m_key = type_id_to_variant(key_type_id);
+    key = type_id_to_variant(key_type_id);
 
     // deserialize tuple types
+    vector<variants> types;
     size_t type_id;
     for (int i = 0; i < numTypes; ++i) {
         deserialize(type_id, bytes, offset);
-        m_types.push_back(type_id_to_variant(type_id));
+        types.push_back(type_id_to_variant(type_id));
     }
 
     // deserialize cells
@@ -70,11 +74,11 @@ BtreeNodePage::BtreeNodePage(ByteVec &bytes, size_t pageID) : Page(pageID) {
         auto &cell = m_cells[i];
         cell.tuple.resize(numTypes);
         // deserialize key
-        deserialize(cell.key, bytes, offset, m_key);
+        deserialize(cell.key, bytes, offset, key);
 
         // deserialize tuple
         for (int j = 0; j < numTypes; ++j)
-            deserialize(cell.tuple[j], bytes, offset, m_types[j]);
+            deserialize(cell.tuple[j], bytes, offset, types[j]);
     }
 
     // serialize children
@@ -88,7 +92,7 @@ BtreeNodePage::BtreeNodePage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     assert (offset <= cts::PG_SZ);
 }
 
-void BtreeNodePage::toBytes(kndb_types::ByteVec &vec) {
+void BtreeNodePage::toBytes(ByteVec &vec) {
     size_t offset = 0;
 
     assert(m_cells.empty() || m_children.size() == m_cells.size() + 1);
@@ -113,25 +117,26 @@ void BtreeNodePage::toBytes(kndb_types::ByteVec &vec) {
     size_t numCells = m_cells.size();
     serialize(numCells, vec, offset);
 
+    if (numCells == 0) return;
+
     // serialize num types
-    size_t numTypes = m_types.size();
+    size_t numTypes = m_cells[0].tuple.size();
     serialize(numTypes, vec, offset);
 
     // serialize key type id
-    size_t key_type_id = variant_to_type_id(m_key);
+    size_t key_type_id = variant_to_type_id(m_cells[0].key);
     serialize(key_type_id, vec, offset);
 
     // serialize tuple types
     size_t type_id;
     for (int i = 0; i < numTypes; i++) {
-        type_id = variant_to_type_id(m_types[i]);
+        type_id = variant_to_type_id(m_cells[0].tuple[i]);
         serialize(type_id, vec, offset);
     }
 
     // serialize cells
     for (int i = 0; i < numCells; i++) {
-        const auto& cell = m_cells[i];
-        assert(cell.tuple.size() == m_types.size());
+        const auto &cell = m_cells[i];
 
         serialize(cell.key, vec, offset);
 
@@ -139,13 +144,10 @@ void BtreeNodePage::toBytes(kndb_types::ByteVec &vec) {
             serialize(cell.tuple[j], vec, offset);
     }
 
-    // serialize children
-    if (numCells != 0)
-        for (int i = 0; i < numCells + 1; i++)
-            serialize(m_children[i], vec, offset);
+    for (int i = 0; i < numCells + 1; i++)
+        serialize(m_children[i], vec, offset);
 }
 
-BtreeNodePage::BtreeNodePage(size_t degree, size_t parentID, bool is_root, bool is_leaf,
-                             const vector<variants> &types, variants key, size_t pageID)
-        : Page(pageID), m_leaf(is_leaf), m_root(is_root), m_degree(degree), m_parentID
-        (parentID), m_types(types), m_children(0), m_cells(0), m_key(std::move(key)) {}
+BtreeNodePage::BtreeNodePage(size_t degree, size_t parentID, bool is_root, bool is_leaf, size_t pageID)
+        : Page(pageID), m_leaf(is_leaf), m_root(is_root), m_degree(degree), m_parentID(parentID),
+          m_children(0), m_cells(0) {}

@@ -8,10 +8,9 @@
 #include "constants.hpp"
 
 TEST(BtreeNodePageTest, PageInitilizationIsCorrect) {
-    vector<variants> types = {string(), string(), double(), int(), float(), int()};
-    BtreeNodePage node(6, 5, true, true, types, types[0], 3);
+//    vector<variants> types = {string(), string(), double(), int(), float(), int()};
+    BtreeNodePage node(6, 5, true, true, 3);
     
-    ASSERT_EQ(types, node.getTypes());
     ASSERT_TRUE(node.getChildren().empty());
     ASSERT_TRUE(node.getCells().empty());
     ASSERT_TRUE(node.isLeaf());
@@ -22,14 +21,13 @@ TEST(BtreeNodePageTest, PageInitilizationIsCorrect) {
 }
 
 TEST(BtreeNodePageTest, PageInitializationAndSerialization) {
-    vector<variants> types = {string(), string(), double(), int(), float(), int()};
-    BtreeNodePage node(6, 5, true, true, types, types[0], 3);
+//    vector<variants> types = {string(), string(), double(), int(), float(), int()};
+    BtreeNodePage node(6, 5, true, true, 3);
 
     ByteVec bytes(cts::PG_SZ);
     node.toBytes(bytes);
 
     BtreeNodePage node2(bytes, 3);
-    ASSERT_EQ(types, node2.getTypes());
     ASSERT_TRUE(node2.getChildren().empty());
     ASSERT_TRUE(node2.getCells().empty());
     ASSERT_TRUE(node2.isLeaf());
@@ -40,9 +38,9 @@ TEST(BtreeNodePageTest, PageInitializationAndSerialization) {
 }
 
 TEST(BtreeNodePageTest, AddingCellWorks) {
-    vector<variants> types = {string(), double(), int()};
+//    vector<variants> types = {string(), double(), int()};
     variants key = int();
-    BtreeNodePage node(6, 5, true, true, types, key, 3);
+    BtreeNodePage node(6, 5, true, true, 3);
 
     node.getCells().push_back({int(33), {string("Kylan"), double(3.1144), int(10)}});
     node.getChildren().push_back(100);
@@ -68,11 +66,11 @@ TEST(BtreeNodePageTest, AddingCellWorks) {
 }
 
 TEST(BtreeNodePageTest, AddingMultipleCellsWorks) {
-    vector<variants> types = {string(), string(), int()};
+//    vector<variants> types = {string(), string(), int()};
     variants key = string();
     size_t MX_SZ = (cts::PG_SZ - 500) / (cts::STR_SZ + cts::STR_SZ + sizeof(int) + cts::STR_SZ);
     size_t deg = (MX_SZ + 1) / 2;
-    BtreeNodePage node(6, 5, true, true, types, key, 3);
+    BtreeNodePage node(6, 5, true, true, 3);
 
     vector<variants> exp_key;
     vector<vector<variants>> exp_tuple;

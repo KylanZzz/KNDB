@@ -14,7 +14,7 @@ Table::Table(string name, Pager &pgr, size_t tablePageId) : m_pager(pgr), m_tabl
         (tablePageId), m_name(name) {
     // Page has not been initialized
     if (T_PAGE.getBtreePageID() == cts::SIZE_T_OUT_OF_BOUNDS) {
-        size_t metadataBuffer = 100 + db_sizeof(T_PAGE.getTypes());
+        size_t metadataBuffer = 100;
         size_t cell_size = db_sizeof(T_PAGE.getTypes()) + db_sizeof(T_PAGE.getTypes()[0]);
         size_t free_space = cts::PG_SZ - metadataBuffer;
         size_t page_ptr_size = db_sizeof<size_t>();
@@ -22,8 +22,7 @@ Table::Table(string name, Pager &pgr, size_t tablePageId) : m_pager(pgr), m_tabl
         size_t minDeg = (free_space + cell_size) / (2 * (cell_size + page_ptr_size));
 
         // new btree node has no parent ptr
-        m_pager.createNewPage<BtreeNodePage>(minDeg, cts::SIZE_T_OUT_OF_BOUNDS, true, true,
-                                             T_PAGE.getTypes(), T_PAGE.getTypes()[0]);
+        m_pager.createNewPage<BtreeNodePage>(minDeg, cts::SIZE_T_OUT_OF_BOUNDS, true, true);
     }
 
     m_btree = std::make_unique<Btree>(T_PAGE.getTypes(), T_PAGE.getBtreePageID(), pgr);
