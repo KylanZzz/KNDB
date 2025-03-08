@@ -9,15 +9,24 @@
 
 namespace cts { // constants
     // configuration
-    const string DATABASE_NAME = "kylan.db";
+    const std::string DATABASE_NAME = "kylan.db";
     constexpr size_t PG_SZ = 4096;
     constexpr size_t CACHE_SZ = 10;
     constexpr size_t STR_SZ = 32;
     constexpr size_t MAX_BLOCKS = 500;
 
     // DB page numbers
-    constexpr size_t FSM_PAGE_NO = 0;
-    constexpr size_t SCHEMA_PAGE_NO = 1;
+    namespace pgid {
+        constexpr size_t FSM_ID = 0;
+        constexpr size_t SCHEMA_ID = 1;
+    }
+
+    // page type id
+    namespace pg_type_id {
+        enum {
+            SCHEMA_PAGE = 1, FSM_PAGE, TABLE_PAGE, BTREE_NODE_PAGE
+        };
+    }
 
     // other
     constexpr size_t SIZE_T_OUT_OF_BOUNDS = std::numeric_limits<size_t>::max();

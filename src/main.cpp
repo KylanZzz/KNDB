@@ -24,11 +24,11 @@ int main() {
 
     // Check if db file exists. If not, create one
     try {
-        pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO);
+        pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID);
     } catch (std::invalid_argument& e) {
         DEBUG(e.what());
         DEBUG("Creating schema page for database");
-        if (pager.createNewPage<SchemaPage>().getPageID() != cts::SCHEMA_PAGE_NO)
+        if (pager.createNewPage<SchemaPage>().getPageID() != cts::pgid::SCHEMA_ID)
             throw std::runtime_error("Error while creating schema page");
     } catch (std::exception& e) {
         DEBUG(e.what());

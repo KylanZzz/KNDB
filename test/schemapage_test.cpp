@@ -16,7 +16,7 @@ struct SchemaPageTest : testing::Test {
     SchemaPageTest() {
         vec = std::make_unique<std::vector<std::byte>>();
         vec->resize(cts::PG_SZ);
-        size_t a = page_type_conversion_id::SCHEMA_PAGE;
+        size_t a = cts::pg_type_id::SCHEMA_PAGE;
         memcpy(vec->data(), &a, sizeof(size_t));
     }
 };

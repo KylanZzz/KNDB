@@ -3,7 +3,8 @@
 //
 
 #include "Schema.hpp"
-#include "BtreeNodePage.hpp"
+#include "SchemaPage.hpp"
+#include "TablePage.hpp"
 
 #define S_PAGE m_pager.getPage<SchemaPage>(m_schemaPageID)
 

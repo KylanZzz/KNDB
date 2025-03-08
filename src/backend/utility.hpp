@@ -5,12 +5,8 @@
 #ifndef KNDB_UTILITY_HPP
 #define KNDB_UTILITY_HPP
 
-#include "SchemaPage.hpp"
-#include "FSMPage.hpp"
-#include "BtreeNodePage.hpp"
 #include "kndb_types.hpp"
 #include "constants.hpp"
-#include "TablePage.hpp"
 
 using namespace kndb_types;
 
@@ -40,12 +36,6 @@ inline size_t db_sizeof(const variants& val) {
 namespace variant_conversion_id {
     enum {
         CHAR = 1, INT, BOOL, STRING, FLOAT, DOUBLE
-    };
-}
-
-namespace page_type_conversion_id {
-    enum {
-        SCHEMA_PAGE = 1, FSM_PAGE, TABLE_PAGE, BTREE_NODE_PAGE
     };
 }
 
@@ -96,31 +86,6 @@ inline size_t variant_to_type_id(const variants& v) {
 }
 
 template<typename T>
-inline size_t get_page_type_id() {
-    throw std::runtime_error("Unsupported page type id");
-}
-
-template<>
-inline size_t get_page_type_id<SchemaPage>() {
-    return page_type_conversion_id::SCHEMA_PAGE;
-}
-
-template<>
-inline size_t get_page_type_id<FSMPage>() {
-    return page_type_conversion_id::FSM_PAGE;
-}
-
-template<>
-inline size_t get_page_type_id<TablePage>() {
-    return page_type_conversion_id::TABLE_PAGE;
-}
-
-template<>
-inline size_t get_page_type_id<BtreeNodePage>() {
-    return page_type_conversion_id::BTREE_NODE_PAGE;
-}
-
-template<typename T>
 inline void deserialize(T &src, const ByteVec &bytes, size_t &offset) {
     memcpy(&src, bytes.data() + offset, db_sizeof<T>());
     offset += db_sizeof<T>();
@@ -141,6 +106,15 @@ inline void deserialize(variants &src, const ByteVec &bytes, size_t &offset, con
         src = buf;
     }, type);
 }
+//
+//inline void deserialize(vector<variants> &src, const ByteVec &bytes, size_t &offset, const
+//vector<variants> &types) {
+//    for (int i = 0; i < types.size(); i++) {
+//        variants v;
+//        deserialize(v, bytes, offset, types[i]);
+//        src.push_back(v);
+//    }
+//}
 
 template<typename T>
 inline void serialize(const T &val, ByteVec &bytes, size_t &offset) {
@@ -159,5 +133,10 @@ inline void serialize(const variants &val, ByteVec &bytes, size_t &offset) {
         serialize(arg, bytes, offset);
     }, val);
 }
+//
+//inline void serialize(const vector<variants> &values, ByteVec &bytes, size_t &offset) {
+//    for (int i = 0; i < values.size(); i++)
+//        serialize(values[i], bytes, offset);
+//}
 
 #endif //KNDB_UTILITY_HPP

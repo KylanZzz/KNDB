@@ -16,11 +16,12 @@ using namespace kndb_types;
  *
  * This class manages keys, child pointers, and tuples within a B-tree node.
  */
+template <typename T>
 class BtreeNodePage : public Page {
 private:
     struct cell {
         variants key;
-        vector<variants> tuple;
+        T value;
     };
 public:
     /**
@@ -32,15 +33,13 @@ public:
 
     /**
      * @brief Constructs a new B-tree node.
-     * @param minDeg Minimum degree of the B-tree.
+     * @param deg Degree of the B-tree.
      * @param parentID Parent node ID.
      * @param is_root Indicates if this node is the root.
      * @param is_leaf Indicates if this node is a leaf.
-     * @param types Data types stored in this node.
-     * @param key Key associated with this node.
      * @param pageID Page ID of this node.
      */
-    BtreeNodePage(size_t minDeg, size_t parentID, bool is_root, bool is_leaf, size_t pageID);
+    BtreeNodePage(size_t deg, size_t parentID, bool is_root, bool is_leaf, size_t pageID);
 
     /**
      * @brief Retrieves child node IDs of this Btree node.
@@ -61,16 +60,16 @@ public:
     size_t getParentID() const { return m_parentID; }
 
     /**
-     * @brief Retrieves the B-tree node degree.
-     * @return The degree of the node.
+     * @brief Retrieves the minimum number of keys a node can contain.
+     * @return The min number of keys.
      */
-    size_t getDegree() const { return m_degree; }
+    size_t getMinKeys() const { return m_degree - 1; }
 
     /**
-     * @brief Checks if the node is full.
-     * @return True if the node is full, false otherwise.
+     * @brief Retrieves the maximum number of keys a node can contain.
+     * @return The max number of keys.
      */
-    bool isFull() { return m_cells.size() >= 2 * m_degree - 1; }
+    size_t getMaxKeys() const { return 2 * m_degree - 1; }
 
     /**
      * @brief Checks if the node is a leaf.
@@ -99,5 +98,6 @@ private:
     vector<cell> m_cells;
 };
 
+#include "BtreeNodePage.tpp"
 
 #endif //KNDB_BTREENODEPAGE_HPP

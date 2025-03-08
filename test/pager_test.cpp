@@ -10,6 +10,7 @@
 #include "SchemaPage.hpp"
 #include "constants.hpp"
 #include "utility.hpp"
+#include "TablePage.hpp"
 
 
 struct PagerTest : testing::Test {
@@ -23,24 +24,24 @@ TEST_F(PagerTest, PagerThrowsWhenNotSchemaPage) {
     IOHandler ioHandler("testfile.db");
     Pager pager(ioHandler);
     pager.createNewPage<FSMPage>();
-    ASSERT_THROW(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO), std::bad_cast);
+    ASSERT_THROW(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID), std::bad_cast);
 }
 
 TEST_F(PagerTest, PagerThrowsWhenNoSchemaPage) {
     IOHandler ioHandler("testfile.db");
     Pager pager(ioHandler);
-    ASSERT_THROW(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO), std::invalid_argument);
+    ASSERT_THROW(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID), std::invalid_argument);
 }
 
 TEST_F(PagerTest, PagerCreatesSchemaPage) {
     IOHandler ioHandler("testfile.db");
     Pager pager(ioHandler);
     pager.createNewPage<SchemaPage>();
-    ASSERT_NO_THROW(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO));
-    ASSERT_EQ(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).getNumTables(), 0);
+    ASSERT_NO_THROW(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID));
+    ASSERT_EQ(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID).getNumTables(), 0);
     std::unordered_map<string, size_t> mp;
-    ASSERT_EQ(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).getTables(), mp);
-    ASSERT_EQ(pager.getPage<SchemaPage>(cts::SCHEMA_PAGE_NO).getPageID(), cts::SCHEMA_PAGE_NO);
+    ASSERT_EQ(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID).getTables(), mp);
+    ASSERT_EQ(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID).getPageID(), cts::pgid::SCHEMA_ID);
 }
 
 TEST_F(PagerTest, SchemaPageWorksAfterSerializing) {
@@ -84,12 +85,12 @@ TEST_F(PagerTest, CreateNewPageAllocatesUniquePageID) {
     size_t storedPageType;
     file.read(reinterpret_cast<char*>(&storedPageType), sizeof(size_t));
 
-    ASSERT_EQ(storedPageType, get_page_type_id<SchemaPage>());
+    ASSERT_EQ(storedPageType, cts::pg_type_id::SCHEMA_PAGE);
 
     file.seekg(pageID2 * cts::PG_SZ, std::ios::beg);
     file.read(reinterpret_cast<char*>(&storedPageType), sizeof(size_t));
 
-    ASSERT_EQ(storedPageType, get_page_type_id<SchemaPage>());
+    ASSERT_EQ(storedPageType, cts::pg_type_id::SCHEMA_PAGE);
 }
 
 TEST_F(PagerTest, SchemaPageTablePersistenceAfterPagerDestruction) {

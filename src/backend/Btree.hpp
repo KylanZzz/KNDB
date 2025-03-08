@@ -10,21 +10,28 @@
 #include "Pager.hpp"
 #include "utility.hpp"
 
+template <typename T>
 class Btree {
 public:
-    Btree(vector<variants> types, size_t rootPageId, Pager &pgr);
+    Btree(size_t rootPageId, Pager &pgr);
 
-    vector<variants> search(variants key);
+    T search(variants key);
 
-    void insert(vector<variants> values, variants key);
+    void insert(T values, variants key);
 
     void remove(variants key);
 
-    void update(vector<variants> values, variants key);
+    void update(T values, variants key);
 
-    size_t getRootPageID();
+    size_t getRootPage() {return m_rootPageID;}
+
 private:
-    Pager& pager;
+    RowPtr searchRowPtr(variants key, size_t currPageID);
+
+    Pager& m_pager;
+    size_t m_rootPageID;
 };
+
+#include "Btree.tpp"
 
 #endif //KNDB_BTREE_HPP

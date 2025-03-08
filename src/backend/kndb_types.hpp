@@ -6,8 +6,17 @@
 #define KNDB_KNDB_TYPES_HPP
 
 #include <string>
+#include <vector>
 
 namespace kndb_types {
+    struct RowPtr {
+        size_t pageID;
+        size_t cellID;
+
+        bool operator==(const RowPtr& other) {
+            return other.pageID == this->pageID && other.cellID == this->cellID;
+        }
+    };
     using variants = std::variant<int, char, bool, float, double, std::string>;
     using std::string;
     using std::byte;

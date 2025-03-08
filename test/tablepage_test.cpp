@@ -13,7 +13,7 @@ struct TablePageTest : testing::Test {
 
     TablePageTest() {
         vec = std::make_unique<std::vector<std::byte>>(cts::PG_SZ);
-        size_t pageType = get_page_type_id<TablePage>();
+        size_t pageType = cts::pg_type_id::TABLE_PAGE;
         memcpy(vec->data(), &pageType, sizeof(size_t));
     }
 

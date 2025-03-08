@@ -86,7 +86,7 @@ public:
 
 private:
     Pager& m_pager;
-    std::unique_ptr<Btree> m_btree;
+    std::unique_ptr<Btree<vector<variants>>> m_btree;
     size_t m_tablePageID;
     string m_name;
 };

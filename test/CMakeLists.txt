@@ -17,6 +17,7 @@ add_executable(backend_test
         tablepage_test.cpp
         utility_test.cpp
         btreepage_test.cpp
+        btree_test.cpp
 )
 
 # Link against backend library

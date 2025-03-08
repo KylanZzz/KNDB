@@ -14,8 +14,8 @@ TablePage::TablePage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     deserialize(page_type_id, bytes, offset);
 
     // check if page type is correct
-    if (page_type_id != get_page_type_id<TablePage>())
-        throw std::runtime_error("page_type_id does not match page type");
+    if (page_type_id != cts::pg_type_id::TABLE_PAGE)
+        throw std::runtime_error("page type id is incorrect");
 
     // deserialize # of types
     deserialize(num_types, bytes, offset);
@@ -80,7 +80,7 @@ void TablePage::toBytes(ByteVec &vec) {
     size_t offset = 0;
 
     // serialize page_type_id
-    size_t page_type_id = get_page_type_id<TablePage>();
+    size_t page_type_id = cts::pg_type_id::TABLE_PAGE;
     serialize(page_type_id, vec, offset);
 
     // serialize # of types

@@ -32,8 +32,8 @@ FSMPage::FSMPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     deserialize(page_type_id, bytes, offset);
 
     // check if page type is correct
-    if (page_type_id != get_page_type_id<FSMPage>())
-        throw std::runtime_error("page_type_id does not match page type");
+    if (page_type_id != cts::pg_type_id::FSM_PAGE)
+        throw std::runtime_error("page type id is incorrect");
 
     // deserialize next Page id
     deserialize(m_nextPageID, bytes, offset);
@@ -111,7 +111,7 @@ void FSMPage::toBytes(ByteVec &vec) {
     size_t offset = 0;
 
     // serialize page_type_id
-    size_t page_type_id = get_page_type_id<FSMPage>();
+    size_t page_type_id = cts::pg_type_id::FSM_PAGE;
     serialize(page_type_id, vec, offset);
 
     // serialize next page ID

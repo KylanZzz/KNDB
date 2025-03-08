@@ -33,8 +33,8 @@ SchemaPage::SchemaPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     deserialize(page_type_id, bytes, offset);
 
     // check if page type is correct
-    if (page_type_id != get_page_type_id<SchemaPage>())
-        throw std::runtime_error("page_type_id does not match any valid page type");
+    if (page_type_id != cts::pg_type_id::SCHEMA_PAGE)
+        throw std::runtime_error("page type id is incorrect");
 
     // deserialize # of tables
     deserialize(num_tables, bytes, offset);
@@ -85,7 +85,7 @@ void SchemaPage::toBytes(ByteVec &vec) {
     size_t offset = 0;
 
     // deserialize page_type_id
-    size_t page_type_id = get_page_type_id<SchemaPage>();
+    size_t page_type_id = cts::pg_type_id::SCHEMA_PAGE;
     serialize(page_type_id, vec, offset);
 
     // deserialize # of tables

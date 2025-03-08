@@ -14,7 +14,7 @@
  *
  * FSMPage keeps track of free and allocated blocks using a bitmap.
  * It allows querying, allocating, and freeing space within a page.
- * The FSMPage also maintains a link to the next FSM page if more space maps
+ * The FSMPage also maintains a link to the next FSM_ID page if more space maps
  * are needed.
  */
 class FSMPage : public Page {
@@ -45,16 +45,16 @@ public:
     bool isFree(size_t idx);
 
     /**
-     * @brief Checks if this FSM page has a reference to the next FSM page.
+     * @brief Checks if this FSM_ID page has a reference to the next FSM_ID page.
      *
-     * @return True if there is a next FSM page, false otherwise.
+     * @return True if there is a next FSM_ID page, false otherwise.
      */
     bool hasNextPage();
 
     /**
      * @brief Gets the number of free blocks remaining in the bitmap.
      *
-     * @return The count of free blocks in this FSM page.
+     * @return The count of free blocks in this FSM_ID page.
      */
     size_t getSpaceLeft();
 
@@ -86,18 +86,18 @@ public:
     size_t findNextFree();
 
     /**
-     * @brief Retrieves the ID of the next FSM page.
+     * @brief Retrieves the ID of the next FSM_ID page.
      *
-     * @return The PageID of the next FSM page.
+     * @return The PageID of the next FSM_ID page.
      *
      * @throws std::invalid_argument If there is no next page.
      */
     size_t getNextPageID();
 
     /**
-     * @brief Sets the next FSM page ID.
+     * @brief Sets the next FSM_ID page ID.
      *
-     * @param pageID The ID of the next FSM page.
+     * @param pageID The ID of the next FSM_ID page.
      */
     void setNextPageID(size_t pageID);
 
