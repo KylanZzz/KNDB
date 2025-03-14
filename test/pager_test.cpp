@@ -11,7 +11,7 @@
 #include "constants.hpp"
 #include "utility.hpp"
 #include "TablePage.hpp"
-
+#include "BtreeNodePage.hpp"
 
 struct PagerTest : testing::Test {
     void SetUp() override {

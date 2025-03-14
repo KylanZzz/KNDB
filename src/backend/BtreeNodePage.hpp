@@ -13,12 +13,20 @@ using namespace kndb_types;
 /**
  * @class BtreeNodePage
  * @brief Represents a node in a B-tree structure stored in a database.
+ * @tparam T Type stored by the Btree Node. Currently supported types include trivially copyable
+ * types (structs used as data class included) and vector<variants> (representing tuples)
  *
  * This class manages keys, child pointers, and tuples within a B-tree node.
+ *
+ * Important assumptions made during deserialization and serialization:
+ * 1. Leaf nodes have no children
+ * 2. Non-leaf nodes have numCells + 1 children if numCells is nonzero, and 0 children otherwise.
+ * 3. If the Btree Node stores tuples, each tuple has the same fixed number of attributes.
+ * 4. The node has no more than 'getMaxKeys()' number of cells.
  */
 template <typename T>
 class BtreeNodePage : public Page {
-private:
+public:
     struct cell {
         variants key;
         T value;
@@ -75,13 +83,31 @@ public:
      * @brief Checks if the node is a leaf.
      * @return Reference to the boolean indicating if the node is a leaf.
      */
-    bool &isLeaf() { return m_leaf; }
+    bool isLeaf() const { return m_leaf; }
 
     /**
      * @brief Checks if the node is the root.
      * @return Reference to the boolean indicating if the node is the root.
      */
-    bool &isRoot() { return m_root; }
+    bool isRoot() const { return m_root; }
+
+    /**
+     * @brief Sets the root status of the node.
+     * @param isRoot True if the node is a root, false otherwise.
+     */
+    void setRoot(bool isRoot) { m_root = isRoot; }
+
+    /**
+     * @brief Sets the leaf status of the node.
+     * @param isLeaf True if the node is a leaf, false otherwise.
+     */
+    void setLeaf(bool isLeaf)  { m_leaf = isLeaf; }
+
+    /**
+     * @brief Sets the parent node.
+     * @param parent The page ID of the new parent node.
+     */
+    void setParent(size_t parent) { m_parentID = parent; }
 
     /**
      * @brief Serializes the B-tree node into a byte vector.

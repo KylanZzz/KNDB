@@ -9,9 +9,10 @@ Pager::Pager(IOHandler &ioHandler) : m_ioHandler(ioHandler) {
     // pager needs to do
     if (m_ioHandler.getNumBlocks() == 0) {
         // create FSMPage
-        int pgid = m_ioHandler.createNewBlock();
+        size_t pgid = m_ioHandler.createNewBlock();
         assert(pgid == cts::pgid::FSM_ID);
-        m_cache.emplace_back(std::make_unique<FSMPage>(pgid));
+        m_cache.emplace(pgid, std::make_unique<FSMPage>(pgid));
+//        m_cache.emplace_back(std::make_unique<FSMPage>(pgid));
     }
 }
 
@@ -48,7 +49,7 @@ size_t Pager::allocPageBit() {
     //      first page is for bitmap)
     size_t newPageID = m_ioHandler.createNewBlock();
     currPage->setNextPageID(newPageID);
-    m_cache.emplace_back(std::make_unique<FSMPage>(newPageID));
+    m_cache.emplace(newPageID, std::make_unique<FSMPage>(newPageID));
     currPage = &getPage<FSMPage>(newPageID);
 
     int localIdx = currPage->findNextFree();
@@ -100,7 +101,7 @@ bool Pager::isFree(size_t pageID) {
 Pager::~Pager() {
     // write everything in cache to disk
     ByteVec temp(cts::PG_SZ);
-    for (const auto &page_ptr: m_cache) {
+    for (const auto &[pgid, page_ptr]: m_cache) {
         page_ptr->toBytes(temp);
         m_ioHandler.writeBlock((void *) temp.data(), page_ptr->getPageID());
     }

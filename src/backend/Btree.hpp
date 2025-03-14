@@ -13,7 +13,7 @@
 template <typename T>
 class Btree {
 public:
-    Btree(size_t rootPageId, Pager &pgr);
+    Btree(size_t rootPageId, Pager &pgr, size_t degree);
 
     T search(variants key);
 
@@ -27,9 +27,11 @@ public:
 
 private:
     RowPtr searchRowPtr(variants key, size_t currPageID);
+    void split(size_t currPageID);
 
     Pager& m_pager;
     size_t m_rootPageID;
+    size_t m_degree;
 };
 
 #include "Btree.tpp"

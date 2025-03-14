@@ -11,9 +11,9 @@ namespace cts { // constants
     // configuration
     const std::string DATABASE_NAME = "kylan.db";
     constexpr size_t PG_SZ = 4096;
-    constexpr size_t CACHE_SZ = 10;
+    constexpr size_t CACHE_SZ = 100;
     constexpr size_t STR_SZ = 32;
-    constexpr size_t MAX_BLOCKS = 500;
+    constexpr size_t MAX_BLOCKS = 100000;
 
     // DB page numbers
     namespace pgid {

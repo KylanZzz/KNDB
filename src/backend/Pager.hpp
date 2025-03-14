@@ -5,6 +5,8 @@
 #ifndef KNDB_PAGER_HPP
 #define KNDB_PAGER_HPP
 
+#include <unordered_map>
+
 #include "kndb_types.hpp"
 #include "Page.hpp"
 #include "IOHandler.hpp"
@@ -108,7 +110,7 @@ private:
     // TODO: LRU cache using implementation here: https://leetcode.com/problems/lru-cache/
     //      - but use template for key and val, and make sure val is a unique_ptr<val> instead
     //      - key is page number, val is PagePtr
-    vector<PagePtr> m_cache;
+    std::unordered_map<size_t, PagePtr> m_cache;
 };
 
 

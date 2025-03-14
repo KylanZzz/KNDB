@@ -16,25 +16,24 @@ T &Pager::getPage(size_t pageID) {
     static_assert(std::is_base_of<Page, T>::value, "T must be a derived class of Page");
 
     if (pageID >= m_ioHandler.getNumBlocks())
-    throw std::invalid_argument("pageID out of bounds");
+        throw std::invalid_argument("pageID out of bounds");
 
     if (!std::is_same_v<T, FSMPage> && isFree(pageID))
-    throw std::invalid_argument("that page is not being used right now");
+        throw std::invalid_argument("that page is not being used right now");
 
     // check if page is in cache
-    for (auto &pagePtr: m_cache)
-        if (pagePtr->getPageID() == pageID)
-            return dynamic_cast<T &>(*pagePtr);
+    if (m_cache.contains(pageID))
+        return dynamic_cast<T &>(*m_cache[pageID]);
 
     // if not in cache, load it into cache
     ByteVec vec(cts::PG_SZ);
     m_ioHandler.readBlock((void *) vec.data(), pageID);
 
     // create a new page in cache (which is just a list for now)
-    m_cache.emplace_back(std::make_unique<T>(vec, pageID));
+    m_cache.emplace(pageID, std::make_unique<T>(vec, pageID));
 
     // dynamic cast to catch potential type safety issues
-    return dynamic_cast<T &>(*m_cache.back());
+    return dynamic_cast<T &>(*m_cache[pageID]);
 }
 
 template<typename T, typename ...Args>
@@ -48,10 +47,10 @@ T &Pager::createNewPage(Args&&... args) {
         throw std::runtime_error("Database has reached block limit.");
 
     // create a new page in cache (which is just a list for now)
-    m_cache.emplace_back(std::make_unique<T>(std::forward<Args>(args)..., new_page_no));
+    m_cache.emplace(new_page_no, std::make_unique<T>(std::forward<Args>(args)..., new_page_no));
 
     // dynamic cast to catch potential type safety issues
-    return dynamic_cast<T &>(*m_cache.back());
+    return dynamic_cast<T &>(*m_cache[new_page_no]);
 }
 
 template <typename T>
@@ -70,14 +69,7 @@ void Pager::freePage(size_t pageID) {
     freePageBit(pageID);
 
     // remove from cache
-    int idx = 0;
-    for (int i = 0; i < m_cache.size(); i++) {
-        if (m_cache[i]->getPageID() == pageID) {
-            idx = i;
-            break;
-        }
-    }
-    m_cache.erase(m_cache.begin() + idx);
+    m_cache.erase(pageID);
 }
 
 #endif //KNDB_PAGER_TPP

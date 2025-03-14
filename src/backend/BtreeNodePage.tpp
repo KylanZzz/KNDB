@@ -5,6 +5,7 @@
 #define KNDB_BTREENODEPAGE_TPP
 
 #include <cassert>
+#include <iostream>
 
 #include "BtreeNodePage.hpp"
 #include "utility.hpp"
@@ -90,7 +91,7 @@ BtreeNodePage<T>::BtreeNodePage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     }
 
     // serialize children
-    if (numCells != 0)
+    if (!m_leaf)
         for (int i = 0; i < numCells + 1; i++) {
             size_t child_id;
             deserialize(child_id, bytes, offset);
@@ -104,7 +105,7 @@ template<typename T>
 void BtreeNodePage<T>::toBytes(ByteVec &vec) {
     size_t offset = 0;
 
-    assert(m_cells.empty() || m_children.size() == m_cells.size() + 1);
+    assert(m_leaf || m_cells.empty() || m_children.size() == m_cells.size() + 1);
 
     // serialize page type id
     size_t page_type_id = cts::pg_type_id::BTREE_NODE_PAGE;
@@ -158,8 +159,9 @@ void BtreeNodePage<T>::toBytes(ByteVec &vec) {
             serialize(cell.value, vec, offset);
     }
 
-    for (int i = 0; i < numCells + 1; i++)
-        serialize(m_children[i], vec, offset);
+    if (!m_leaf)
+        for (int i = 0; i < numCells + 1; i++)
+            serialize(m_children[i], vec, offset);
 }
 
 template<typename T>
