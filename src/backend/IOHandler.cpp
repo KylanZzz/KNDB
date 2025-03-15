@@ -34,7 +34,7 @@ IOHandler::IOHandler(std::string_view fileName) {
 
     m_blocks = fileSize.QuadPart / cts::PG_SZ;
 #else //_WIN32
-    m_fd = open(fileName.c_str(), O_RDWR | O_CREAT, 0644);
+    m_fd = open(string(fileName).c_str(), O_RDWR | O_CREAT, 0644);
 
     if (m_fd == -1)
         throw std::runtime_error("Failed to open file");
