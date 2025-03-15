@@ -26,11 +26,11 @@ T &Pager::getPage(size_t pageID) {
         return dynamic_cast<T &>(*m_cache[pageID]);
 
     // if not in cache, load it into cache
-    ByteVec vec(cts::PG_SZ);
-    m_ioHandler.readBlock((void *) vec.data(), pageID);
+    PgArr<Byte> buf;
+    m_ioHandler.readBlock((void *) buf.data(), pageID);
 
     // create a new page in cache (which is just a list for now)
-    m_cache.emplace(pageID, std::make_unique<T>(vec, pageID));
+    m_cache.emplace(pageID, std::make_unique<T>(buf, pageID));
 
     // dynamic cast to catch potential type safety issues
     return dynamic_cast<T &>(*m_cache[pageID]);
@@ -62,8 +62,8 @@ void Pager::freePage(size_t pageID) {
 
     // TODO: this is inefficient since we don't really need to wipe the page,
     //  but doing this for safety.
-    ByteVec temp(cts::PG_SZ, static_cast<std::byte>(0));
-    m_ioHandler.writeBlock((void *) temp.data(), pageID);
+    PgArr<Byte> buf{};
+    m_ioHandler.writeBlock(buf.data(), pageID);
 
     // mark page as free in bitmap
     freePageBit(pageID);

@@ -5,8 +5,6 @@
 #ifndef KNDB_SCHEMAPAGE_HPP
 #define KNDB_SCHEMAPAGE_HPP
 
-#include <vector>
-
 #include "Page.hpp"
 #include "unordered_map"
 #include "kndb_types.hpp"
@@ -27,7 +25,7 @@ public:
      * @param bytes The byte vector containing schema data.
      * @param pageID The on-disk page number of this schema page.
      */
-    SchemaPage(ByteVec &bytes, size_t pageID);
+    SchemaPage(std::span<const Byte> bytes, size_t pageID);
 
     /**
      * @brief Creates a new empty SchemaPage.
@@ -46,7 +44,7 @@ public:
      * @brief Gets list of all tables in schema.
      * @return Map of table names to pageID of table metadata page.
      */
-    std::unordered_map<string, size_t> getTables();
+    std::unordered_map<String, size_t> getTables();
 
     /**
      * @brief Creates a new table in the schema.
@@ -54,26 +52,26 @@ public:
      * @param types The types of the table columns.
      * @param pageID The page number of the table.
      */
-    void addTable(string name, size_t pageID);
+    void addTable(String name, size_t pageID);
 
     /**
      * @brief Removes a table from the schema.
      * @param name The name of the table to remove.
      */
-    void removeTable(const string& name);
+    void removeTable(const String& name);
 
-    void toBytes(ByteVec &vec) override;
+    void toBytes(std::span<Byte> buffer) override;
 
 private:
     struct table_descriptor {
-        string name;
+        String name;
         size_t pageID;
     };
 
     // calculates the amount of free space (in bytes) that the page has left
     size_t freeSpace();
 
-    vector<table_descriptor> m_tables;
+    Vec<table_descriptor> m_tables;
 };
 
 

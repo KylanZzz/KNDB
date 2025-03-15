@@ -7,12 +7,12 @@
 #include "utility.hpp"
 
 struct TablePageTest : testing::Test {
-    std::unique_ptr<std::vector<std::byte>> vec;
+    std::unique_ptr<Vec<std::byte>> vec;
     std::unique_ptr<TablePage> table;
-    vector<variants> types = {string(), int(), double(), double(), float()};
+    Vec<Vari> types = {String(), int(), double(), double(), float()};
 
     TablePageTest() {
-        vec = std::make_unique<std::vector<std::byte>>(cts::PG_SZ);
+        vec = std::make_unique<Vec<std::byte>>(cts::PG_SZ);
         size_t pageType = cts::pg_type_id::TABLE_PAGE;
         memcpy(vec->data(), &pageType, sizeof(size_t));
     }
@@ -37,7 +37,7 @@ TEST_F(TablePageTest, SimpleAddAndSubtractTuplesWorks) {
 }
 
 TEST_F(TablePageTest, SimpleSerializationAndDeserializationWorks) {
-    ByteVec buffer(cts::PG_SZ);
+    Vec<Byte> buffer(cts::PG_SZ);
     table->toBytes(buffer);
     TablePage serialized(buffer, 1);
     ASSERT_EQ(serialized.getNumTuples(), 0);
@@ -49,7 +49,7 @@ TEST_F(TablePageTest, SerializationWorksWithLargeNumberOfAddAndRemove) {
     for (int i = 0; i < 50000; i++)
         table->addTuple();
 
-    ByteVec buffer(cts::PG_SZ);
+    Vec<Byte> buffer(cts::PG_SZ);
     table->toBytes(buffer);
 
     TablePage serialized(buffer, 1);
@@ -57,7 +57,7 @@ TEST_F(TablePageTest, SerializationWorksWithLargeNumberOfAddAndRemove) {
     for (int i = 0; i < 40000; i++)
         serialized.removeTuple();
 
-    ByteVec buffer2(cts::PG_SZ);
+    Vec<Byte> buffer2(cts::PG_SZ);
     serialized.toBytes(buffer2);
 
     TablePage serialized2(buffer2, 1);
@@ -66,8 +66,8 @@ TEST_F(TablePageTest, SerializationWorksWithLargeNumberOfAddAndRemove) {
 }
 
 TEST_F(TablePageTest, ManyTypesWorks) {
-    vector<variants> types;
-    vector<variants> valid_types = {int(), double(), string(), float(), char(), bool()};
+    Vec<Vari> types;
+    Vec<Vari> valid_types = {int(), double(), String(), float(), char(), bool()};
     for (int i = 0; i < 200; i++) {
         types.push_back(valid_types[i % 6]);
     }

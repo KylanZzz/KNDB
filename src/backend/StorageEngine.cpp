@@ -2,47 +2,44 @@
 // Created by Kylan Chen on 10/13/24.
 //
 
-#include "Schema.hpp"
+#include "StorageEngine.hpp"
+
+#include <Btree.hpp>
+#include "utility.hpp"
 #include "SchemaPage.hpp"
-#include "TablePage.hpp"
 
 #define S_PAGE m_pager.getPage<SchemaPage>(m_schemaPageID)
 
-Schema::Schema(Pager &pgr, size_t schemaPageID) : m_pager(pgr), m_schemaPageID(schemaPageID) {
+StorageEngine::StorageEngine(Pager &pgr, size_t schemaPageID) : m_pager(pgr), m_schemaPageID(schemaPageID) {
     // add existing tables
     for (const auto &[name, pageID]: S_PAGE.getTables())
         m_tables.emplace_back(std::make_unique<Table>(name, m_pager, pageID));
 }
 
-void Schema::createTable(string name, vector<variants> types) {
-    if (name.length() + 1 > db_sizeof<string>())
+void StorageEngine::createTable(const String& name, const Vec<Vari>& types) {
+    if (name.length() + 1 > db_sizeof<String>())
         throw std::invalid_argument("Name is too long");
 
     if (name.empty())
         throw std::invalid_argument("Name cannot be empty");
 
-    for (auto &table: m_tables)
+    for (const auto &table: m_tables)
         if (table->getName() == name)
             throw std::invalid_argument("Table with that name already exists");
 
-    size_t tabID = m_pager.createNewPage<TablePage>(types, cts::SIZE_T_OUT_OF_BOUNDS).getPageID();
-    S_PAGE.addTable(name, tabID);
+    m_tables.emplace_back(std::make_unique<Table>(name,m_pager, types));
 
-    m_tables.emplace_back(std::make_unique<Table>(
-            name,
-            m_pager,
-            tabID
-    ));
+    S_PAGE.addTable(m_tables.back()->getName(), m_tables.back()->getTablePageID());
 }
 
-vector<variants> Schema::getTableTypes(string table) {
-    for (auto &tab: m_tables)
+Vec<Vari> StorageEngine::getTableTypes(const String& table) {
+    for (const auto &tab: m_tables)
         if (tab->getName() == table) return tab->getTypes();
 
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-void Schema::dropTable(string name) {
+void StorageEngine::dropTable(const String& name) {
     int idx = -1;
     for (int i = 0; i < m_tables.size(); i++)
         if (m_tables[i]->getName() == name) idx = i;
@@ -52,58 +49,52 @@ void Schema::dropTable(string name) {
 
     S_PAGE.removeTable(name);
 
-    m_tables[idx]->dropTable();
+    m_tables[idx]->drop();
     m_tables.erase(m_tables.begin() + idx);
 }
 
-vector<string> Schema::getTableNames() {
-    vector<string> res;
+Vec<String> StorageEngine::getTableNames() const {
+    Vec<String> res;
     for (auto &table: S_PAGE.getTables())
         res.push_back(table.first);
-    return res;
+    return std::move(res);
 }
 
-void Schema::removeTuple(string table, variants key) {
+void StorageEngine::removeTuple(const String& table, const Vari& key) {
     for (auto &tab: m_tables)
         if (tab->getName() == table) return tab->deleteTuple(key);
 
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-void Schema::updateTuple(string table, vector<variants> values) {
-    for (auto &tab: m_tables)
+void StorageEngine::updateTuple(const String& table, const Vec<Vari>& values) {
+    for (const auto &tab: m_tables)
         if (tab->getName() == table)
             return tab->updateTuple(values);
 
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-void Schema::insertTuple(string table, vector<variants> values) {
+void StorageEngine::insertTuple(const String& table, const Vec<Vari>& values) {
     for (auto &tab: m_tables)
         if (tab->getName() == table)
-            return tab->createTuple(values);
+            return tab->insertTuple(values);
 
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-vector<variants> Schema::getTuple(string table, variants key) {
+Vec<Vari> StorageEngine::getTuple(const String& table, const Vari& key) {
     for (auto &tab: m_tables)
         if (tab->getName() == table) return tab->readTuple(key);
 
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-size_t Schema::getNumTuples(string table) {
-    for (auto &tab: m_tables)
+size_t StorageEngine::getNumTuples(const String& table) {
+    for (const auto &tab: m_tables)
         if (tab->getName() == table) return tab->getNumTuples();
 
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-bool Schema::sameTypes(vector<variants> vec1, vector<variants> vec2) {
-    if (vec1.size() != vec2.size()) return false;
-    for (int i = 0; i < vec1.size(); i++)
-        if (variant_to_type_id(vec1[i]) != variant_to_type_id(vec2[i])) return false;
-    return true;
-}
 

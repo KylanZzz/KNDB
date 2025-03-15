@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include <limits>
+#include <string>
 
 namespace cts { // constants
     // configuration
@@ -14,7 +15,7 @@ namespace cts { // constants
     constexpr size_t PG_SZ = 4096;
     constexpr size_t CACHE_SZ = 100;
     constexpr size_t STR_SZ = 32;
-    constexpr size_t MAX_BLOCKS = 100000;
+    constexpr size_t MAX_BLOCKS = 1000;
 
     // DB page numbers
     namespace pgid {
@@ -30,7 +31,7 @@ namespace cts { // constants
     }
 
     // other
-    constexpr size_t SIZE_T_OUT_OF_BOUNDS = std::numeric_limits<size_t>::max();
+    constexpr size_t SIZE_T_INVALID = std::numeric_limits<size_t>::max();
 }
 
 #endif //KNDB_CONSTANTS_HPP

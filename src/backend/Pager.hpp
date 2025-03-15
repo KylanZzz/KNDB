@@ -37,7 +37,7 @@ public:
      *
      * @tparam T type of page that is expected to be returned.  This type
      * must be a subclass of class Page and have a constructor that takes in a
-     * ByteVec& and page number.
+     * Vec<Byte>& and page number.
      *
      * @param pageID the requested page's id.
      *
@@ -67,7 +67,7 @@ public:
      *
      * @tparam T type of page that you would like to create. This type must
      * be a subclass of class Page and have a constructor that takes in a
-     * ByteVec& and page number.
+     * Vec<Byte>& and page number.
      *
      * @throws std::runtime_error if the max page limit has been reached.
      *

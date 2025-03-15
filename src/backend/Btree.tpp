@@ -15,7 +15,7 @@ Btree<T>::Btree(size_t rootPageId, Pager &pgr, size_t degree) : m_rootPageID(roo
 (pgr), m_degree(degree) {}
 
 template <typename T>
-RowPtr Btree<T>::searchRowPtr(variants targ_key, size_t currPageID) {
+RowPtr Btree<T>::searchRowPtr(Vari targ_key, size_t currPageID) {
     // 1. iterate through keys (linearly, for now) to look for key
     //      - if key == targ, return
     //      - if we have passed the key amount at cells[idx], we look at child[idx]
@@ -37,34 +37,34 @@ RowPtr Btree<T>::searchRowPtr(variants targ_key, size_t currPageID) {
         return {currPageID, idx};
 
     if (leaf) // leaf, and target key has not been found, so doesnt exist
-        return {currPageID, cts::SIZE_T_OUT_OF_BOUNDS};
+        return {currPageID, cts::SIZE_T_INVALID};
 
     // non-leaf node, so we search the children
     return searchRowPtr(targ_key, children[idx]);
 }
 
 template<typename T>
-T Btree<T>::search(variants key) {
+T Btree<T>::search(const Vari &key) {
     RowPtr row = searchRowPtr(key, m_rootPageID);
-    if (row.cellID == cts::SIZE_T_OUT_OF_BOUNDS)
+    if (row.cellID == cts::SIZE_T_INVALID)
         throw std::invalid_argument("Row was not found in btree");
     return B_NODE(row.pageID).getCells()[row.cellID].value;
 }
 
 template<typename T>
-void Btree<T>::update(T values, variants key) {
+void Btree<T>::update(T values, const Vari &key) {
     RowPtr row = searchRowPtr(key, m_rootPageID);
-    if (row.cellID == cts::SIZE_T_OUT_OF_BOUNDS)
+    if (row.cellID == cts::SIZE_T_INVALID)
         throw std::invalid_argument("Row was not found in btree");
     B_NODE(row.pageID).getCells()[row.cellID].value = values;
 }
 
 template<typename T>
-void Btree<T>::insert(T values, variants key) {
+void Btree<T>::insert(T values, Vari key) {
     // 1. find node that cell belongs in
     //      1b. if node already contains the key, throw error
     RowPtr row = searchRowPtr(key, m_rootPageID);
-    if (row.cellID != cts::SIZE_T_OUT_OF_BOUNDS)
+    if (row.cellID != cts::SIZE_T_INVALID)
         throw std::invalid_argument("Tuple with that key already exists");
     assert(B_NODE(row.pageID).isLeaf());
 
@@ -83,7 +83,7 @@ void Btree<T>::insert(T values, variants key) {
 
 template <typename T>
 void Btree<T>::split(size_t currPageID) {
-//    1. if node is NOT full, return (doesnt need to be split)
+//    1. if node is NOT full, return (doesn't need to be split)
     auto& cells = B_NODE(currPageID).getCells();
     auto& children = B_NODE(currPageID).getChildren();
 
@@ -139,7 +139,7 @@ void Btree<T>::split(size_t currPageID) {
         //        3b. create new node (new root) with middle cell of curr node as the single cell
         //             - update root
         size_t newRootID = m_pager.createNewPage<BtreeNodePage<T>>(m_degree,
-                cts::SIZE_T_OUT_OF_BOUNDS, true, false).getPageID();
+                cts::SIZE_T_INVALID, true, false).getPageID();
         m_rootPageID = newRootID;
         B_NODE(currPageID).setRoot(false);
         B_NODE(currPageID).setParent(newRootID);
@@ -182,7 +182,7 @@ void Btree<T>::split(size_t currPageID) {
 }
 
 template<typename T>
-void Btree<T>::remove(variants key) {
+void Btree<T>::remove(Vari key) {
 
 }
 

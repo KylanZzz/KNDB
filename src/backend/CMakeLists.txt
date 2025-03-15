@@ -1,6 +1,6 @@
 add_library(backend STATIC
         Table.cpp
-        Schema.cpp
+        StorageEngine.cpp
         SchemaPage.cpp
         IOHandler.cpp
         FSMPage.cpp

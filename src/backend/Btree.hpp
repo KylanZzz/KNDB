@@ -5,28 +5,25 @@
 #ifndef KNDB_BTREE_HPP
 #define KNDB_BTREE_HPP
 
-#include <vector>
-
 #include "Pager.hpp"
-#include "utility.hpp"
 
 template <typename T>
 class Btree {
 public:
     Btree(size_t rootPageId, Pager &pgr, size_t degree);
 
-    T search(variants key);
+    T search(const Vari &key);
 
-    void insert(T values, variants key);
+    void insert(T values, Vari key);
 
-    void remove(variants key);
+    void remove(Vari key);
 
-    void update(T values, variants key);
+    void update(T values, const Vari &key);
 
-    size_t getRootPage() {return m_rootPageID;}
+    size_t getRootPage() const {return m_rootPageID;}
 
 private:
-    RowPtr searchRowPtr(variants key, size_t currPageID);
+    RowPtr searchRowPtr(Vari key, size_t currPageID);
     void split(size_t currPageID);
 
     Pager& m_pager;

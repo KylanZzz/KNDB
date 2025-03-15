@@ -4,7 +4,7 @@ RDBMS
 Project Goals (preliminary):
 - Load and persist a database to a file
 - Create tables that contain tuples of varying length and types
-  - Types supported so far include: [int, float, double, bool, string, char]
+  - Types supported so far include: [int, float, double, bool, String, char]
 - Drop tables 
 - CRUD operations on tuples
   - Create tuples

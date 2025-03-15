@@ -7,7 +7,7 @@
 #include "TablePage.hpp"
 #include "utility.hpp"
 
-TablePage::TablePage(ByteVec &bytes, size_t pageID) : Page(pageID) {
+TablePage::TablePage(std::span<const Byte> bytes, size_t pageID) : Page(pageID) {
     size_t offset = 0;
 
     size_t page_type_id, num_types, type_id;
@@ -39,7 +39,7 @@ TablePage::TablePage(ByteVec &bytes, size_t pageID) : Page(pageID) {
     assert(offset <= cts::PG_SZ);
 }
 
-TablePage::TablePage(const vector<variants>& types, size_t btreePageID, size_t pageID)
+TablePage::TablePage(const Vec<Vari>& types, size_t btreePageID, size_t pageID)
 : Page(pageID), m_types(types), m_btreePageID(btreePageID), m_numTuples(0) {
     if (types.empty())
         throw std::invalid_argument("There cannot be 0 types in TablePage.");
@@ -49,7 +49,7 @@ TablePage::TablePage(const vector<variants>& types, size_t btreePageID, size_t p
     }
 }
 
-size_t TablePage::getBtreePageID() {
+size_t TablePage::getBtreePageID() const {
     return m_btreePageID;
 }
 
@@ -57,11 +57,11 @@ void TablePage::setBtreePageID(size_t btreePageID) {
     m_btreePageID = btreePageID;
 }
 
-const vector<variants>& TablePage::getTypes() {
+const Vec<Vari>& TablePage::getTypes() {
     return m_types;
 }
 
-size_t TablePage::getNumTuples() {
+size_t TablePage::getNumTuples() const {
     return m_numTuples;
 }
 
@@ -76,28 +76,28 @@ void TablePage::removeTuple() {
     m_numTuples--;
 }
 
-void TablePage::toBytes(ByteVec &vec) {
+void TablePage::toBytes(std::span<Byte> buf) {
     size_t offset = 0;
 
     // serialize page_type_id
     size_t page_type_id = cts::pg_type_id::TABLE_PAGE;
-    serialize(page_type_id, vec, offset);
+    serialize(page_type_id, buf, offset);
 
     // serialize # of types
     size_t numTypes = m_types.size();
-    serialize(numTypes, vec, offset);
+    serialize(numTypes, buf, offset);
 
     // serialize list of types in each table
     for (int j = 0; j < numTypes; ++j) {
         size_t type_id = variant_to_type_id(m_types[j]);
-        serialize(type_id, vec, offset);
+        serialize(type_id, buf, offset);
     }
 
     // serialize btree page id
-    serialize(m_btreePageID, vec, offset);
+    serialize(m_btreePageID, buf, offset);
 
     // serialize num tuples
-    serialize(m_numTuples, vec, offset);
+    serialize(m_numTuples, buf, offset);
 
     assert (offset <= cts::PG_SZ);
 }

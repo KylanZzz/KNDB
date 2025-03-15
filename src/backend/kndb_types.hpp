@@ -7,23 +7,34 @@
 
 #include <string>
 #include <vector>
+#include <array>
+#include <constants.hpp>
 #include <variant>
 #include <memory>
 
 namespace kndb_types {
-    using variants = std::variant<int, char, bool, float, double, std::string>;
-    using std::string;
-    using std::vector;
-    using ByteVec = std::vector<std::byte>;
-    using ByteVecPtr = std::unique_ptr<std::vector<std::byte>>;
+    template<typename T>
+    using Vec = std::vector<T>;
+
+    template <typename T, size_t N>
+    using Arr = std::array<T, N>;
+
+    template<typename T>
+    using PgArr = std::array<T, cts::PG_SZ>;
+
+    template<typename T>
+    using VecPtr = std::unique_ptr<std::vector<T>>;
+
+    template<typename T>
+    using PrArrPtr = std::unique_ptr<PgArr<T>>;
+
+    using Vari = std::variant<int, char, bool, float, double, std::string>;
+    using String = std::string;
+    using Byte = std::byte;
 
     struct RowPtr {
         size_t pageID;
         size_t cellID;
-
-        bool operator==(const RowPtr& other) const {
-            return other.pageID == this->pageID && other.cellID == this->cellID;
-        }
     };
 //
 //    struct SecIdxVal {

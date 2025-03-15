@@ -100,7 +100,7 @@ bool Pager::isFree(size_t pageID) {
 
 Pager::~Pager() {
     // write everything in cache to disk
-    ByteVec temp(cts::PG_SZ);
+    PgArr<Byte> temp;
     for (const auto &[pgid, page_ptr]: m_cache) {
         page_ptr->toBytes(temp);
         m_ioHandler.writeBlock((void *) temp.data(), page_ptr->getPageID());

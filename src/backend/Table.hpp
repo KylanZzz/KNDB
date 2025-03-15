@@ -5,7 +5,6 @@
 #ifndef KNDB_TABLE_HPP
 #define KNDB_TABLE_HPP
 
-#include <vector>
 #include "Pager.hpp"
 #include "Btree.hpp"
 #include "kndb_types.hpp"
@@ -24,30 +23,36 @@ public:
     /**
      * @brief Constructs a Table from an existing TablePage.
      * @param name The name of the table.
-     * @param pgr Reference to the Pager for managing pages.
+     * @param pgr Reference to the Pager.
      * @param tablePageId Page ID of the table's metadata page.
-     *
-     * If no corresponding B-tree node exists, one is initialized.
      */
-    Table(string name, Pager& pgr, size_t tablePageId);
+    Table(String name, Pager& pgr, size_t tablePageId);
+
+    /**
+     * @brief Constructs a new Table.
+     * @param name The name of the table.
+     * @param pgr Reference to the Pager.
+     * @param types A list of types that the table tuples will contain.
+     */
+    Table(String name, Pager& pgr, const Vec<Vari>& types);
 
     /**
      * @brief Deletes the table and all associated data, including any Btree Nodes used to store
      * the data.
      */
-    void dropTable();
+    void drop();
 
     /**
      * @brief Retrieves the table name.
      * @return The name of the table.
      */
-    string getName();
+    String getName();
 
     /**
      * @brief Retrieves the number of tuples in the table.
      * @return The number of tuples stored in the table.
      */
-    size_t getNumTuples();
+    size_t getNumTuples() const;
 
     /**
      * @brief Inserts a new tuple into the table.
@@ -55,14 +60,14 @@ public:
      *
      * The first index of the tuple will ALWAYS be the primary key, meaning it must be unique.
      */
-    void createTuple(vector<variants> values);
+    void insertTuple(Vec<Vari> values) const;
 
     /**
      * @brief Reads a tuple from the table using the key.
      * @param key The key to look up.
      * @return The tuple associated with the key.
      */
-    vector<variants> readTuple(variants key);
+    Vec<Vari> readTuple(const Vari& key) const;
 
     /**
      * @brief Updates an existing tuple in the table.
@@ -70,25 +75,31 @@ public:
      *
      * The first index of the tuple will ALWAYS be the primary key, meaning it must be unique.
      */
-    void updateTuple(vector<variants> values);
+    void updateTuple(const Vec<Vari> &values) const;
 
     /**
      * @brief Deletes a tuple from the table using the key.
      * @param key The key of the tuple to delete.
      */
-    void deleteTuple(variants key);
+    void deleteTuple(const Vari &key) const;
 
     /**
      * @brief Retrieves the column types of the table.
      * @return A list containing the types of each column.
      */
-    vector<variants> getTypes();
+    Vec<Vari> getTypes() const;
+
+    /**
+     * Get the Table PageID.
+     * @return The ID of the page that stores metadata about the table.
+     */
+    size_t getTablePageID() const;
 
 private:
     Pager& m_pager;
-    std::unique_ptr<Btree<vector<variants>>> m_btree;
+    std::unique_ptr<Btree<Vec<Vari>>> m_btree;
     size_t m_tablePageID;
-    string m_name;
+    String m_name;
 };
 
 

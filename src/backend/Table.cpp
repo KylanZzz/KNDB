@@ -5,45 +5,48 @@
 #include <utility>
 
 #include "Table.hpp"
+
+#include <Btree.hpp>
+
 #include "BtreeNodePage.hpp"
 #include "Pager.hpp"
 #include "TablePage.hpp"
 
 #define T_PAGE m_pager.getPage<TablePage>(m_tablePageID)
 
-Table::Table(string name, Pager &pgr, size_t tablePageId) : m_pager(pgr), m_tablePageID
-        (tablePageId), m_name(name) {
-    size_t metadataBuffer = 100;
-    size_t cell_size = db_sizeof(T_PAGE.getTypes()) + db_sizeof(T_PAGE.getTypes()[0]);
-    size_t free_space = cts::PG_SZ - metadataBuffer;
-    size_t page_ptr_size = db_sizeof<size_t>();
-
-    size_t deg = (free_space + cell_size) / (2 * (cell_size + page_ptr_size));
-
-    // Page has not been initialized
-    if (T_PAGE.getBtreePageID() == cts::SIZE_T_OUT_OF_BOUNDS) {
-        // new btree node has no parent ptr
-        m_pager.createNewPage<BtreeNodePage<vector<variants>>>(
-                deg, cts::SIZE_T_OUT_OF_BOUNDS, true, true
-        );
-    }
-
-    m_btree = std::make_unique<Btree<vector<variants>>>(T_PAGE.getBtreePageID(), pgr, deg);
+Table::Table(String name, Pager &pgr, const size_t tablePageId) : m_pager(pgr), m_tablePageID
+        (tablePageId), m_name(std::move(name)) {
+    size_t deg = calculateDegree(T_PAGE.getTypes()[0], T_PAGE.getTypes());
+    m_btree = std::make_unique<Btree<Vec<Vari>>>(T_PAGE.getBtreePageID(), pgr, deg);
 }
 
-size_t Table::getNumTuples() {
+Table::Table(String name, Pager &pgr, const Vec<Vari>& types) : m_pager(pgr), m_name(std::move(name)){
+    m_tablePageID = m_pager.createNewPage<TablePage>(types, cts::SIZE_T_INVALID).getPageID();
+    size_t deg = calculateDegree(T_PAGE.getTypes()[0], T_PAGE.getTypes());
+    size_t btree_pg = m_pager.createNewPage<BtreeNodePage<Vec<Vari>>>(
+                deg, cts::SIZE_T_INVALID, true, true
+        ).getPageID();
+    T_PAGE.setBtreePageID(btree_pg);
+    m_btree = std::make_unique<Btree<Vec<Vari>>>(T_PAGE.getBtreePageID(), m_pager, deg);
+}
+
+size_t Table::getNumTuples() const {
     return T_PAGE.getNumTuples();
 }
 
-vector<variants> Table::getTypes() {
+Vec<Vari> Table::getTypes() const {
     return T_PAGE.getTypes();
 }
 
-string Table::getName() {
+size_t Table::getTablePageID() const {
+    return m_tablePageID;
+}
+
+String Table::getName() {
     return m_name;
 }
 
-void Table::createTuple(vector<variants> values) {
+void Table::insertTuple(Vec<Vari> values) const {
     if (values.size() != T_PAGE.getTypes().size())
         throw std::runtime_error("Tuple has incorrect number of values.");
 
@@ -59,18 +62,18 @@ void Table::createTuple(vector<variants> values) {
         T_PAGE.setBtreePageID(m_btree->getRootPage());
 }
 
-vector<variants> Table::readTuple(variants key) {
+Vec<Vari> Table::readTuple(const Vari& key) const {
     if (variant_to_type_id(T_PAGE.getTypes()[0]) != variant_to_type_id(key))
         throw std::runtime_error("Key is incorrect type.");
 
-    return m_btree->search(std::move(key));
+    return m_btree->search(key);
 }
 
-void Table::dropTable() {
+void Table::drop() {
     // ???
 }
 
-void Table::updateTuple(vector<variants> values) {
+void Table::updateTuple(const Vec<Vari> &values) const {
     if (values.size() != T_PAGE.getTypes().size())
         throw std::runtime_error("Tuple has incorrect number of values.");
 
@@ -81,7 +84,7 @@ void Table::updateTuple(vector<variants> values) {
     m_btree->update(values, values[0]);
 }
 
-void Table::deleteTuple(variants key) {
+void Table::deleteTuple(const Vari &key) const {
     if (variant_to_type_id(T_PAGE.getTypes()[0]) != variant_to_type_id(key))
         throw std::runtime_error("Key is incorrect type.");
 

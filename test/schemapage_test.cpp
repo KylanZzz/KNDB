@@ -12,9 +12,9 @@
 using namespace kndb_types;
 
 struct SchemaPageTest : testing::Test {
-    std::unique_ptr<std::vector<std::byte>> vec;
+    std::unique_ptr<Vec<std::byte>> vec;
     SchemaPageTest() {
-        vec = std::make_unique<std::vector<std::byte>>();
+        vec = std::make_unique<Vec<std::byte>>();
         vec->resize(cts::PG_SZ);
         size_t a = cts::pg_type_id::SCHEMA_PAGE;
         memcpy(vec->data(), &a, sizeof(size_t));
@@ -47,7 +47,7 @@ TEST_F(SchemaPageTest, SerializationPreservesTables) {
     original.addTable("Users", 5);
     original.addTable("Orders", 10);
 
-    ByteVec serialized(cts::PG_SZ);
+    Vec<Byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);
@@ -62,7 +62,7 @@ TEST_F(SchemaPageTest, AddRemoveTablesWithSerialization) {
     original.addTable("Orders", 10);
     original.removeTable("Users");
 
-    ByteVec serialized(cts::PG_SZ);
+    Vec<Byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);
@@ -78,7 +78,7 @@ TEST_F(SchemaPageTest, SerializeAfterAddingAndRemovingSameTable) {
     original.removeTable("TempTable");
     original.addTable("TempTable", 60);
 
-    ByteVec serialized(cts::PG_SZ);
+    Vec<Byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);
@@ -107,7 +107,7 @@ TEST_F(SchemaPageTest, AddTableWithMaxAndExceedingNameLength) {
 
     ASSERT_THROW(schema.addTable(tooLongName, 6), std::invalid_argument);
 
-    ByteVec serialized(cts::PG_SZ);
+    Vec<Byte> serialized(cts::PG_SZ);
     schema.toBytes(serialized);
 
     SchemaPage schema2(serialized, 1);
@@ -128,7 +128,7 @@ TEST_F(SchemaPageTest, AddingTableBeyondCapacityThrows) {
 
     ASSERT_THROW(schema.addTable("OverflowTable", pageID), std::runtime_error);
 
-    ByteVec bytes(cts::PG_SZ);
+    Vec<Byte> bytes(cts::PG_SZ);
     schema.toBytes(bytes);
 
     SchemaPage s2(bytes, 1);
@@ -138,7 +138,7 @@ TEST_F(SchemaPageTest, AddingTableBeyondCapacityThrows) {
 
 TEST_F(SchemaPageTest, SerializationPreservesEmptySchema) {
     SchemaPage original(1);
-    ByteVec serialized(cts::PG_SZ);
+    Vec<Byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);
@@ -155,7 +155,7 @@ TEST_F(SchemaPageTest, SerializationWithMultipleOperations) {
     original.removeTable("Orders");
     original.addTable("Customers", 20);
 
-    ByteVec serialized(cts::PG_SZ);
+    Vec<Byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);

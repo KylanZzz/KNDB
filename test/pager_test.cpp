@@ -9,9 +9,7 @@
 #include "IOHandler.hpp"
 #include "SchemaPage.hpp"
 #include "constants.hpp"
-#include "utility.hpp"
 #include "TablePage.hpp"
-#include "BtreeNodePage.hpp"
 
 struct PagerTest : testing::Test {
     void SetUp() override {
@@ -39,7 +37,7 @@ TEST_F(PagerTest, PagerCreatesSchemaPage) {
     pager.createNewPage<SchemaPage>();
     ASSERT_NO_THROW(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID));
     ASSERT_EQ(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID).getNumTables(), 0);
-    std::unordered_map<string, size_t> mp;
+    std::unordered_map<String, size_t> mp;
     ASSERT_EQ(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID).getTables(), mp);
     ASSERT_EQ(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID).getPageID(), cts::pgid::SCHEMA_ID);
 }
@@ -58,7 +56,7 @@ TEST_F(PagerTest, SchemaPageWorksAfterSerializing) {
     Pager pager(ioHandler);
     ASSERT_EQ(pager.getPage<SchemaPage>(schemaPageID).getNumTables(), 2);
     auto tables = pager.getPage<SchemaPage>(schemaPageID).getTables();
-    std::unordered_map<string, size_t> expected = {{"MyTable", 3}, {"AnotherTable", 4}};
+    std::unordered_map<String, size_t> expected = {{"MyTable", 3}, {"AnotherTable", 4}};
     ASSERT_EQ(tables, expected);
 }
 
@@ -124,7 +122,7 @@ TEST_F(PagerTest, GetPageReturnsSameDataOnRepeatedCalls) {
     IOHandler ioHandler("testfile.db");
 
     size_t pageID;
-    std::unordered_map<string, size_t> expectedTables;
+    std::unordered_map<String, size_t> expectedTables;
 
     {
         Pager pager(ioHandler);
@@ -181,7 +179,7 @@ TEST_F(PagerTest, GetPageThrowsForFreedPage) {
 
 TEST_F(PagerTest, ThrowsIfExceedsMaxBlocks) {
     IOHandler ioHandler("testfile.db");
-    std::vector<size_t> pageIDs;
+    Vec<size_t> pageIDs;
 
     {
         Pager pager(ioHandler);
@@ -220,7 +218,7 @@ TEST_F(PagerTest, RepeatedFreeAndReallocateSamePage) {
 
 TEST_F(PagerTest, FreeEveryOtherPageThenReallocate) {
     IOHandler ioHandler("testfile.db");
-    std::vector<size_t> allocatedPages;
+    Vec<size_t> allocatedPages;
 
     {
         Pager pager(ioHandler);
@@ -245,7 +243,7 @@ TEST_F(PagerTest, FreeEveryOtherPageThenReallocate) {
 
 TEST_F(PagerTest, FreeAllPagesAndReallocate) {
     IOHandler ioHandler("testfile.db");
-    std::vector<size_t> firstBatch, secondBatch;
+    Vec<size_t> firstBatch, secondBatch;
 
     {
         Pager pager(ioHandler);
@@ -282,7 +280,7 @@ TEST_F(PagerTest, GetPageThrowsForUnallocatedPage) {
 
 TEST_F(PagerTest, FreePagesInReverseOrder) {
     IOHandler ioHandler("testfile.db");
-    std::vector<size_t> pageIDs;
+    Vec<size_t> pageIDs;
 
     {
         Pager pager(ioHandler);
@@ -368,11 +366,10 @@ TEST_F(PagerTest, SchemaPageHandlesLargeStringNames) {
 
 TEST_F(PagerTest, SimpleTablePageWorks) {
     IOHandler ioHandler("testfile.db");
-    size_t pageID;
 
-    vector<variants> types = {string(), string(), int(), double(), float(), int()};
+    Vec<Vari> types = {String(), String(), int(), double(), float(), int()};
     Pager pager(ioHandler);
-    pageID = pager.createNewPage<TablePage>(types, 5).getPageID();
+    size_t pageID = pager.createNewPage<TablePage>(types, 5).getPageID();
     ASSERT_EQ(pager.getPage<TablePage>(pageID).getTypes(), types);
     ASSERT_EQ(pager.getPage<TablePage>(pageID).getPageID(), pageID);
     ASSERT_EQ(pager.getPage<TablePage>(pageID).getNumTuples(), 0);
@@ -385,7 +382,7 @@ TEST_F(PagerTest, SimpleTablePageWorks) {
 
 TEST_F(PagerTest, TablePageWorksWithAddAndRemove) {
     size_t pageID;
-    vector<variants> types = {string(), string(), int(), double(), float(), int()};
+    Vec<Vari> types = {String(), String(), int(), double(), float(), int()};
     {
         IOHandler ioHandler("testfile.db");
         Pager pager(ioHandler);

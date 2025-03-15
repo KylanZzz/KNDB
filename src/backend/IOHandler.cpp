@@ -5,14 +5,14 @@
 #include "utility.hpp"
 #include "IOHandler.hpp"
 
-size_t IOHandler::getNumBlocks() {
+size_t IOHandler::getNumBlocks() const {
     return m_blocks;
 }
 
 IOHandler::IOHandler(std::string_view fileName) {
 #ifdef _WIN32
     m_handle = CreateFile(
-        string(fileName).c_str(),            // File name
+        String(fileName).c_str(),            // File name
         GENERIC_READ | GENERIC_WRITE, // Access mode
         0,                         // No sharing
         nullptr,                      // Security attributes
@@ -34,7 +34,7 @@ IOHandler::IOHandler(std::string_view fileName) {
 
     m_blocks = fileSize.QuadPart / cts::PG_SZ;
 #else //_WIN32
-    m_fd = open(string(fileName).c_str(), O_RDWR | O_CREAT, 0644);
+    m_fd = open(String(fileName).c_str(), O_RDWR | O_CREAT, 0644);
 
     if (m_fd == -1)
         throw std::runtime_error("Failed to open file");
@@ -67,7 +67,7 @@ size_t IOHandler::createNewBlock() {
     return m_blocks - 1;
 }
 
-void IOHandler::writeBlock(void *arr, size_t BlockNo) {
+void IOHandler::writeBlock(void *arr, size_t BlockNo) const {
     if (BlockNo >= m_blocks)
         throw std::runtime_error("BlockNo out of bounds");
 #ifdef _WIN32
@@ -94,7 +94,7 @@ void IOHandler::writeBlock(void *arr, size_t BlockNo) {
 #endif
 }
 
-void IOHandler::readBlock(void *arr, size_t BlockNo) {
+void IOHandler::readBlock(void *arr, size_t BlockNo) const {
     if (BlockNo >= m_blocks)
         throw std::runtime_error("BlockNo out of bounds");
 #ifdef _WIN32

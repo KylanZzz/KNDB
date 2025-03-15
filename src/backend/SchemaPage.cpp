@@ -26,7 +26,7 @@ Format:
     table2PageId --- etc.
 
 */
-SchemaPage::SchemaPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
+SchemaPage::SchemaPage(std::span<const Byte> bytes, size_t pageID) : Page(pageID) {
     size_t offset = 0;
 
     size_t page_type_id, num_tables;
@@ -58,8 +58,8 @@ size_t SchemaPage::getNumTables() {
     return m_tables.size();
 }
 
-std::unordered_map<string, size_t> SchemaPage::getTables() {
-    std::unordered_map<string, size_t> res;
+std::unordered_map<String, size_t> SchemaPage::getTables() {
+    std::unordered_map<String, size_t> res;
     for (const auto &table: m_tables)
         res[table.name] = table.pageID;
     return res;
@@ -79,29 +79,8 @@ size_t SchemaPage::freeSpace() {
     return cts::PG_SZ - used;
 }
 
-void SchemaPage::toBytes(ByteVec &vec) {
-    assert(vec.size() == cts::PG_SZ);
-
-    size_t offset = 0;
-
-    // deserialize page_type_id
-    size_t page_type_id = cts::pg_type_id::SCHEMA_PAGE;
-    serialize(page_type_id, vec, offset);
-
-    // deserialize # of tables
-    size_t num_tables = m_tables.size();
-    serialize(num_tables, vec, offset);
-
-    // deserialize each table
-    for (const auto &tab_desc: m_tables) {
-        serialize(tab_desc.name, vec, offset);
-
-        serialize(tab_desc.pageID, vec, offset);
-    }
-}
-
-void SchemaPage::addTable(string name, size_t pageID) {
-    if (name.length() + 1 > db_sizeof<string>())
+void SchemaPage::addTable(String name, size_t pageID) {
+    if (name.length() + 1 > db_sizeof<String>())
         throw std::invalid_argument("Name is too long");
 
     if (name.empty())
@@ -116,14 +95,14 @@ void SchemaPage::addTable(string name, size_t pageID) {
     // check if we have enough space to store table
     table_descriptor new_table{std::move(name), pageID};
 
-    if (freeSpace() < db_sizeof<string>() + db_sizeof<size_t>())
+    if (freeSpace() < db_sizeof<String>() + db_sizeof<size_t>())
         throw std::runtime_error("Not enough space in page to add table");
 
     m_tables.push_back(std::move(new_table));
 }
 
-void SchemaPage::removeTable(const string& targ_name) {
-    if (targ_name.length() + 1 > db_sizeof<string>())
+void SchemaPage::removeTable(const String& targ_name) {
+    if (targ_name.length() + 1 > db_sizeof<String>())
         throw std::invalid_argument("Name is too long");
 
     if (targ_name.empty())
@@ -137,4 +116,25 @@ void SchemaPage::removeTable(const string& targ_name) {
     }
 
     throw std::invalid_argument("target name was not found in tables list");
+}
+
+void SchemaPage::toBytes(std::span<Byte> buf) {
+    assert(buf.size() == cts::PG_SZ);
+
+    size_t offset = 0;
+
+    // deserialize page_type_id
+    size_t page_type_id = cts::pg_type_id::SCHEMA_PAGE;
+    serialize(page_type_id, buf, offset);
+
+    // deserialize # of tables
+    size_t num_tables = m_tables.size();
+    serialize(num_tables, buf, offset);
+
+    // deserialize each table
+    for (const auto &tab_desc: m_tables) {
+        serialize(tab_desc.name, buf, offset);
+
+        serialize(tab_desc.pageID, buf, offset);
+    }
 }

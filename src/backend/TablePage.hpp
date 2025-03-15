@@ -19,7 +19,7 @@ public:
      * @param bytes The byte vector containing table data.
      * @param pageID The on-disk page number of this table page.
      */
-    TablePage(ByteVec &bytes, size_t pageID);
+    TablePage(std::span<const Byte> bytes, size_t pageID);
 
     /**
      * Creates an empty TablePage.
@@ -28,26 +28,26 @@ public:
      * @param pageID The on-disk page number of this table page.
      * @throws std::invalid_argument if list of types is empty or too long.
      */
-    TablePage(const vector<variants>& types, size_t btreePageID, size_t pageID);
+    TablePage(const Vec<Vari> &types, size_t btreePageID, size_t pageID);
 
     /**
      * Get the types that this table stores.
      * @throws std::runtime_error if the TablePage has not been initialized yet.
      * @return A list of all the types.
      */
-    const vector<variants>& getTypes();
+    const Vec<Vari> &getTypes();
 
     /**
      * @throws std::runtime_error if the TablePage has not been initialized yet.
      * @return The pageID of the root node that contains the data for this table.
      */
-    size_t getBtreePageID();
+    size_t getBtreePageID() const;
 
     /**
      * @throws std::runtime_error if the TablePage has not been initialized yet.
      * @return The number of tuples of the table that this page represents.
      */
-    size_t getNumTuples();
+    size_t getNumTuples() const;
 
     /**
      * Adds a tuple to the count of tuples in this table.
@@ -67,10 +67,10 @@ public:
      */
     void setBtreePageID(size_t btreePageID);
 
-    void toBytes(ByteVec &vec) override;
+    void toBytes(std::span<Byte> buffer) override;
 
 private:
-    vector<variants> m_types;
+    Vec<Vari> m_types;
     size_t m_btreePageID;
     size_t m_numTuples;
 };

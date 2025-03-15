@@ -49,7 +49,7 @@ TEST(FSMPageTest, SerializationPreservesNextPage) {
     FSMPage original(1);
     original.setNextPageID(99);
 
-    ByteVec serialized(cts::PG_SZ);
+    Vec<Byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     FSMPage deserialized(serialized, 1);
@@ -74,7 +74,7 @@ TEST(FSMPageTest, SerializationPreservesAllocatedBits) {
     original.allocBit(7);
     original.allocBit(15);
 
-    ByteVec serialized(cts::PG_SZ);
+    Vec<Byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     FSMPage deserialized(serialized, 1);
@@ -103,7 +103,7 @@ TEST(FSMPageTest, SerializationPreservesFindNextFree) {
     original.allocBit(1);
     original.allocBit(2);
 
-    ByteVec serialized(cts::PG_SZ);
+    Vec<Byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     FSMPage deserialized(serialized, 1);
@@ -141,7 +141,7 @@ TEST(FSMPageTest, SerializationPreservesFullAllocationCycle) {
         original.allocBit(i);
     }
 
-    ByteVec serialized(cts::PG_SZ);
+    Vec<Byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
     FSMPage deserialized(serialized, 1);
 
@@ -154,7 +154,7 @@ TEST(FSMPageTest, SerializationPreservesFullAllocationCycle) {
         deserialized.freeBit(i);
     }
 
-    ByteVec reserialized(cts::PG_SZ);
+    Vec<Byte> reserialized(cts::PG_SZ);
     deserialized.toBytes(reserialized);
     FSMPage reloaded(reserialized, 1);
 

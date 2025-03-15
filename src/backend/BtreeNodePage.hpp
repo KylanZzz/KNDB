@@ -28,7 +28,7 @@ template <typename T>
 class BtreeNodePage : public Page {
 public:
     struct cell {
-        variants key;
+        Vari key;
         T value;
     };
 public:
@@ -37,7 +37,7 @@ public:
      * @param bytes Serialized data.
      * @param pageID The page ID.
      */
-    BtreeNodePage(ByteVec &bytes, size_t pageID);
+    BtreeNodePage(std::span<const Byte> bytes, size_t pageID);
 
     /**
      * @brief Constructs a new B-tree node.
@@ -53,13 +53,13 @@ public:
      * @brief Retrieves child node IDs of this Btree node.
      * @return A list of pageIDs to children nodes.
      */
-    vector<size_t> &getChildren() { return m_children; }
+    Vec<size_t> &getChildren() { return m_children; }
 
     /**
      * @brief Retrieves all the stored key-tuple cells in the node.
      * @return A list of key-tuple pairs that represent a row in the database.
      */
-    vector<cell> &getCells() { return m_cells; }
+    Vec<cell> &getCells() { return m_cells; }
 
     /**
      * @brief Retrieves the parent node ID.
@@ -113,15 +113,15 @@ public:
      * @brief Serializes the B-tree node into a byte vector.
      * @param vec The byte vector to store serialized data.
      */
-    void toBytes(ByteVec &vec) override;
+    void toBytes(std::span<Byte> buffer) override;
 
 private:
     size_t m_degree;
     size_t m_parentID;
     bool m_leaf;
     bool m_root;
-    vector<size_t> m_children;
-    vector<cell> m_cells;
+    Vec<size_t> m_children;
+    Vec<cell> m_cells;
 };
 
 #include "BtreeNodePage.tpp"

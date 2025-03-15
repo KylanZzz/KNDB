@@ -40,7 +40,7 @@ public:
      *
      * @return The number of blocks currently allocated.
      */
-    size_t getNumBlocks();
+    size_t getNumBlocks() const;
 
     /**
      * @brief Creates a new block in the file.
@@ -55,7 +55,7 @@ public:
      * @param arr Pointer to the data to be written.
      * @param BlockNo The ID of the block to write to (0-indexed).
      */
-    void writeBlock(void *arr, size_t BlockNo);
+    void writeBlock(void *arr, size_t BlockNo) const;
 
     /**
      * @brief Reads data from a block in the file.
@@ -63,7 +63,7 @@ public:
      * @param arr Pointer to the buffer where data will be read into.
      * @param BlockNo The ID of the block to read from (0-indexed).
      */
-    void readBlock(void *arr, size_t BlockNo);
+    void readBlock(void *arr, size_t BlockNo) const;
 
     ~IOHandler();
 

@@ -5,10 +5,8 @@
 #ifndef KNDB_PAGE_HPP
 #define KNDB_PAGE_HPP
 
-#include <vector>
-#include <memory>
 #include <cstddef>
-#include <iostream>
+#include <span>
 
 #include "kndb_types.hpp"
 
@@ -42,7 +40,7 @@ public:
      * @brief Serializes the page into a byte vector.
      * @param vec The byte vector to store serialized data.
      */
-    virtual void toBytes(ByteVec &vec) = 0;
+    virtual void toBytes(std::span<Byte> buffer) = 0;
 
     virtual ~Page() = default;
 };

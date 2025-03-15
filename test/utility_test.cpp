@@ -7,33 +7,33 @@
 #include "utility.hpp"
 
 TEST(UtilityTest, sizeOfVariantsWorks) {
-    variants s = int();
+    Vari s = int();
     ASSERT_EQ(db_sizeof(s), sizeof(int));
     s = double();
     ASSERT_EQ(db_sizeof(s), sizeof(double));
-    s = string();
+    s = String();
     ASSERT_EQ(db_sizeof(s), cts::STR_SZ);
 
-    const variants c_s = int();
+    const Vari c_s = int();
     ASSERT_EQ(db_sizeof(c_s), sizeof(int));
 
-    const variants c_s2 = string();
+    const Vari c_s2 = String();
     ASSERT_EQ(db_sizeof(c_s2), cts::STR_SZ);
 }
 
 TEST(UtilityTest, serializationOfVariantsWork) {
     size_t offset = 0;
-    ByteVec vec(1000);
-    vector<variants> list = {3, "Kylan", "Apple", double(4.1323), 'a', float(3.14159)};
+    Vec<Byte> vec(1000);
+    Vec<Vari> list = {3, "Kylan", "Apple", double(4.1323), 'a', float(3.14159)};
     for (const auto& item: list) {
         serialize(item, vec, offset);
     }
 
     offset = 0;
-    vector<variants> types = {int(), string(), string(), double() , char(), float()};
-    vector<variants> res;
+    Vec<Vari> types = {int(), String(), String(), double() , char(), float()};
+    Vec<Vari> res;
     for (const auto& type: types) {
-        variants temp;
+        Vari temp;
         deserialize(temp, vec, offset, type);
         res.push_back(temp);
     }

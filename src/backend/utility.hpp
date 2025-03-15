@@ -5,6 +5,8 @@
 #ifndef KNDB_UTILITY_HPP
 #define KNDB_UTILITY_HPP
 
+#include <span>
+
 #include "kndb_types.hpp"
 #include "constants.hpp"
 
@@ -19,14 +21,14 @@ inline size_t db_sizeof<std::string>() { return cts::STR_SZ; }
 template<typename T>
 inline size_t db_sizeof(T &&) { return db_sizeof<std::decay_t<T>>(); }
 
-inline size_t db_sizeof(variants& val) {
+inline size_t db_sizeof(Vari& val) {
     return std::visit([](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         return db_sizeof<T>();
     }, val);
 }
 
-inline size_t db_sizeof(const variants& val) {
+inline size_t db_sizeof(const Vari& val) {
     return std::visit([](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         return db_sizeof<T>();
@@ -39,7 +41,7 @@ namespace variant_conversion_id {
     };
 }
 
-inline variants type_id_to_variant(const size_t type_id) {
+inline Vari type_id_to_variant(const size_t type_id) {
     switch (type_id) {
         case variant_conversion_id::CHAR:
             return char();
@@ -58,8 +60,8 @@ inline variants type_id_to_variant(const size_t type_id) {
     }
 }
 
-inline size_t variant_to_type_id(const variants& v) {
-    size_t res = std::numeric_limits<size_t>::max();
+inline size_t variant_to_type_id(const Vari& v) {
+    size_t res = cts::SIZE_T_INVALID;
 
     std::visit([&res](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
@@ -78,7 +80,7 @@ inline size_t variant_to_type_id(const variants& v) {
         }
     }, v);
 
-    if (res == std::numeric_limits<size_t>::max()) {
+    if (res == cts::SIZE_T_INVALID) {
         throw std::runtime_error("Unsupported variant; cannot convert to type id");
     }
 
@@ -86,19 +88,20 @@ inline size_t variant_to_type_id(const variants& v) {
 }
 
 template<typename T>
-inline void deserialize(T &src, const ByteVec &bytes, size_t &offset) {
+inline void deserialize(T &src, std::span<const Byte> bytes, size_t &offset) {
+    static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
     memcpy(&src, bytes.data() + offset, db_sizeof<T>());
     offset += db_sizeof<T>();
 }
 
-inline void deserialize(string &src, const ByteVec &bytes, size_t &offset) {
+inline void deserialize(String &src, std::span<const Byte> bytes, size_t &offset) {
     char buf[db_sizeof<std::string>()];
     memcpy(buf, bytes.data() + offset, db_sizeof<std::string>());
-    src = string(buf);
+    src = String(buf);
     offset += db_sizeof<std::string>();
 }
 
-inline void deserialize(variants &src, const ByteVec &bytes, size_t &offset, const variants &type) {
+inline void deserialize(Vari &src, std::span<const Byte> bytes, size_t &offset, const Vari &type) {
     std::visit([&bytes, &offset, &src](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         T buf;
@@ -106,37 +109,47 @@ inline void deserialize(variants &src, const ByteVec &bytes, size_t &offset, con
         src = buf;
     }, type);
 }
-//
-//inline void deserialize(vector<variants> &src, const ByteVec &bytes, size_t &offset, const
-//vector<variants> &types) {
-//    for (int i = 0; i < types.size(); i++) {
-//        variants v;
-//        deserialize(v, bytes, offset, types[i]);
-//        src.push_back(v);
-//    }
-//}
 
 template<typename T>
-inline void serialize(const T &val, ByteVec &bytes, size_t &offset) {
+inline void serialize(const T &val, std::span<Byte> bytes, size_t &offset) {
+    static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
     memcpy(bytes.data() + offset, &val, db_sizeof<T>());
     offset += db_sizeof<T>();
 }
 
-inline void serialize(const std::string &val, ByteVec &bytes, size_t &offset) {
+inline void serialize(const std::string &val, std::span<Byte> bytes, size_t &offset) {
     memcpy(bytes.data() + offset, val.data(), db_sizeof<std::string>());
     offset += db_sizeof<std::string>();
 }
 
-inline void serialize(const variants &val, ByteVec &bytes, size_t &offset) {
+inline void serialize(const Vari &val, std::span<Byte> bytes, size_t &offset) {
     std::visit([&bytes, &offset](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         serialize(arg, bytes, offset);
     }, val);
 }
-//
-//inline void serialize(const vector<variants> &values, ByteVec &bytes, size_t &offset) {
-//    for (int i = 0; i < values.size(); i++)
-//        serialize(values[i], bytes, offset);
-//}
+
+template <typename KeyType>
+inline size_t calculateDegree(const KeyType& key, const Vec<Vari>& values) {
+    static constexpr size_t metadataBuffer = 100;
+    constexpr size_t free_space = cts::PG_SZ - metadataBuffer;
+
+    size_t cell_size = 0;
+    cell_size += db_sizeof(key);
+    for (const auto & value : values) {
+        cell_size += db_sizeof(value);
+    }
+    const size_t page_ptr_size = db_sizeof<size_t>();
+
+    return (free_space + cell_size) / (2 * (cell_size + page_ptr_size));
+}
+
+inline bool sameTypes(const Vec<Vari> &vec1, const Vec<Vari> &vec2) {
+    if (vec1.size() != vec2.size()) return false;
+    for (int i = 0; i < vec1.size(); i++)
+        if (variant_to_type_id(vec1[i]) != variant_to_type_id(vec2[i])) return false;
+    return true;
+}
+
 
 #endif //KNDB_UTILITY_HPP

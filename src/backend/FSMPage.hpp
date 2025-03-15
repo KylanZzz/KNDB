@@ -27,7 +27,7 @@ public:
      * @param pageID The ID of the page.
      * @param bytes serialized data
      */
-    FSMPage(ByteVec &bytes, size_t pageID);
+    FSMPage(std::span<const Byte> bytes, size_t pageID);
 
     /**
     * @brief Constructs a new, empty FSMPage.
@@ -110,13 +110,13 @@ public:
      */
     static size_t getBlocksInPage() { return (cts::PG_SZ - sizeof(size_t) * 3) * 8; }
 
-    void toBytes(ByteVec &vec) override;
+    void toBytes(std::span<Byte> buf) override;
 
 private:
 
     static constexpr size_t NO_NEXT_PAGE = std::numeric_limits<size_t>::max();
 
-    std::vector<uint8_t> m_bitmap;
+    Vec<uint8_t> m_bitmap;
     size_t m_nextPageID;
     size_t m_freeBlocks;
 };

@@ -25,7 +25,7 @@
 //----------------------------------------
 //----------------------------------------
 
-FSMPage::FSMPage(ByteVec &bytes, size_t pageID) : Page(pageID) {
+FSMPage::FSMPage(std::span<const Byte> bytes, size_t pageID) : Page(pageID) {
     size_t offset = 0;
 
     size_t page_type_id;
@@ -105,23 +105,23 @@ void FSMPage::setNextPageID(size_t pageID) {
     m_nextPageID = pageID;
 }
 
-void FSMPage::toBytes(ByteVec &vec) {
-    assert(vec.size() == cts::PG_SZ);
+void FSMPage::toBytes(std::span<Byte> buf) {
+    assert(buf.size() == cts::PG_SZ);
 
     size_t offset = 0;
 
     // serialize page_type_id
     size_t page_type_id = cts::pg_type_id::FSM_PAGE;
-    serialize(page_type_id, vec, offset);
+    serialize(page_type_id, buf, offset);
 
     // serialize next page ID
-    serialize(m_nextPageID, vec, offset);
+    serialize(m_nextPageID, buf, offset);
 
     // serialize free blocks count
-    serialize(m_freeBlocks, vec, offset);
+    serialize(m_freeBlocks, buf, offset);
 
     // serialize bitmap
-    memcpy(vec.data() + offset, m_bitmap.data(), m_bitmap.size());
+    memcpy(buf.data() + offset, m_bitmap.data(), m_bitmap.size());
     offset += m_bitmap.size();
 }
 
