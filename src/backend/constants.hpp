@@ -6,6 +6,7 @@
 #define KNDB_CONSTANTS_HPP
 
 #include <cstdio>
+#include <limits>
 
 namespace cts { // constants
     // configuration

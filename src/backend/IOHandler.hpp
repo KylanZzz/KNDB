@@ -8,12 +8,17 @@
 #include <cstddef>
 #include <string>
 
-using std::string;
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <fcntl.h>
+    #include <sys/stat.h>
+    #include <unistd.h>
+#endif //_WIN32
 
 /**
  * @class IOHandler
- * @brief Provides an interface for low-level file I/O operations. ada a a a
- * a a  a a
+ * @brief Provides an interface for low-level file I/O operations.
  *
  * Handles file interactions such as reading and writing, as well as
  * increasing the size of the file when needed.
@@ -28,7 +33,7 @@ public:
      * Opens or creates a file for managing database storage. If
      * the file is created, default size is 0.
      */
-    explicit IOHandler(string fileName);
+    explicit IOHandler(std::string_view fileName);
 
     /**
      * @brief Gets the total number of blocks in the database file.
@@ -63,7 +68,11 @@ public:
     ~IOHandler();
 
 private:
+#ifdef _WIN32
+    HANDLE m_handle;
+#else
     int m_fd;
+#endif // _WIN32
     size_t m_blocks;
 };
 

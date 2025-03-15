@@ -7,11 +7,12 @@
 
 #include <string>
 #include <vector>
+#include <variant>
+#include <memory>
 
 namespace kndb_types {
     using variants = std::variant<int, char, bool, float, double, std::string>;
     using std::string;
-    using std::byte;
     using std::vector;
     using ByteVec = std::vector<std::byte>;
     using ByteVecPtr = std::unique_ptr<std::vector<std::byte>>;

@@ -63,11 +63,11 @@ TEST_F(PagerTest, SchemaPageWorksAfterSerializing) {
 }
 
 TEST_F(PagerTest, CreateNewPageAllocatesUniquePageID) {
-    IOHandler ioHandler("testfile.db");
     size_t pageID1;
     size_t pageID2;
 
     {
+        IOHandler ioHandler("testfile.db");
         Pager pager(ioHandler);
         auto& page1 = pager.createNewPage<SchemaPage>();
         auto& page2 = pager.createNewPage<SchemaPage>();
