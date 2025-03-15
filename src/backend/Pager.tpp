@@ -62,7 +62,7 @@ void Pager::freePage(size_t pageID) {
 
     // TODO: this is inefficient since we don't really need to wipe the page,
     //  but doing this for safety.
-    ByteVec temp(cts::PG_SZ, byte(0));
+    ByteVec temp(cts::PG_SZ, static_cast<std::byte>(0));
     m_ioHandler.writeBlock((void *) temp.data(), pageID);
 
     // mark page as free in bitmap

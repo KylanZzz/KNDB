@@ -137,6 +137,6 @@ TEST_F(BtreeNodePageTestFixture, InsertingManyRowPtrWorks) {
 }
 
 TEST_F(BtreeNodePageTestFixture, InvalidDeserializationThrows) {
-    ByteVec invalidBytes(10, byte(0)); // Intentionally too short
+    ByteVec invalidBytes(10, static_cast<std::byte>(0)); // Intentionally too short
     ASSERT_THROW(BtreeNodePage<vector<variants>> invalidNode(invalidBytes, defaultPageID), std::runtime_error);
 }

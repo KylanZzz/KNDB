@@ -5,6 +5,8 @@
 #ifndef KNDB_FSMPAGE_HPP
 #define KNDB_FSMPAGE_HPP
 
+#include <cstdint>
+
 #include "Page.hpp"
 #include "constants.hpp"
 
@@ -114,7 +116,7 @@ private:
 
     static constexpr size_t NO_NEXT_PAGE = std::numeric_limits<size_t>::max();
 
-    std::vector<u_int8_t> m_bitmap;
+    std::vector<uint8_t> m_bitmap;
     size_t m_nextPageID;
     size_t m_freeBlocks;
 };
