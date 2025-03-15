@@ -7,7 +7,7 @@
 #include "Pager.hpp"
 #include "SchemaPage.hpp"
 #include "utility.hpp"
-#include "Schema.hpp"
+#include "StorageEngine.hpp"
 
 using std::cout;
 using std::endl;
