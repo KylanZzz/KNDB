@@ -6,6 +6,9 @@
 #define KNDB_TABLEPAGE_HPP
 
 #include "Page.hpp"
+#include "kndb_types.hpp"
+
+using namespace kndb;
 
 /**
  * @class TablePage
@@ -19,7 +22,7 @@ public:
      * @param bytes The byte vector containing table data.
      * @param pageID The on-disk page number of this table page.
      */
-    TablePage(std::span<const Byte> bytes, size_t pageID);
+    TablePage(std::span<const byte> bytes, u32 pageID);
 
     /**
      * Creates an empty TablePage.
@@ -28,36 +31,31 @@ public:
      * @param pageID The on-disk page number of this table page.
      * @throws std::invalid_argument if list of types is empty or too long.
      */
-    TablePage(const Vec<Vari> &types, size_t btreePageID, size_t pageID);
+    TablePage(const Vec<Vari> &types, u32 btreePageID, u32 pageID);
 
     /**
      * Get the types that this table stores.
-     * @throws std::runtime_error if the TablePage has not been initialized yet.
      * @return A list of all the types.
      */
     const Vec<Vari> &getTypes();
 
     /**
-     * @throws std::runtime_error if the TablePage has not been initialized yet.
      * @return The pageID of the root node that contains the data for this table.
      */
-    size_t getBtreePageID() const;
+    u32 getBtreePageID() const;
 
     /**
-     * @throws std::runtime_error if the TablePage has not been initialized yet.
      * @return The number of tuples of the table that this page represents.
      */
-    size_t getNumTuples() const;
+    u64 getNumTuples() const;
 
     /**
      * Adds a tuple to the count of tuples in this table.
-     * @throws std::runtime_error if the TablePage has not been initialized yet.
      */
     void addTuple();
 
     /**
      * Removes a tuple to the count of tuples in this table.
-     * @throws std::runtime_error if the TablePage has not been initialized yet.
      */
     void removeTuple();
 
@@ -65,14 +63,14 @@ public:
      * Changes the page ID of the table's btree root.
      * @param btreePageID the new page ID.
      */
-    void setBtreePageID(size_t btreePageID);
+    void setBtreePageID(u32 btreePageID);
 
-    void toBytes(std::span<Byte> buffer) override;
+    void toBytes(std::span<byte> buffer) override;
 
 private:
     Vec<Vari> m_types;
-    size_t m_btreePageID;
-    size_t m_numTuples;
+    u32 m_btreePageID;
+    u64 m_numTuples;
 };
 
 

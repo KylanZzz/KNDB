@@ -10,7 +10,7 @@
 TEST(FSMPageTest, NewlyCreatedPageIsAllFree) {
     FSMPage page(1);
     ASSERT_FALSE(page.isFree(0));
-    for (size_t i = 1; i < page.getSpaceLeft(); ++i) {
+    for (int i = 1; i < page.getSpaceLeft(); ++i) {
         ASSERT_TRUE(page.isFree(i));
     }
 }
@@ -49,7 +49,7 @@ TEST(FSMPageTest, SerializationPreservesNextPage) {
     FSMPage original(1);
     original.setNextPageID(99);
 
-    Vec<Byte> serialized(cts::PG_SZ);
+    Vec<byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     FSMPage deserialized(serialized, 1);
@@ -74,7 +74,7 @@ TEST(FSMPageTest, SerializationPreservesAllocatedBits) {
     original.allocBit(7);
     original.allocBit(15);
 
-    Vec<Byte> serialized(cts::PG_SZ);
+    Vec<byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     FSMPage deserialized(serialized, 1);
@@ -91,7 +91,7 @@ TEST(FSMPageTest, FindNextFreeReturnsFirstAvailableBit) {
 TEST(FSMPageTest, FindNextFreeThrowsIfNoFreeBits) {
     FSMPage page(1);
 
-    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
+    for (int i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         page.allocBit(i);
     }
     ASSERT_EQ(0, page.getSpaceLeft());
@@ -103,7 +103,7 @@ TEST(FSMPageTest, SerializationPreservesFindNextFree) {
     original.allocBit(1);
     original.allocBit(2);
 
-    Vec<Byte> serialized(cts::PG_SZ);
+    Vec<byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     FSMPage deserialized(serialized, 1);
@@ -114,20 +114,20 @@ TEST(FSMPageTest, AllocateAllBitsThenFreeAndReallocate) {
     FSMPage page(1);
 
     // Allocate all bits
-    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
+    for (int i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         page.allocBit(i);
         ASSERT_FALSE(page.isFree(i));
     }
     ASSERT_THROW(page.findNextFree(), std::invalid_argument);
 
     // Free all bits
-    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
+    for (int i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         page.freeBit(i);
         ASSERT_TRUE(page.isFree(i));
     }
 
     // Reallocate all bits again
-    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
+    for (int i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         page.allocBit(i);
         ASSERT_FALSE(page.isFree(i));
     }
@@ -137,28 +137,28 @@ TEST(FSMPageTest, SerializationPreservesFullAllocationCycle) {
     FSMPage original(1);
 
     // Allocate all bits
-    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
+    for (int i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         original.allocBit(i);
     }
 
-    Vec<Byte> serialized(cts::PG_SZ);
+    Vec<byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
     FSMPage deserialized(serialized, 1);
 
-    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
+    for (int i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         ASSERT_FALSE(deserialized.isFree(i));
     }
 
     // Free all bits
-    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
+    for (int i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         deserialized.freeBit(i);
     }
 
-    Vec<Byte> reserialized(cts::PG_SZ);
+    Vec<byte> reserialized(cts::PG_SZ);
     deserialized.toBytes(reserialized);
     FSMPage reloaded(reserialized, 1);
 
-    for (size_t i = 1; i < FSMPage::getBlocksInPage(); ++i) {
+    for (int i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         ASSERT_TRUE(reloaded.isFree(i));
     }
 }

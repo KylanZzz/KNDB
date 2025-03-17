@@ -11,8 +11,9 @@
 #include <constants.hpp>
 #include <variant>
 #include <memory>
+#include <windows.h> // for windows 'byte' -> unsigned char
 
-namespace kndb_types {
+namespace kndb {
     template<typename T>
     using Vec = std::vector<T>;
 
@@ -23,18 +24,28 @@ namespace kndb_types {
     using PgArr = std::array<T, cts::PG_SZ>;
 
     template<typename T>
-    using VecPtr = std::unique_ptr<std::vector<T>>;
+    using Ptr = std::unique_ptr<T>;
 
     template<typename T>
-    using PrArrPtr = std::unique_ptr<PgArr<T>>;
+    using PgArrPtr = std::unique_ptr<PgArr<T>>;
 
     using Vari = std::variant<int, char, bool, float, double, std::string>;
-    using String = std::string;
-    using Byte = std::byte;
+    using string = std::string;
 
-    struct RowPtr {
-        size_t pageID;
-        size_t cellID;
+#ifdef _WIN32
+    using byte = byte; // use windows byte typedef
+#else
+    using byte = std::byte;
+#endif
+
+    using u8 = uint8_t;
+    using u16 = uint16_t;
+    using u32 = uint32_t;
+    using u64 = uint64_t;
+
+    struct RowPos {
+        u32 pageID;
+        u32 cellID; // could potentially change to 16 bytes if we need extra space eventually
     };
 //
 //    struct SecIdxVal {

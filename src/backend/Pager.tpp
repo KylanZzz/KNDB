@@ -12,7 +12,7 @@
 #include "constants.hpp"
 
 template <typename T>
-T &Pager::getPage(size_t pageID) {
+T &Pager::getPage(u32 pageID) {
     static_assert(std::is_base_of<Page, T>::value, "T must be a derived class of Page");
 
     if (pageID >= m_ioHandler.getNumBlocks())
@@ -26,8 +26,8 @@ T &Pager::getPage(size_t pageID) {
         return dynamic_cast<T &>(*m_cache[pageID]);
 
     // if not in cache, load it into cache
-    PgArr<Byte> buf;
-    m_ioHandler.readBlock((void *) buf.data(), pageID);
+    PgArr<byte> buf;
+    m_ioHandler.readBlock(buf.data(), pageID);
 
     // create a new page in cache (which is just a list for now)
     m_cache.emplace(pageID, std::make_unique<T>(buf, pageID));
@@ -41,7 +41,7 @@ T &Pager::createNewPage(Args&&... args) {
     static_assert(std::is_base_of<Page, T>::value, "T must be a derived class of Page");
 
     // create new block in db file
-    size_t new_page_no = allocPageBit();
+    u32 new_page_no = allocPageBit();
 
     if (m_ioHandler.getNumBlocks() > cts::MAX_BLOCKS)
         throw std::runtime_error("Database has reached block limit.");
@@ -54,7 +54,7 @@ T &Pager::createNewPage(Args&&... args) {
 }
 
 template <typename T>
-void Pager::freePage(size_t pageID) {
+void Pager::freePage(u32 pageID) {
     static_assert(std::is_base_of<Page, T>::value, "T must be a derived class of Page");
 
     if (pageID >= m_ioHandler.getNumBlocks())
@@ -62,7 +62,7 @@ void Pager::freePage(size_t pageID) {
 
     // TODO: this is inefficient since we don't really need to wipe the page,
     //  but doing this for safety.
-    PgArr<Byte> buf{};
+    PgArr<byte> buf{};
     m_ioHandler.writeBlock(buf.data(), pageID);
 
     // mark page as free in bitmap

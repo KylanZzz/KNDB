@@ -25,10 +25,10 @@
 //----------------------------------------
 //----------------------------------------
 
-FSMPage::FSMPage(std::span<const Byte> bytes, size_t pageID) : Page(pageID) {
-    size_t offset = 0;
+FSMPage::FSMPage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
+    u16 offset = 0;
 
-    size_t page_type_id;
+    u8 page_type_id;
     deserialize(page_type_id, bytes, offset);
 
     // check if page type is correct
@@ -49,14 +49,14 @@ FSMPage::FSMPage(std::span<const Byte> bytes, size_t pageID) : Page(pageID) {
     assert(offset <= cts::PG_SZ);
 }
 
-FSMPage::FSMPage(size_t pageID) : Page(pageID) {
-    m_nextPageID = NO_NEXT_PAGE;
-    m_bitmap.resize(cts::PG_SZ - db_sizeof<size_t>() * 3);
+FSMPage::FSMPage(u32 pageID) : Page(pageID) {
+    m_nextPageID = cts::U32_INVALID;
+    m_bitmap.resize(cts::PG_SZ - db_sizeof<u32>() * 3);
     m_freeBlocks = m_bitmap.size() * 8;
     allocBit(0);
 }
 
-void FSMPage::allocBit(size_t idx) {
+void FSMPage::allocBit(u32 idx) {
     if (!isFree(idx))
         throw std::invalid_argument("that bit is already in use");
 
@@ -65,25 +65,25 @@ void FSMPage::allocBit(size_t idx) {
     m_bitmap[idx / 8] ^= 1 << (idx % 8);
 }
 
-bool FSMPage::isFree(size_t idx) {
+bool FSMPage::isFree(u32 idx) {
     if (idx >= (m_bitmap.size() * 8))
         throw std::invalid_argument("idx is out of bounds");
 
     return !(m_bitmap[idx / 8] & 1 << (idx % 8));
 }
 
-size_t FSMPage::findNextFree() {
+u32 FSMPage::findNextFree() {
     for (int i = 0; i < m_bitmap.size() * 8; i++)
         if (isFree(i)) return i;
 
     throw std::invalid_argument("There are no more free nodes");
 }
 
-size_t FSMPage::getSpaceLeft() {
+u32 FSMPage::getSpaceLeft() const {
     return m_freeBlocks;
 }
 
-void FSMPage::freeBit(size_t idx) {
+void FSMPage::freeBit(u32 idx) {
     if (isFree(idx))
         throw std::invalid_argument("that bit is already free");
 
@@ -92,26 +92,26 @@ void FSMPage::freeBit(size_t idx) {
     m_bitmap[idx / 8] ^= 1 << (idx % 8);
 }
 
-bool FSMPage::hasNextPage() {
-    return m_nextPageID != NO_NEXT_PAGE;
+bool FSMPage::hasNextPage() const {
+    return m_nextPageID != cts::U32_INVALID;
 }
 
-size_t FSMPage::getNextPageID() {
+u32 FSMPage::getNextPageID() const {
     if (!hasNextPage()) throw std::invalid_argument("Has no next page");
     return m_nextPageID;
 }
 
-void FSMPage::setNextPageID(size_t pageID) {
+void FSMPage::setNextPageID(u32 pageID) {
     m_nextPageID = pageID;
 }
 
-void FSMPage::toBytes(std::span<Byte> buf) {
+void FSMPage::toBytes(std::span<byte> buf) {
     assert(buf.size() == cts::PG_SZ);
 
-    size_t offset = 0;
+    u16 offset = 0;
 
     // serialize page_type_id
-    size_t page_type_id = cts::pg_type_id::FSM_PAGE;
+    u8 page_type_id = cts::pg_type_id::FSM_PAGE;
     serialize(page_type_id, buf, offset);
 
     // serialize next page ID

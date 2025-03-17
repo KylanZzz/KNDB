@@ -7,17 +7,16 @@
 #include "SchemaPage.hpp"
 #include "kndb_types.hpp"
 #include "constants.hpp"
-#include "utility.hpp"
 
-using namespace kndb_types;
+using namespace kndb;
 
 struct SchemaPageTest : testing::Test {
-    std::unique_ptr<Vec<std::byte>> vec;
+    std::unique_ptr<Vec<byte>> vec;
     SchemaPageTest() {
-        vec = std::make_unique<Vec<std::byte>>();
+        vec = std::make_unique<Vec<byte>>();
         vec->resize(cts::PG_SZ);
-        size_t a = cts::pg_type_id::SCHEMA_PAGE;
-        memcpy(vec->data(), &a, sizeof(size_t));
+        u8 a = cts::pg_type_id::SCHEMA_PAGE;
+        memcpy(vec->data(), &a, sizeof(u8));
     }
 };
 
@@ -47,7 +46,7 @@ TEST_F(SchemaPageTest, SerializationPreservesTables) {
     original.addTable("Users", 5);
     original.addTable("Orders", 10);
 
-    Vec<Byte> serialized(cts::PG_SZ);
+    Vec<byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);
@@ -62,7 +61,7 @@ TEST_F(SchemaPageTest, AddRemoveTablesWithSerialization) {
     original.addTable("Orders", 10);
     original.removeTable("Users");
 
-    Vec<Byte> serialized(cts::PG_SZ);
+    Vec<byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);
@@ -78,7 +77,7 @@ TEST_F(SchemaPageTest, SerializeAfterAddingAndRemovingSameTable) {
     original.removeTable("TempTable");
     original.addTable("TempTable", 60);
 
-    Vec<Byte> serialized(cts::PG_SZ);
+    Vec<byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);
@@ -107,7 +106,7 @@ TEST_F(SchemaPageTest, AddTableWithMaxAndExceedingNameLength) {
 
     ASSERT_THROW(schema.addTable(tooLongName, 6), std::invalid_argument);
 
-    Vec<Byte> serialized(cts::PG_SZ);
+    Vec<byte> serialized(cts::PG_SZ);
     schema.toBytes(serialized);
 
     SchemaPage schema2(serialized, 1);
@@ -116,19 +115,19 @@ TEST_F(SchemaPageTest, AddTableWithMaxAndExceedingNameLength) {
 
 TEST_F(SchemaPageTest, AddingTableBeyondCapacityThrows) {
     SchemaPage schema(1);
-    size_t used_space = 16; // Initial schema space
-    size_t max_space = cts::PG_SZ;
+    u32 used_space = 16; // Initial schema space
+    u32 max_space = cts::PG_SZ;
 
-    size_t pageID = 5;
-    while (used_space + 32 + 8 <= max_space) {
+    u32 pageID = 5;
+    while (used_space + 32 + 4 <= max_space) {
         schema.addTable("Table" + std::to_string(pageID), pageID);
         pageID++;
-        used_space += 32 + 8; // 32 (name) + 8 (pageID)
+        used_space += 32 + 4; // 32 (name) + 4 (pageID)
     }
 
     ASSERT_THROW(schema.addTable("OverflowTable", pageID), std::runtime_error);
 
-    Vec<Byte> bytes(cts::PG_SZ);
+    Vec<byte> bytes(cts::PG_SZ);
     schema.toBytes(bytes);
 
     SchemaPage s2(bytes, 1);
@@ -138,7 +137,7 @@ TEST_F(SchemaPageTest, AddingTableBeyondCapacityThrows) {
 
 TEST_F(SchemaPageTest, SerializationPreservesEmptySchema) {
     SchemaPage original(1);
-    Vec<Byte> serialized(cts::PG_SZ);
+    Vec<byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);
@@ -155,7 +154,7 @@ TEST_F(SchemaPageTest, SerializationWithMultipleOperations) {
     original.removeTable("Orders");
     original.addTable("Customers", 20);
 
-    Vec<Byte> serialized(cts::PG_SZ);
+    Vec<byte> serialized(cts::PG_SZ);
     original.toBytes(serialized);
 
     SchemaPage deserialized(serialized, 1);

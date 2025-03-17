@@ -10,7 +10,7 @@
 
 #include "kndb_types.hpp"
 
-using namespace kndb_types;
+using namespace kndb;
 
 /**
  * @class Page
@@ -21,26 +21,26 @@ using namespace kndb_types;
  */
 class Page {
 protected:
-    size_t m_pageID;
+    u32 m_pageID;
 
 public:
     /**
      * @brief Constructs a Page with a given ID.
      * @param pageID The unique page ID.
      */
-    explicit Page(size_t pageID) : m_pageID(pageID) {};
+    explicit Page(u32 pageID) : m_pageID(pageID) {};
 
     /**
      * @brief Gets the page ID.
      * @return The page ID.
      */
-    size_t getPageID() const { return m_pageID; }
+    u32 getPageID() const { return m_pageID; }
 
     /**
      * @brief Serializes the page into a byte vector.
-     * @param vec The byte vector to store serialized data.
+     * @param buffer The container that will be serialized to.
      */
-    virtual void toBytes(std::span<Byte> buffer) = 0;
+    virtual void toBytes(std::span<byte> buffer) = 0;
 
     virtual ~Page() = default;
 };

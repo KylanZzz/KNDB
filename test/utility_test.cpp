@@ -11,26 +11,26 @@ TEST(UtilityTest, sizeOfVariantsWorks) {
     ASSERT_EQ(db_sizeof(s), sizeof(int));
     s = double();
     ASSERT_EQ(db_sizeof(s), sizeof(double));
-    s = String();
+    s = string();
     ASSERT_EQ(db_sizeof(s), cts::STR_SZ);
 
     const Vari c_s = int();
     ASSERT_EQ(db_sizeof(c_s), sizeof(int));
 
-    const Vari c_s2 = String();
+    const Vari c_s2 = string();
     ASSERT_EQ(db_sizeof(c_s2), cts::STR_SZ);
 }
 
 TEST(UtilityTest, serializationOfVariantsWork) {
-    size_t offset = 0;
-    Vec<Byte> vec(1000);
+    u16 offset = 0;
+    Vec<byte> vec(1000);
     Vec<Vari> list = {3, "Kylan", "Apple", double(4.1323), 'a', float(3.14159)};
     for (const auto& item: list) {
-        serialize(item, vec, offset);
+        serialize (item, vec, offset);
     }
 
     offset = 0;
-    Vec<Vari> types = {int(), String(), String(), double() , char(), float()};
+    Vec<Vari> types = {int(), string(), string(), double() , char(), float()};
     Vec<Vari> res;
     for (const auto& type: types) {
         Vari temp;

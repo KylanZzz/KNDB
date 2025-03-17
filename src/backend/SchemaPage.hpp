@@ -9,7 +9,7 @@
 #include "unordered_map"
 #include "kndb_types.hpp"
 
-using namespace kndb_types;
+using namespace kndb;
 
 /**
  * @class SchemaPage
@@ -25,51 +25,49 @@ public:
      * @param bytes The byte vector containing schema data.
      * @param pageID The on-disk page number of this schema page.
      */
-    SchemaPage(std::span<const Byte> bytes, size_t pageID);
+    SchemaPage(std::span<const byte> bytes, u32 pageID);
 
     /**
      * @brief Creates a new empty SchemaPage.
-     * @param bytes
      * @param pageID
      */
-    SchemaPage(size_t pageID);
+    SchemaPage(u32 pageID);
 
     /**
      * @brief Gets the total number of tables in the schema.
      * @return The number of tables.
      */
-    size_t getNumTables();
+    u8 getNumTables() const;
 
     /**
      * @brief Gets list of all tables in schema.
      * @return Map of table names to pageID of table metadata page.
      */
-    std::unordered_map<String, size_t> getTables();
+    std::unordered_map<string, u32> getTables();
 
     /**
      * @brief Creates a new table in the schema.
      * @param name The name of the table.
-     * @param types The types of the table columns.
      * @param pageID The page number of the table.
      */
-    void addTable(String name, size_t pageID);
+    void addTable(string name, u32 pageID);
 
     /**
      * @brief Removes a table from the schema.
      * @param name The name of the table to remove.
      */
-    void removeTable(const String& name);
+    void removeTable(const string& name);
 
-    void toBytes(std::span<Byte> buffer) override;
+    void toBytes(std::span<byte> buffer) override;
 
 private:
     struct table_descriptor {
-        String name;
-        size_t pageID;
+        string name;
+        u32 pageID;
     };
 
     // calculates the amount of free space (in bytes) that the page has left
-    size_t freeSpace();
+    u16 freeSpace();
 
     Vec<table_descriptor> m_tables;
 };

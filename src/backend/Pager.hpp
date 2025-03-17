@@ -11,9 +11,7 @@
 #include "Page.hpp"
 #include "IOHandler.hpp"
 
-using namespace kndb_types;
-
-using PagePtr = std::unique_ptr<Page>;
+using namespace kndb;
 
 /**
  * @class Pager
@@ -60,7 +58,7 @@ public:
      * @return a reference to the requested page.
      */
     template<typename T>
-    T &getPage(size_t pageID);
+    T &getPage(u32 pageID);
 
     /**
      * @brief Creates a new page
@@ -90,7 +88,7 @@ public:
      * page is already freed.
      */
     template<typename T>
-    void freePage(size_t pageID);
+    void freePage(u32 pageID);
 
     /**
      * All pages are guaranteed to be written
@@ -99,18 +97,19 @@ public:
 
 private:
     // helper functions to manipulate the free space bitmap
-    void freePageBit(size_t pageID);
+    void freePageBit(u32 pageID);
 
-    size_t allocPageBit();
+    // allocates a pg in the bitmap and returns the pg id
+    u32 allocPageBit();
 
-    bool isFree(size_t pageID);
+    bool isFree(u32 pageID);
 
     IOHandler &m_ioHandler;
 
     // TODO: LRU cache using implementation here: https://leetcode.com/problems/lru-cache/
     //      - but use template for key and val, and make sure val is a unique_ptr<val> instead
     //      - key is page number, val is PagePtr
-    std::unordered_map<size_t, PagePtr> m_cache;
+    std::unordered_map<u32, Ptr<Page>> m_cache;
 };
 
 

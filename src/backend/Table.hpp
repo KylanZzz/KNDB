@@ -9,7 +9,7 @@
 #include "Btree.hpp"
 #include "kndb_types.hpp"
 
-using namespace kndb_types;
+using namespace kndb;
 
 /**
  * @class Table
@@ -26,7 +26,7 @@ public:
      * @param pgr Reference to the Pager.
      * @param tablePageId Page ID of the table's metadata page.
      */
-    Table(String name, Pager& pgr, size_t tablePageId);
+    Table(string name, Pager& pgr, u32 tablePageId);
 
     /**
      * @brief Constructs a new Table.
@@ -34,7 +34,7 @@ public:
      * @param pgr Reference to the Pager.
      * @param types A list of types that the table tuples will contain.
      */
-    Table(String name, Pager& pgr, const Vec<Vari>& types);
+    Table(string name, Pager& pgr, const Vec<Vari>& types);
 
     /**
      * @brief Deletes the table and all associated data, including any Btree Nodes used to store
@@ -46,13 +46,13 @@ public:
      * @brief Retrieves the table name.
      * @return The name of the table.
      */
-    String getName();
+    string getName();
 
     /**
      * @brief Retrieves the number of tuples in the table.
      * @return The number of tuples stored in the table.
      */
-    size_t getNumTuples() const;
+    u64 getNumTuples() const;
 
     /**
      * @brief Inserts a new tuple into the table.
@@ -93,13 +93,13 @@ public:
      * Get the Table PageID.
      * @return The ID of the page that stores metadata about the table.
      */
-    size_t getTablePageID() const;
+    u32 getTablePageID() const;
 
 private:
     Pager& m_pager;
     std::unique_ptr<Btree<Vec<Vari>>> m_btree;
-    size_t m_tablePageID;
-    String m_name;
+    u32 m_tablePageID;
+    string m_name;
 };
 
 

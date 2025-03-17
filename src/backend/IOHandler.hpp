@@ -16,6 +16,10 @@
     #include <unistd.h>
 #endif //_WIN32
 
+#include "kndb_types.hpp"
+
+using namespace kndb;
+
 /**
  * @class IOHandler
  * @brief Provides an interface for low-level file I/O operations.
@@ -40,14 +44,14 @@ public:
      *
      * @return The number of blocks currently allocated.
      */
-    size_t getNumBlocks() const;
+    u32 getNumBlocks() const;
 
     /**
      * @brief Creates a new block in the file.
      *
      * @return The Block No of the newly created block (0-indexed).
      */
-    size_t createNewBlock();
+    u32 createNewBlock();
 
     /**
      * @brief Writes data to a block in the file.
@@ -55,7 +59,7 @@ public:
      * @param arr Pointer to the data to be written.
      * @param BlockNo The ID of the block to write to (0-indexed).
      */
-    void writeBlock(void *arr, size_t BlockNo) const;
+    void writeBlock(void *arr, u32 BlockNo) const;
 
     /**
      * @brief Reads data from a block in the file.
@@ -63,7 +67,7 @@ public:
      * @param arr Pointer to the buffer where data will be read into.
      * @param BlockNo The ID of the block to read from (0-indexed).
      */
-    void readBlock(void *arr, size_t BlockNo) const;
+    void readBlock(void *arr, u32 BlockNo) const;
 
     ~IOHandler();
 
@@ -73,7 +77,7 @@ private:
 #else
     int m_fd;
 #endif // _WIN32
-    size_t m_blocks;
+    u32 m_blocks;
 };
 
 

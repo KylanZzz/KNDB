@@ -10,25 +10,25 @@
 #include "kndb_types.hpp"
 #include "constants.hpp"
 
-using namespace kndb_types;
+using namespace kndb;
 
 template<typename T>
 inline size_t db_sizeof() { return sizeof(T); }
 
 template<>
-inline size_t db_sizeof<std::string>() { return cts::STR_SZ; }
+inline size_t db_sizeof<string>() { return cts::STR_SZ; }
 
 template<typename T>
-inline size_t db_sizeof(T &&) { return db_sizeof<std::decay_t<T>>(); }
+inline size_t db_sizeof(T &&) { return db_sizeof<std::decay_t<T> >(); }
 
-inline size_t db_sizeof(Vari& val) {
+inline size_t db_sizeof(Vari &val) {
     return std::visit([](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         return db_sizeof<T>();
     }, val);
 }
 
-inline size_t db_sizeof(const Vari& val) {
+inline size_t db_sizeof(const Vari &val) {
     return std::visit([](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         return db_sizeof<T>();
@@ -41,7 +41,7 @@ namespace variant_conversion_id {
     };
 }
 
-inline Vari type_id_to_variant(const size_t type_id) {
+inline Vari type_id_to_variant(const u8 type_id) {
     switch (type_id) {
         case variant_conversion_id::CHAR:
             return char();
@@ -60,8 +60,8 @@ inline Vari type_id_to_variant(const size_t type_id) {
     }
 }
 
-inline size_t variant_to_type_id(const Vari& v) {
-    size_t res = cts::SIZE_T_INVALID;
+inline u8 variant_to_type_id(const Vari &v) {
+    u8 res = cts::U8_INVALID;
 
     std::visit([&res](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
@@ -80,7 +80,7 @@ inline size_t variant_to_type_id(const Vari& v) {
         }
     }, v);
 
-    if (res == cts::SIZE_T_INVALID) {
+    if (res == cts::U8_INVALID) {
         throw std::runtime_error("Unsupported variant; cannot convert to type id");
     }
 
@@ -88,20 +88,20 @@ inline size_t variant_to_type_id(const Vari& v) {
 }
 
 template<typename T>
-inline void deserialize(T &src, std::span<const Byte> bytes, size_t &offset) {
+inline void deserialize(T &src, std::span<const byte> bytes, u16 &offset) {
     static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
     memcpy(&src, bytes.data() + offset, db_sizeof<T>());
     offset += db_sizeof<T>();
 }
 
-inline void deserialize(String &src, std::span<const Byte> bytes, size_t &offset) {
+inline void deserialize(string &src, std::span<const byte> bytes, u16 &offset) {
     char buf[db_sizeof<std::string>()];
     memcpy(buf, bytes.data() + offset, db_sizeof<std::string>());
-    src = String(buf);
+    src = string(buf);
     offset += db_sizeof<std::string>();
 }
 
-inline void deserialize(Vari &src, std::span<const Byte> bytes, size_t &offset, const Vari &type) {
+inline void deserialize(Vari &src, std::span<const byte> bytes, u16 &offset, const Vari &type) {
     std::visit([&bytes, &offset, &src](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         T buf;
@@ -111,35 +111,35 @@ inline void deserialize(Vari &src, std::span<const Byte> bytes, size_t &offset, 
 }
 
 template<typename T>
-inline void serialize(const T &val, std::span<Byte> bytes, size_t &offset) {
+inline void serialize(const T &val, std::span<byte> bytes, u16 &offset) {
     static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
     memcpy(bytes.data() + offset, &val, db_sizeof<T>());
     offset += db_sizeof<T>();
 }
 
-inline void serialize(const std::string &val, std::span<Byte> bytes, size_t &offset) {
+inline void serialize(const std::string &val, std::span<byte> bytes, u16 &offset) {
     memcpy(bytes.data() + offset, val.data(), db_sizeof<std::string>());
     offset += db_sizeof<std::string>();
 }
 
-inline void serialize(const Vari &val, std::span<Byte> bytes, size_t &offset) {
+inline void serialize(const Vari &val, std::span<byte> bytes, u16 &offset) {
     std::visit([&bytes, &offset](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         serialize(arg, bytes, offset);
     }, val);
 }
 
-template <typename KeyType>
-inline size_t calculateDegree(const KeyType& key, const Vec<Vari>& values) {
-    static constexpr size_t metadataBuffer = 100;
-    constexpr size_t free_space = cts::PG_SZ - metadataBuffer;
+template<typename KeyType>
+inline u16 calculateDegree(const KeyType &key, const Vec<Vari> &values) {
+    static constexpr u16 metadataBuffer = 100;
+    constexpr u16 free_space = cts::PG_SZ - metadataBuffer;
 
-    size_t cell_size = 0;
+    u16 cell_size = 0;
     cell_size += db_sizeof(key);
-    for (const auto & value : values) {
+    for (const auto &value: values) {
         cell_size += db_sizeof(value);
     }
-    const size_t page_ptr_size = db_sizeof<size_t>();
+    const u16 page_ptr_size = db_sizeof<u32>();
 
     return (free_space + cell_size) / (2 * (cell_size + page_ptr_size));
 }

@@ -25,19 +25,19 @@ TEST_F(IOHandlerTest, GetBlocksInitializesToZero) {
 }
 
 TEST_F(IOHandlerTest, CreateOneBlockWorks) {
-    size_t pageid = ioHandler->createNewBlock();
+    u32 pageid = ioHandler->createNewBlock();
     ASSERT_EQ(0, pageid);
     ASSERT_EQ(1, ioHandler->getNumBlocks());
 }
 
 TEST_F(IOHandlerTest, CreateMultipleBlocksWorks) {
-    size_t pageid1 = ioHandler->createNewBlock();
+    u32 pageid1 = ioHandler->createNewBlock();
     ASSERT_EQ(1, ioHandler->getNumBlocks());
-    size_t pageid2 = ioHandler->createNewBlock();
+    u32 pageid2 = ioHandler->createNewBlock();
     ASSERT_EQ(2, ioHandler->getNumBlocks());
-    size_t pageid3 = ioHandler->createNewBlock();
+    u32 pageid3 = ioHandler->createNewBlock();
     ASSERT_EQ(3, ioHandler->getNumBlocks());
-    size_t pageid4 = ioHandler->createNewBlock();
+    u32 pageid4 = ioHandler->createNewBlock();
     ASSERT_EQ(4, ioHandler->getNumBlocks());
     ASSERT_EQ(0, pageid1);
     ASSERT_EQ(1, pageid2);
@@ -46,7 +46,7 @@ TEST_F(IOHandlerTest, CreateMultipleBlocksWorks) {
 }
 
 TEST(IOHandlerPersistenceTest, FilePersistsWithCorrectSizeAfterDestruction) {
-    size_t expectedSize;
+    u32 expectedSize;
 
     {
         IOHandler handler("testfile.db");
@@ -68,7 +68,7 @@ TEST(IOHandlerPersistenceTest, FilePersistsWithCorrectSizeAfterDestruction) {
 
 TEST(IOHandlerPersistenceTest, SingleBlockPersistsAfterDestruction) {
     char writeData[cts::PG_SZ] = "Persistent Block";
-    size_t expectedSize;
+    u32 expectedSize;
 
     {
         IOHandler handler("testfile.db");
@@ -90,7 +90,7 @@ TEST(IOHandlerPersistenceTest, SingleBlockPersistsAfterDestruction) {
 TEST(IOHandlerPersistenceTest, MultipleBlocksPersistAfterDestruction) {
     char block1[cts::PG_SZ] = "Block One";
     char block2[cts::PG_SZ] = "Block Two";
-    size_t expectedSize;
+    u32 expectedSize;
 
     {
         IOHandler handler("testfile.db");
@@ -104,7 +104,7 @@ TEST(IOHandlerPersistenceTest, MultipleBlocksPersistAfterDestruction) {
     std::ifstream file("testfile.db", std::ios::binary);
     ASSERT_TRUE(file.good());
 
-    char fileData[cts::PG_SZ] = {0};
+    char fileData[cts::PG_SZ] = {};
 
     file.read(fileData, cts::PG_SZ);
     ASSERT_EQ(memcmp(block1, fileData, cts::PG_SZ), 0);
@@ -119,7 +119,7 @@ TEST(IOHandlerPersistenceTest, MultipleBlocksPersistAfterDestruction) {
 TEST(IOHandlerPersistenceTest, OverwrittenDataPersistsAfterDestruction) {
     char originalData[cts::PG_SZ] = "Original Block";
     char newData[cts::PG_SZ] = "Updated Block";
-    size_t expectedSize;
+    u32 expectedSize;
 
     {
         IOHandler handler("testfile.db");

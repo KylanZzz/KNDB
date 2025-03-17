@@ -5,6 +5,7 @@
 #ifndef KNDB_CONSTANTS_HPP
 #define KNDB_CONSTANTS_HPP
 
+#include <cstdint>
 #include <cstdio>
 #include <limits>
 #include <string>
@@ -12,15 +13,16 @@
 namespace cts { // constants
     // configuration
     const std::string DATABASE_NAME = "kylan.db";
-    constexpr size_t PG_SZ = 4096;
-    constexpr size_t CACHE_SZ = 100;
-    constexpr size_t STR_SZ = 32;
-    constexpr size_t MAX_BLOCKS = 1000;
+    constexpr uint8_t STR_SZ = 32;
+    constexpr uint8_t MAX_TABLES = 100;
+    constexpr uint16_t PG_SZ = 4096; // 4kb pg size
+    constexpr uint32_t CACHE_SZ = 100000; // ≈ 400 mb cache
+    constexpr uint32_t MAX_BLOCKS = 1000;
 
     // DB page numbers
     namespace pgid {
-        constexpr size_t FSM_ID = 0;
-        constexpr size_t SCHEMA_ID = 1;
+        constexpr uint8_t FSM_ID = 0;
+        constexpr uint8_t SCHEMA_ID = 1;
     }
 
     // page type id
@@ -32,6 +34,10 @@ namespace cts { // constants
 
     // other
     constexpr size_t SIZE_T_INVALID = std::numeric_limits<size_t>::max();
+    constexpr uint8_t U8_INVALID = std::numeric_limits<uint8_t>::max();
+    constexpr uint16_t U16_INVALID = std::numeric_limits<uint16_t>::max();
+    constexpr uint32_t U32_INVALID = std::numeric_limits<uint32_t>::max();
+    constexpr uint64_t U64_INVALID = std::numeric_limits<uint64_t>::max();
 }
 
 #endif //KNDB_CONSTANTS_HPP

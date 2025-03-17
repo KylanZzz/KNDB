@@ -7,10 +7,11 @@
 #include "TablePage.hpp"
 #include "utility.hpp"
 
-TablePage::TablePage(std::span<const Byte> bytes, size_t pageID) : Page(pageID) {
-    size_t offset = 0;
+TablePage::TablePage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
+    u16 offset = 0;
 
-    size_t page_type_id, num_types, type_id;
+    u8 page_type_id, type_id;
+    u16 num_types;
     deserialize(page_type_id, bytes, offset);
 
     // check if page type is correct
@@ -39,21 +40,21 @@ TablePage::TablePage(std::span<const Byte> bytes, size_t pageID) : Page(pageID) 
     assert(offset <= cts::PG_SZ);
 }
 
-TablePage::TablePage(const Vec<Vari>& types, size_t btreePageID, size_t pageID)
+TablePage::TablePage(const Vec<Vari>& types, u32 btreePageID, u32 pageID)
 : Page(pageID), m_types(types), m_btreePageID(btreePageID), m_numTuples(0) {
     if (types.empty())
         throw std::invalid_argument("There cannot be 0 types in TablePage.");
 
-    if (types.size() > (cts::PG_SZ - db_sizeof<size_t>() * 10) / 8) {
+    if (types.size() > (cts::PG_SZ - 100) / db_sizeof<u8>()) {
         throw std::invalid_argument("TablePage cannot support that many types.");
     }
 }
 
-size_t TablePage::getBtreePageID() const {
+u32 TablePage::getBtreePageID() const {
     return m_btreePageID;
 }
 
-void TablePage::setBtreePageID(size_t btreePageID) {
+void TablePage::setBtreePageID(u32 btreePageID) {
     m_btreePageID = btreePageID;
 }
 
@@ -61,7 +62,7 @@ const Vec<Vari>& TablePage::getTypes() {
     return m_types;
 }
 
-size_t TablePage::getNumTuples() const {
+u64 TablePage::getNumTuples() const {
     return m_numTuples;
 }
 
@@ -70,26 +71,25 @@ void TablePage::addTuple() {
 }
 
 void TablePage::removeTuple() {
-    if (m_numTuples < 1)
-        throw std::runtime_error("The tuple count is already at 0");
+    assert(m_numTuples > 0);
 
     m_numTuples--;
 }
 
-void TablePage::toBytes(std::span<Byte> buf) {
-    size_t offset = 0;
+void TablePage::toBytes(std::span<byte> buf) {
+    u16 offset = 0;
 
     // serialize page_type_id
-    size_t page_type_id = cts::pg_type_id::TABLE_PAGE;
+    u8 page_type_id = cts::pg_type_id::TABLE_PAGE;
     serialize(page_type_id, buf, offset);
 
     // serialize # of types
-    size_t numTypes = m_types.size();
+    u16 numTypes = m_types.size();
     serialize(numTypes, buf, offset);
 
     // serialize list of types in each table
     for (int j = 0; j < numTypes; ++j) {
-        size_t type_id = variant_to_type_id(m_types[j]);
+        u8 type_id = variant_to_type_id(m_types[j]);
         serialize(type_id, buf, offset);
     }
 

@@ -9,7 +9,7 @@
 #include "Table.hpp"
 #include "kndb_types.hpp"
 
-using namespace kndb_types;
+using namespace kndb;
 
 /**
  * @class StorageEngine
@@ -30,7 +30,7 @@ public:
      * @param schemaPageID The page ID containing the metadata for the Storage Engine.
      * @param pgr The Pager responsible for managing disk I/O.
      */
-    StorageEngine(Pager& pgr, size_t schemaPageID);
+    StorageEngine(Pager& pgr, u32 schemaPageID);
 
     /**
      * Creates a new table in the Storage Engine.
@@ -39,7 +39,7 @@ public:
      * @param name The name of the table (case-sensitive).
      * @param types The list of column types for the table.
      */
-    void createTable(const String &name, const Vec<Vari>& types);
+    void createTable(const string &name, const Vec<Vari>& types);
 
     /**
      * Drops an existing table from the Storage Engine.
@@ -47,14 +47,14 @@ public:
      * @throws std::invalid_argument if the table does not exist.
      * @param name The name of the table to drop (case-sensitive).
      */
-    void dropTable(const String& name);
+    void dropTable(const string& name);
 
     /**
      * Retrieves the names of all tables in the Storage Engine.
      *
      * @return A list containing the names of all tables.
      */
-    Vec<String> getTableNames() const;
+    Vec<string> getTableNames() const;
 
     /**
      * Retrieves the column types of a specified table.
@@ -63,7 +63,7 @@ public:
      * @param table The name of the table.
      * @return A list of column types.
      */
-    Vec<Vari> getTableTypes(const String& table);
+    Vec<Vari> getTableTypes(const string& table);
 
     /**
      * Retrieves the number of tuples stored in a table.
@@ -72,7 +72,7 @@ public:
      * @param table The name of the table.
      * @return The number of tuples in the table.
      */
-    size_t getNumTuples(const String &table);
+    u64 getNumTuples(const string &table);
 
     /**
      * Removes a tuple from a table.
@@ -81,7 +81,7 @@ public:
      * @param table The name of the table.
      * @param key The primary key value of the tuple to remove.
      */
-    void removeTuple(const String &table, const Vari& key);
+    void removeTuple(const string &table, const Vari& key);
 
     /**
      * Updates an existing tuple in a table.
@@ -90,7 +90,7 @@ public:
      * @param table The name of the table.
      * @param values The new values for the tuple.
      */
-    void updateTuple(const String &table, const Vec<Vari>& values);
+    void updateTuple(const string &table, const Vec<Vari>& values);
 
     /**
      * Inserts a new tuple into a table.
@@ -99,7 +99,7 @@ public:
      * @param table The name of the table.
      * @param values The values for the new tuple.
      */
-    void insertTuple(const String &table, const Vec<Vari>& values);
+    void insertTuple(const string &table, const Vec<Vari>& values);
 
     /**
      * Retrieves a tuple from a table based on the primary key.
@@ -109,7 +109,7 @@ public:
      * @param key The primary key value of the tuple to retrieve.
      * @return The tuple's values.
      */
-    Vec<Vari> getTuple(const String &table, const Vari& key);
+    Vec<Vari> getTuple(const string &table, const Vari& key);
 
 private:
     /**
@@ -123,7 +123,7 @@ private:
 
     Pager& m_pager;  ///< Reference to the Pager handling disk operations.
     Vec<std::unique_ptr<Table>> m_tables;  ///< List of tables managed by the Storage Engine.
-    size_t m_schemaPageID;  ///< The hardcoded page ID where Storage Engine metadata is stored.
+    u32 m_schemaPageID;  ///< The hardcoded page ID where Storage Engine metadata is stored.
 };
 
 #endif //KNDB_STORAGE_ENGINE_HPP

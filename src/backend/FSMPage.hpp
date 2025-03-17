@@ -5,10 +5,11 @@
 #ifndef KNDB_FSMPAGE_HPP
 #define KNDB_FSMPAGE_HPP
 
-#include <cstdint>
-
+#include "kndb_types.hpp"
 #include "Page.hpp"
 #include "constants.hpp"
+
+using namespace kndb;
 
 /**
  * @class FSMPage
@@ -27,13 +28,13 @@ public:
      * @param pageID The ID of the page.
      * @param bytes serialized data
      */
-    FSMPage(std::span<const Byte> bytes, size_t pageID);
+    FSMPage(std::span<const byte> bytes, u32 pageID);
 
     /**
     * @brief Constructs a new, empty FSMPage.
     * @param pageID The ID of the page.
     */
-    FSMPage(size_t pageID);
+    FSMPage(u32 pageID);
 
     /**
      * @brief Checks if a specific bit (block) in the bitmap is free.
@@ -44,21 +45,21 @@ public:
      *
      * @return True if the bit is free, false otherwise.
      */
-    bool isFree(size_t idx);
+    bool isFree(u32 idx);
 
     /**
      * @brief Checks if this FSM_ID page has a reference to the next FSM_ID page.
      *
      * @return True if there is a next FSM_ID page, false otherwise.
      */
-    bool hasNextPage();
+    bool hasNextPage() const;
 
     /**
      * @brief Gets the number of free blocks remaining in the bitmap.
      *
      * @return The count of free blocks in this FSM_ID page.
      */
-    size_t getSpaceLeft();
+    u32 getSpaceLeft() const;
 
     /**
      * @brief Allocates a bit (block) in the bitmap.
@@ -67,7 +68,7 @@ public:
      *
      * @throws std::invalid_argument If the bit is already allocated.
      */
-    void allocBit(size_t idx);
+    void allocBit(u32 idx);
 
     /**
     * @brief Frees a previously allocated bit (block) in the bitmap.
@@ -76,7 +77,7 @@ public:
      *
     * @throws std::invalid_argument If the bit is already free.
     */
-    void freeBit(size_t idx);
+    void freeBit(u32 idx);
 
     /**
      * @brief Finds the next available free block.
@@ -85,7 +86,7 @@ public:
      *
      * @throws std::invalid_argument If no free bits are available.
      */
-    size_t findNextFree();
+    u32 findNextFree();
 
     /**
      * @brief Retrieves the ID of the next FSM_ID page.
@@ -94,31 +95,28 @@ public:
      *
      * @throws std::invalid_argument If there is no next page.
      */
-    size_t getNextPageID();
+    u32 getNextPageID() const;
 
     /**
      * @brief Sets the next FSM_ID page ID.
      *
      * @param pageID The ID of the next FSM_ID page.
      */
-    void setNextPageID(size_t pageID);
+    void setNextPageID(u32 pageID);
 
     /**
      * @brief Get the max number of blocks that a single FSMPage can represent.
      *
      * @return The number of blocks (or pages).
      */
-    static size_t getBlocksInPage() { return (cts::PG_SZ - sizeof(size_t) * 3) * 8; }
+    static u32 getBlocksInPage() { return (cts::PG_SZ - sizeof(u32) * 3) * 8; }
 
-    void toBytes(std::span<Byte> buf) override;
+    void toBytes(std::span<byte> buf) override;
 
 private:
-
-    static constexpr size_t NO_NEXT_PAGE = std::numeric_limits<size_t>::max();
-
-    Vec<uint8_t> m_bitmap;
-    size_t m_nextPageID;
-    size_t m_freeBlocks;
+    Vec<u8> m_bitmap;
+    u32 m_nextPageID;
+    u32 m_freeBlocks;
 };
 
 
