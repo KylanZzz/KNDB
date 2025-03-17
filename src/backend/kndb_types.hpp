@@ -11,7 +11,10 @@
 #include <constants.hpp>
 #include <variant>
 #include <memory>
-#include <windows.h> // for windows 'byte' -> unsigned char
+
+#ifdef _WIN32
+    #include <windows.h> // for windows 'byte' -> unsigned char
+#endif // _WIN32
 
 namespace kndb {
     template<typename T>
