@@ -12,14 +12,14 @@ TablePage::TablePage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
 
     u8 page_type_id, type_id;
     u16 num_types;
-    deserialize(page_type_id, bytes, offset);
+    db_deserialize(page_type_id, bytes, offset);
 
     // check if page type is correct
     if (page_type_id != cts::pg_type_id::TABLE_PAGE)
         throw std::runtime_error("page type id is incorrect");
 
     // deserialize # of types
-    deserialize(num_types, bytes, offset);
+    db_deserialize(num_types, bytes, offset);
 
     // page has not been initialized yet, since tuples cannot be empty
     if (num_types == 0)
@@ -27,15 +27,15 @@ TablePage::TablePage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
 
     // deserialize types
     for (int j = 0; j < num_types; ++j) {
-        deserialize(type_id, bytes, offset);
+        db_deserialize(type_id, bytes, offset);
         m_types.push_back(type_id_to_variant(type_id));
     }
 
     // deserialize btree page id
-    deserialize(m_btreePageID, bytes, offset);
+    db_deserialize(m_btreePageID, bytes, offset);
 
     // deserialize numTuples
-    deserialize(m_numTuples, bytes, offset);
+    db_deserialize(m_numTuples, bytes, offset);
 
     assert(offset <= cts::PG_SZ);
 }
@@ -81,23 +81,23 @@ void TablePage::toBytes(std::span<byte> buf) {
 
     // serialize page_type_id
     u8 page_type_id = cts::pg_type_id::TABLE_PAGE;
-    serialize(page_type_id, buf, offset);
+    db_serialize(page_type_id, buf, offset);
 
     // serialize # of types
     u16 numTypes = m_types.size();
-    serialize(numTypes, buf, offset);
+    db_serialize(numTypes, buf, offset);
 
     // serialize list of types in each table
     for (int j = 0; j < numTypes; ++j) {
         u8 type_id = variant_to_type_id(m_types[j]);
-        serialize(type_id, buf, offset);
+        db_serialize(type_id, buf, offset);
     }
 
     // serialize btree page id
-    serialize(m_btreePageID, buf, offset);
+    db_serialize(m_btreePageID, buf, offset);
 
     // serialize num tuples
-    serialize(m_numTuples, buf, offset);
+    db_serialize(m_numTuples, buf, offset);
 
     assert (offset <= cts::PG_SZ);
 }

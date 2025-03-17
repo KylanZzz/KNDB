@@ -26,7 +26,7 @@ TEST(UtilityTest, serializationOfVariantsWork) {
     Vec<byte> vec(1000);
     Vec<Vari> list = {3, "Kylan", "Apple", double(4.1323), 'a', float(3.14159)};
     for (const auto& item: list) {
-        serialize (item, vec, offset);
+        db_serialize (item, vec, offset);
     }
 
     offset = 0;
@@ -34,7 +34,7 @@ TEST(UtilityTest, serializationOfVariantsWork) {
     Vec<Vari> res;
     for (const auto& type: types) {
         Vari temp;
-        deserialize(temp, vec, offset, type);
+        db_deserialize(temp, vec, offset, type);
         res.push_back(temp);
     }
 

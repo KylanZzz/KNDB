@@ -29,17 +29,17 @@ FSMPage::FSMPage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
     u16 offset = 0;
 
     u8 page_type_id;
-    deserialize(page_type_id, bytes, offset);
+    db_deserialize(page_type_id, bytes, offset);
 
     // check if page type is correct
     if (page_type_id != cts::pg_type_id::FSM_PAGE)
         throw std::runtime_error("page type id is incorrect");
 
     // deserialize next Page id
-    deserialize(m_nextPageID, bytes, offset);
+    db_deserialize(m_nextPageID, bytes, offset);
 
     // deserialize free blocks count
-    deserialize(m_freeBlocks, bytes, offset);
+    db_deserialize(m_freeBlocks, bytes, offset);
 
     // rest of the page is for bitmap
     m_bitmap.resize(cts::PG_SZ - offset);
@@ -112,13 +112,13 @@ void FSMPage::toBytes(std::span<byte> buf) {
 
     // serialize page_type_id
     u8 page_type_id = cts::pg_type_id::FSM_PAGE;
-    serialize(page_type_id, buf, offset);
+    db_serialize(page_type_id, buf, offset);
 
     // serialize next page ID
-    serialize(m_nextPageID, buf, offset);
+    db_serialize(m_nextPageID, buf, offset);
 
     // serialize free blocks count
-    serialize(m_freeBlocks, buf, offset);
+    db_serialize(m_freeBlocks, buf, offset);
 
     // serialize bitmap
     memcpy(buf.data() + offset, m_bitmap.data(), m_bitmap.size());

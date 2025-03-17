@@ -88,44 +88,44 @@ inline u8 variant_to_type_id(const Vari &v) {
 }
 
 template<typename T>
-inline void deserialize(T &src, std::span<const byte> bytes, u16 &offset) {
+inline void db_deserialize(T &src, std::span<const byte> bytes, u16 &offset) {
     static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
     memcpy(&src, bytes.data() + offset, db_sizeof<T>());
     offset += db_sizeof<T>();
 }
 
-inline void deserialize(string &src, std::span<const byte> bytes, u16 &offset) {
+inline void db_deserialize(string &src, std::span<const byte> bytes, u16 &offset) {
     char buf[db_sizeof<std::string>()];
     memcpy(buf, bytes.data() + offset, db_sizeof<std::string>());
     src = string(buf);
     offset += db_sizeof<std::string>();
 }
 
-inline void deserialize(Vari &src, std::span<const byte> bytes, u16 &offset, const Vari &type) {
+inline void db_deserialize(Vari &src, std::span<const byte> bytes, u16 &offset, const Vari &type) {
     std::visit([&bytes, &offset, &src](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         T buf;
-        deserialize(buf, bytes, offset);
+        db_deserialize(buf, bytes, offset);
         src = buf;
     }, type);
 }
 
 template<typename T>
-inline void serialize(const T &val, std::span<byte> bytes, u16 &offset) {
+inline void db_serialize(const T &val, std::span<byte> bytes, u16 &offset) {
     static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
     memcpy(bytes.data() + offset, &val, db_sizeof<T>());
     offset += db_sizeof<T>();
 }
 
-inline void serialize(const std::string &val, std::span<byte> bytes, u16 &offset) {
+inline void db_serialize(const std::string &val, std::span<byte> bytes, u16 &offset) {
     memcpy(bytes.data() + offset, val.data(), db_sizeof<std::string>());
     offset += db_sizeof<std::string>();
 }
 
-inline void serialize(const Vari &val, std::span<byte> bytes, u16 &offset) {
+inline void db_serialize(const Vari &val, std::span<byte> bytes, u16 &offset) {
     std::visit([&bytes, &offset](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
-        serialize(arg, bytes, offset);
+        db_serialize(arg, bytes, offset);
     }, val);
 }
 

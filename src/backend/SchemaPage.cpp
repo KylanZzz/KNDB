@@ -30,21 +30,21 @@ SchemaPage::SchemaPage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
     u16 offset = 0;
 
     u8 page_type_id, num_tables;
-    deserialize(page_type_id, bytes, offset);
+    db_deserialize(page_type_id, bytes, offset);
 
     // check if page type is correct
     if (page_type_id != cts::pg_type_id::SCHEMA_PAGE)
         throw std::runtime_error("page type id is incorrect");
 
     // deserialize # of tables
-    deserialize(num_tables, bytes, offset);
+    db_deserialize(num_tables, bytes, offset);
 
     // deserialize each table individually
     for (int i = 0; i < num_tables; ++i) {
         table_descriptor tab_desc;
 
-        deserialize(tab_desc.name, bytes, offset);
-        deserialize(tab_desc.pageID, bytes, offset);
+        db_deserialize(tab_desc.name, bytes, offset);
+        db_deserialize(tab_desc.pageID, bytes, offset);
 
         m_tables.push_back(tab_desc);
     }
@@ -125,16 +125,16 @@ void SchemaPage::toBytes(std::span<byte> buf) {
 
     // deserialize page_type_id
     u8 page_type_id = cts::pg_type_id::SCHEMA_PAGE;
-    serialize(page_type_id, buf, offset);
+    db_serialize(page_type_id, buf, offset);
 
     // deserialize # of tables
     u8 num_tables = m_tables.size();
-    serialize(num_tables, buf, offset);
+    db_serialize(num_tables, buf, offset);
 
     // deserialize each table
     for (const auto &tab_desc: m_tables) {
-        serialize(tab_desc.name, buf, offset);
+        db_serialize(tab_desc.name, buf, offset);
 
-        serialize(tab_desc.pageID, buf, offset);
+        db_serialize(tab_desc.pageID, buf, offset);
     }
 }
