@@ -15,19 +15,19 @@ using std::endl;
 #define DEBUG(msg) cout << "DEBUG: " << msg << endl
 
 int main() {
-    std::ofstream file(cts::DATABASE_NAME, std::ios::trunc);
+    std::ofstream file(backend::cts::DATABASE_NAME, std::ios::trunc);
     file.close();
 
-    IOHandler ioHandler(cts::DATABASE_NAME);
-    Pager pager(ioHandler);
+    backend::IOHandler ioHandler(backend::cts::DATABASE_NAME);
+    backend::Pager pager(ioHandler);
 
     // Check if db file exists. If not, create one
     try {
-        pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID);
+        pager.getPage<backend::SchemaPage>(backend::cts::pgid::SCHEMA_ID);
     } catch (std::invalid_argument& e) {
         DEBUG(e.what());
         DEBUG("Creating schema page for database");
-        if (pager.createNewPage<SchemaPage>().getPageID() != cts::pgid::SCHEMA_ID)
+        if (pager.createNewPage<backend::SchemaPage>().getPageID() != backend::cts::pgid::SCHEMA_ID)
             throw std::runtime_error("Error while creating schema page");
     } catch (std::exception& e) {
         DEBUG(e.what());

@@ -8,17 +8,16 @@
 #include <cstddef>
 #include <string>
 
+#include "kndb_types.hpp"
 #ifdef _WIN32
     #include <windows.h>
-#else
+#else // includes for posix
     #include <fcntl.h>
     #include <sys/stat.h>
     #include <unistd.h>
 #endif //_WIN32
 
-#include "kndb_types.hpp"
-
-using namespace kndb;
+namespace backend {
 
 /**
  * @class IOHandler
@@ -80,5 +79,6 @@ private:
     u32 m_blocks;
 };
 
+} // namespace backend
 
 #endif //KNDB_IOHANDLER_HPP

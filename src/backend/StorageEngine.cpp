@@ -4,19 +4,22 @@
 
 #include "StorageEngine.hpp"
 
-#include <Btree.hpp>
+#include "Btree.hpp"
 #include "utility.hpp"
 #include "SchemaPage.hpp"
 
 #define S_PAGE m_pager.getPage<SchemaPage>(m_schemaPageID)
 
-StorageEngine::StorageEngine(Pager &pgr, u32 schemaPageID) : m_pager(pgr), m_schemaPageID(schemaPageID) {
+namespace backend {
+
+StorageEngine::StorageEngine(Pager &pgr, u32 schemaPageID) : m_pager(pgr),
+                                                             m_schemaPageID(schemaPageID) {
     // add existing tables
     for (const auto &[name, pageID]: S_PAGE.getTables())
         m_tables.emplace_back(std::make_unique<Table>(name, m_pager, pageID));
 }
 
-void StorageEngine::createTable(const string& name, const Vec<Vari>& types) {
+void StorageEngine::createTable(const string &name, const Vec<Vari> &types) {
     if (name.length() + 1 > db_sizeof<string>())
         throw std::invalid_argument("Name is too long");
 
@@ -27,19 +30,19 @@ void StorageEngine::createTable(const string& name, const Vec<Vari>& types) {
         if (table->getName() == name)
             throw std::invalid_argument("Table with that name already exists");
 
-    m_tables.emplace_back(std::make_unique<Table>(name,m_pager, types));
+    m_tables.emplace_back(std::make_unique<Table>(name, m_pager, types));
 
     S_PAGE.addTable(m_tables.back()->getName(), m_tables.back()->getTablePageID());
 }
 
-Vec<Vari> StorageEngine::getTableTypes(const string& table) {
+Vec<Vari> StorageEngine::getTableTypes(const string &table) {
     for (const auto &tab: m_tables)
         if (tab->getName() == table) return tab->getTypes();
 
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-void StorageEngine::dropTable(const string& name) {
+void StorageEngine::dropTable(const string &name) {
     int idx = -1;
     for (int i = 0; i < m_tables.size(); i++)
         if (m_tables[i]->getName() == name) idx = i;
@@ -60,14 +63,14 @@ Vec<string> StorageEngine::getTableNames() const {
     return std::move(res);
 }
 
-void StorageEngine::removeTuple(const string& table, const Vari& key) {
+void StorageEngine::removeTuple(const string &table, const Vari &key) {
     for (auto &tab: m_tables)
         if (tab->getName() == table) return tab->deleteTuple(key);
 
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-void StorageEngine::updateTuple(const string& table, const Vec<Vari>& values) {
+void StorageEngine::updateTuple(const string &table, const Vec<Vari> &values) {
     for (const auto &tab: m_tables)
         if (tab->getName() == table)
             return tab->updateTuple(values);
@@ -75,7 +78,7 @@ void StorageEngine::updateTuple(const string& table, const Vec<Vari>& values) {
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-void StorageEngine::insertTuple(const string& table, const Vec<Vari>& values) {
+void StorageEngine::insertTuple(const string &table, const Vec<Vari> &values) {
     for (auto &tab: m_tables)
         if (tab->getName() == table)
             return tab->insertTuple(values);
@@ -83,18 +86,18 @@ void StorageEngine::insertTuple(const string& table, const Vec<Vari>& values) {
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-Vec<Vari> StorageEngine::getTuple(const string& table, const Vari& key) {
+Vec<Vari> StorageEngine::getTuple(const string &table, const Vari &key) {
     for (auto &tab: m_tables)
         if (tab->getName() == table) return tab->readTuple(key);
 
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-u64 StorageEngine::getNumTuples(const string& table) {
+u64 StorageEngine::getNumTuples(const string &table) {
     for (const auto &tab: m_tables)
         if (tab->getName() == table) return tab->getNumTuples();
 
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-
+} // namespace backend

@@ -5,7 +5,7 @@
 #include "Pager.hpp"
 #include "kndb_types.hpp"
 
-using namespace kndb;
+namespace backend{
 
 Pager::Pager(IOHandler &ioHandler) : m_ioHandler(ioHandler) {
     // db has just been created, we need to init first FSM_ID page so pager can actually do what
@@ -108,3 +108,5 @@ Pager::~Pager() {
         m_ioHandler.writeBlock((void *) temp.data(), page_ptr->getPageID());
     }
 }
+
+} // namespace backend

@@ -6,6 +6,8 @@
 #include "FSMPage.hpp"
 #include "utility.hpp"
 
+namespace backend {
+
 //- page type id
 //- next block no (-1 if there is no next
 //page)
@@ -24,7 +26,6 @@
 //----------------------------------------
 //----------------------------------------
 //----------------------------------------
-
 FSMPage::FSMPage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
     u16 offset = 0;
 
@@ -125,3 +126,4 @@ void FSMPage::toBytes(std::span<byte> buf) {
     offset += m_bitmap.size();
 }
 
+} // namespace backend

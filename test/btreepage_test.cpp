@@ -5,6 +5,8 @@
 #include "BtreeNodePage.hpp"
 #include "constants.hpp"
 
+using namespace backend;
+
 class BtreeNodePageTestFixture : public ::testing::Test {
 protected:
     uint16_t defaultPageID = 3;

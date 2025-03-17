@@ -8,7 +8,7 @@
 #include "utility.hpp"
 #include "kndb_types.hpp"
 
-using namespace kndb;
+using namespace backend;
 
 struct TablePageTest : testing::Test {
     Ptr<Vec<byte>> vec;

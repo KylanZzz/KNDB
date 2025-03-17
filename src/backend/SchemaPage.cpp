@@ -7,6 +7,8 @@
 #include "SchemaPage.hpp"
 #include "utility.hpp"
 
+namespace backend {
+
 /*
 Info needed to be stored:
     - # Tables
@@ -86,7 +88,7 @@ void SchemaPage::addTable(string name, u32 pageID) {
     if (name.empty())
         throw std::invalid_argument("Name cannot be empty");
 
-    for (auto & m_table : m_tables) {
+    for (auto &m_table: m_tables) {
         if (m_table.name == name) {
             throw std::invalid_argument("Table name already exists");
         }
@@ -101,7 +103,7 @@ void SchemaPage::addTable(string name, u32 pageID) {
     m_tables.push_back(std::move(new_table));
 }
 
-void SchemaPage::removeTable(const string& targ_name) {
+void SchemaPage::removeTable(const string &targ_name) {
     if (targ_name.length() + 1 > db_sizeof<string>())
         throw std::invalid_argument("Name is too long");
 
@@ -138,3 +140,5 @@ void SchemaPage::toBytes(std::span<byte> buf) {
         db_serialize(tab_desc.pageID, buf, offset);
     }
 }
+
+} // namespace backend

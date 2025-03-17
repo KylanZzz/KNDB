@@ -11,6 +11,8 @@
 #include "constants.hpp"
 #include "TablePage.hpp"
 
+using namespace backend;
+
 struct PagerTest : testing::Test {
     void SetUp() override {
         std::ofstream file("testfile.db", std::ios::trunc);

@@ -9,7 +9,7 @@
 #include "Table.hpp"
 #include "kndb_types.hpp"
 
-using namespace kndb;
+namespace backend {
 
 /**
  * @class StorageEngine
@@ -125,5 +125,7 @@ private:
     Vec<std::unique_ptr<Table>> m_tables;  ///< List of tables managed by the Storage Engine.
     u32 m_schemaPageID;  ///< The hardcoded page ID where Storage Engine metadata is stored.
 };
+
+} // namespace backend
 
 #endif //KNDB_STORAGE_ENGINE_HPP

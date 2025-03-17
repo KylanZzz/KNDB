@@ -10,6 +10,8 @@
 #include "BtreeNodePage.hpp"
 #include "utility.hpp"
 
+namespace backend {
+
 //    size_t pagetypeid
 //    size_t m_degree;
 //    size_t m_parentID;
@@ -24,10 +26,9 @@
 //    variant key
 //    vec<variants> values
 //    }
-
 template<typename T>
 BtreeNodePage<T>::BtreeNodePage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
-    u16  offset = 0;
+    u16 offset = 0;
 
     u8 page_type_id;
     db_deserialize(page_type_id, bytes, offset);
@@ -186,8 +187,10 @@ void BtreeNodePage<T>::toBytes(std::span<byte> buf) {
 
 template<typename T>
 BtreeNodePage<T>::BtreeNodePage(u16 deg, u32 parentID, bool is_root, bool is_leaf, u32 pageID)
-    : Page(pageID), m_leaf(is_leaf), m_root(is_root), m_degree(deg), m_parentID(parentID),
-      m_children(0), m_cells(0) {
+        : Page(pageID), m_leaf(is_leaf), m_root(is_root), m_degree(deg), m_parentID(parentID),
+          m_children(0), m_cells(0) {
 }
+
+} // namespace backend
 
 #endif //KNDB_BTREENODEPAGE_TPP

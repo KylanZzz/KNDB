@@ -7,7 +7,9 @@
 
 #include "Pager.hpp"
 
-template <typename T>
+namespace backend {
+
+template<typename T>
 class Btree {
 public:
     Btree(u32 rootPageId, Pager &pgr, u16 degree);
@@ -20,16 +22,19 @@ public:
 
     void update(T values, const Vari &key);
 
-    u32 getRootPage() const {return m_rootPageID;}
+    u32 getRootPage() const { return m_rootPageID; }
 
 private:
     RowPos searchRowPtr(Vari targ_key, u32 currPageID);
+
     void split(u32 currPageID);
 
-    Pager& m_pager;
+    Pager &m_pager;
     u32 m_rootPageID;
     u16 m_degree;
 };
+
+} // namespace backend
 
 #include "Btree.tpp"
 

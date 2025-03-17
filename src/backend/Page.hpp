@@ -10,7 +10,7 @@
 
 #include "kndb_types.hpp"
 
-using namespace kndb;
+namespace backend {
 
 /**
  * @class Page
@@ -45,5 +45,6 @@ public:
     virtual ~Page() = default;
 };
 
+} // namespace backend
 
 #endif //KNDB_PAGE_HPP

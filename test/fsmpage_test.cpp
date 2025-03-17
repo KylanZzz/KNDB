@@ -7,6 +7,8 @@
 #include "FSMPage.hpp"
 #include "utility.hpp"
 
+using namespace backend;
+
 TEST(FSMPageTest, NewlyCreatedPageIsAllFree) {
     FSMPage page(1);
     ASSERT_FALSE(page.isFree(0));

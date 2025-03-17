@@ -5,6 +5,8 @@
 #include "utility.hpp"
 #include "IOHandler.hpp"
 
+namespace backend {
+
 u32 IOHandler::getNumBlocks() const {
     return m_blocks;
 }
@@ -126,3 +128,5 @@ IOHandler::~IOHandler() {
     close(m_fd);
 #endif//_WIN32
 }
+
+} // namespace backend

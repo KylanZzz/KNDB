@@ -9,7 +9,7 @@
 #include "Btree.hpp"
 #include "kndb_types.hpp"
 
-using namespace kndb;
+namespace backend {
 
 /**
  * @class Table
@@ -26,7 +26,7 @@ public:
      * @param pgr Reference to the Pager.
      * @param tablePageId Page ID of the table's metadata page.
      */
-    Table(string name, Pager& pgr, u32 tablePageId);
+    Table(string name, Pager &pgr, u32 tablePageId);
 
     /**
      * @brief Constructs a new Table.
@@ -34,7 +34,7 @@ public:
      * @param pgr Reference to the Pager.
      * @param types A list of types that the table tuples will contain.
      */
-    Table(string name, Pager& pgr, const Vec<Vari>& types);
+    Table(string name, Pager &pgr, const Vec<Vari> &types);
 
     /**
      * @brief Deletes the table and all associated data, including any Btree Nodes used to store
@@ -67,7 +67,7 @@ public:
      * @param key The key to look up.
      * @return The tuple associated with the key.
      */
-    Vec<Vari> readTuple(const Vari& key) const;
+    Vec<Vari> readTuple(const Vari &key) const;
 
     /**
      * @brief Updates an existing tuple in the table.
@@ -96,11 +96,12 @@ public:
     u32 getTablePageID() const;
 
 private:
-    Pager& m_pager;
+    Pager &m_pager;
     std::unique_ptr<Btree<Vec<Vari>>> m_btree;
     u32 m_tablePageID;
     string m_name;
 };
 
+} // namespace backend
 
 #endif //KNDB_TABLE_HPP

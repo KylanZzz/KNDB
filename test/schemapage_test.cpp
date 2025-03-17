@@ -8,7 +8,7 @@
 #include "kndb_types.hpp"
 #include "constants.hpp"
 
-using namespace kndb;
+using namespace backend;
 
 struct SchemaPageTest : testing::Test {
     std::unique_ptr<Vec<byte>> vec;
@@ -98,8 +98,8 @@ TEST_F(SchemaPageTest, AddTableWithEmptyNameThrows) {
 
 TEST_F(SchemaPageTest, AddTableWithMaxAndExceedingNameLength) {
     SchemaPage schema(1);
-    std::string maxLengthName(31, 'A'); // 31 characters, should work
-    std::string tooLongName(32, 'B');   // 32 characters, should throw
+    std::string maxLengthName(cts::STR_SZ - 1, 'A'); // 31 characters, should work
+    std::string tooLongName(cts::STR_SZ, 'B');   // 32 characters, should throw
 
     schema.addTable(maxLengthName, 5);
     ASSERT_EQ(schema.getTables().size(), 1);
@@ -115,14 +115,14 @@ TEST_F(SchemaPageTest, AddTableWithMaxAndExceedingNameLength) {
 
 TEST_F(SchemaPageTest, AddingTableBeyondCapacityThrows) {
     SchemaPage schema(1);
-    u32 used_space = 16; // Initial schema space
+    u32 used_space = 2; // Initial schema space
     u32 max_space = cts::PG_SZ;
 
     u32 pageID = 5;
-    while (used_space + 32 + 4 <= max_space) {
+    while (used_space + cts::STR_SZ + sizeof(u32) <= max_space) {
         schema.addTable("Table" + std::to_string(pageID), pageID);
         pageID++;
-        used_space += 32 + 4; // 32 (name) + 4 (pageID)
+        used_space += cts::STR_SZ + sizeof(u32); // 32 (name) + 4 (pageID)
     }
 
     ASSERT_THROW(schema.addTable("OverflowTable", pageID), std::runtime_error);

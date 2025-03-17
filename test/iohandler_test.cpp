@@ -6,9 +6,8 @@
 #include <fstream>
 
 #include "IOHandler.hpp"
-#include "utility.hpp"
 
-using std::string;
+using namespace backend;
 
 struct IOHandlerTest : testing::Test {
     std::unique_ptr<IOHandler> ioHandler;

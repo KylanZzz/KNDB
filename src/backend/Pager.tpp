@@ -11,6 +11,8 @@
 #include "FSMPage.hpp"
 #include "constants.hpp"
 
+namespace backend {
+
 template <typename T>
 T &Pager::getPage(u32 pageID) {
     static_assert(std::is_base_of<Page, T>::value, "T must be a derived class of Page");
@@ -71,5 +73,7 @@ void Pager::freePage(u32 pageID) {
     // remove from cache
     m_cache.erase(pageID);
 }
+
+} // namespace backend
 
 #endif //KNDB_PAGER_TPP

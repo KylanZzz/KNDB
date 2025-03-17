@@ -8,7 +8,7 @@
 #include "Page.hpp"
 #include "kndb_types.hpp"
 
-using namespace kndb;
+namespace backend {
 
 /**
  * @class TablePage
@@ -73,5 +73,6 @@ private:
     u64 m_numTuples;
 };
 
+} //namespace backend
 
 #endif //KNDB_TABLEPAGE_HPP

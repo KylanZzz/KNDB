@@ -11,7 +11,6 @@
 #include "Page.hpp"
 #include "IOHandler.hpp"
 
-using namespace kndb;
 
 /**
  * @class Pager
@@ -20,6 +19,8 @@ using namespace kndb;
  * Manages reading, writing, and tracking of database pages. This class acts as
  * the main interface for other classes to use database pages.
  */
+namespace backend {
+
 class Pager {
 public:
 
@@ -75,7 +76,7 @@ public:
      * of the page, which contains the page_type_id.
      */
     template<typename T, typename ...Args>
-    T &createNewPage(Args&&... args);
+    T &createNewPage(Args &&... args);
 
     /**
      * @brief Frees a page
@@ -112,6 +113,8 @@ private:
     std::unordered_map<u32, Ptr<Page>> m_cache;
 };
 
+} // namespace backend
 
 #include "Pager.tpp"
+
 #endif //KNDB_PAGER_HPP

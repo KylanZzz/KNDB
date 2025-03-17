@@ -9,7 +9,7 @@
 #include "unordered_map"
 #include "kndb_types.hpp"
 
-using namespace kndb;
+namespace backend {
 
 /**
  * @class SchemaPage
@@ -72,5 +72,6 @@ private:
     Vec<table_descriptor> m_tables;
 };
 
+} // namespace backend
 
 #endif //KNDB_SCHEMAPAGE_HPP

@@ -8,7 +8,7 @@
 #include "Page.hpp"
 #include "kndb_types.hpp"
 
-using namespace kndb;
+namespace backend {
 
 /**
  * @class BtreeNodePage
@@ -124,6 +124,8 @@ private:
     Vec<uint32_t> m_children;
     Vec<cell> m_cells;
 };
+
+} // namespace backend
 
 #include "BtreeNodePage.tpp"
 

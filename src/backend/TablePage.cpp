@@ -7,6 +7,8 @@
 #include "TablePage.hpp"
 #include "utility.hpp"
 
+namespace backend {
+
 TablePage::TablePage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
     u16 offset = 0;
 
@@ -40,8 +42,8 @@ TablePage::TablePage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
     assert(offset <= cts::PG_SZ);
 }
 
-TablePage::TablePage(const Vec<Vari>& types, u32 btreePageID, u32 pageID)
-: Page(pageID), m_types(types), m_btreePageID(btreePageID), m_numTuples(0) {
+TablePage::TablePage(const Vec<Vari> &types, u32 btreePageID, u32 pageID)
+        : Page(pageID), m_types(types), m_btreePageID(btreePageID), m_numTuples(0) {
     if (types.empty())
         throw std::invalid_argument("There cannot be 0 types in TablePage.");
 
@@ -58,7 +60,7 @@ void TablePage::setBtreePageID(u32 btreePageID) {
     m_btreePageID = btreePageID;
 }
 
-const Vec<Vari>& TablePage::getTypes() {
+const Vec<Vari> &TablePage::getTypes() {
     return m_types;
 }
 
@@ -101,3 +103,5 @@ void TablePage::toBytes(std::span<byte> buf) {
 
     assert (offset <= cts::PG_SZ);
 }
+
+} // namespace backend

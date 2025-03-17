@@ -9,6 +9,8 @@
 #include "Btree.hpp"
 #include "BtreeNodePage.hpp"
 
+using namespace backend;
+
 class BtreeTest : public ::testing::Test {
 protected:
     static constexpr int SEED = 152;

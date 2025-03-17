@@ -10,7 +10,7 @@
 #include "kndb_types.hpp"
 #include "constants.hpp"
 
-using namespace kndb;
+namespace backend {
 
 template<typename T>
 inline size_t db_sizeof() { return sizeof(T); }
@@ -36,9 +36,9 @@ inline size_t db_sizeof(const Vari &val) {
 }
 
 namespace variant_conversion_id {
-    enum {
-        CHAR = 1, INT, BOOL, STRING, FLOAT, DOUBLE
-    };
+enum {
+    CHAR = 1, INT, BOOL, STRING, FLOAT, DOUBLE
+};
 }
 
 inline Vari type_id_to_variant(const u8 type_id) {
@@ -101,7 +101,8 @@ inline void db_deserialize(string &src, std::span<const byte> bytes, u16 &offset
     offset += db_sizeof<std::string>();
 }
 
-inline void db_deserialize(Vari &src, std::span<const byte> bytes, u16 &offset, const Vari &type) {
+inline void
+db_deserialize(Vari &src, std::span<const byte> bytes, u16 &offset, const Vari &type) {
     std::visit([&bytes, &offset, &src](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         T buf;
@@ -151,5 +152,6 @@ inline bool sameTypes(const Vec<Vari> &vec1, const Vec<Vari> &vec2) {
     return true;
 }
 
+} // namespace backend
 
 #endif //KNDB_UTILITY_HPP

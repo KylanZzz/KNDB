@@ -11,11 +11,13 @@
 #define B_NODE(id) m_pager.getPage<BtreeNodePage<T>>(id)
 #define B_NEW(deg, par, root, leaf) m_pager.createNewPage<BtreeNodePage<T>>(deg, par, root, leaf);
 
+namespace backend {
+
 template<typename T>
 Btree<T>::Btree(u32 rootPageId, Pager &pgr, u16 degree) : m_rootPageID(rootPageId), m_pager
-(pgr), m_degree(degree) {}
+        (pgr), m_degree(degree) {}
 
-template <typename T>
+template<typename T>
 RowPos Btree<T>::searchRowPtr(Vari targ_key, u32 currPageID) {
     // 1. iterate through keys (linearly, for now) to look for key
     //      - if key == targ, return
@@ -23,9 +25,9 @@ RowPos Btree<T>::searchRowPtr(Vari targ_key, u32 currPageID) {
     //      - if reached end of node, search for rightmost child
     // how do we know if its out of bounds? if leaf, and not found
 
-    auto& node = B_NODE(currPageID);
-    auto& cells = node.cells();
-    auto& children = node.children();
+    auto &node = B_NODE(currPageID);
+    auto &cells = node.cells();
+    auto &children = node.children();
     bool leaf = B_NODE(currPageID).leaf();
 
     assert (B_NODE(currPageID).leaf() || cells.size() == 0 || cells.size() == children.size() - 1);
@@ -71,7 +73,7 @@ void Btree<T>::insert(T values, Vari key) {
 
     // 2. insert into cell
     //      2b. find position that cell belongs in
-    auto& cells = B_NODE(row.pageID).cells();
+    auto &cells = B_NODE(row.pageID).cells();
     u16 idx = 0;
     while (idx < cells.size() && cells[idx].key < key)
         idx++;
@@ -81,22 +83,22 @@ void Btree<T>::insert(T values, Vari key) {
     split(row.pageID);
 }
 
-template <typename T>
+template<typename T>
 void Btree<T>::split(u32 currPageID) {
-//    1. if node is NOT full, return (doesn't need to be split)
-    auto& node = B_NODE(currPageID);
-    auto& cells = node.cells();
-    auto& children = node.children();
+    //    1. if node is NOT full, return (doesn't need to be split)
+    auto &node = B_NODE(currPageID);
+    auto &cells = node.cells();
+    auto &children = node.children();
 
     if (cells.size() < node.maxKeys())
         return;
 
-//    2. if NOT root
+    //    2. if NOT root
     if (!node.root()) {
         //    2b. find the current node page id in the parent's children[], store as IDX
-        auto& parent = B_NODE(node.parent());
-        auto& p_children = parent.children();
-        auto& p_cells = parent.cells();
+        auto &parent = B_NODE(node.parent());
+        auto &p_children = parent.children();
+        auto &p_cells = parent.cells();
         u16 idx = cts::U16_INVALID;
         for (int i = 0; i < p_children.size(); i++) {
             if (p_children[i] == currPageID) {
@@ -113,9 +115,9 @@ void Btree<T>::split(u32 currPageID) {
 
         //    2d. create new node right half of current nodes, and remove that half from og node
         //        - split both cells[] and children[] (only split children if not leaf)
-        auto& newNode = B_NEW(m_degree, parent.getPageID(), false, node.leaf());
-        auto& n_cells = newNode.cells();
-        auto& n_children = newNode.children();
+        auto &newNode = B_NEW(m_degree, parent.getPageID(), false, node.leaf());
+        auto &n_cells = newNode.cells();
+        auto &n_children = newNode.children();
         // set right half of cells to new node
         n_cells.assign(cells.begin() + median, cells.end());
         // set left half of cells to old node (resizing is quicker)
@@ -136,12 +138,12 @@ void Btree<T>::split(u32 currPageID) {
         //    3. if IS root
         //        3b. create new node (new root) with middle cell of curr node as the single cell
         //             - update root
-        auto& newRoot = B_NEW(m_degree, cts::U32_INVALID, true, false);
+        auto &newRoot = B_NEW(m_degree, cts::U32_INVALID, true, false);
         m_rootPageID = newRoot.getPageID();
         node.setRoot(false);
         node.setParent(newRoot.getPageID());
-        auto& p_children = newRoot.children();
-        auto& p_cells = newRoot.cells();
+        auto &p_children = newRoot.children();
+        auto &p_cells = newRoot.cells();
 
         u16 median = cells.size() / 2;
         p_cells.push_back(cells[median]);
@@ -149,10 +151,10 @@ void Btree<T>::split(u32 currPageID) {
 
         //    3c. create two new nodes with left and right half of current nodes
         //             - split both cells[] and children[]
-        auto& newNode = B_NEW(m_degree, newRoot.getPageID(), false,
-                                                                   B_NODE(currPageID).leaf());
-        auto& n_cells = newNode.cells();
-        auto& n_children = newNode.children();
+        auto &newNode = B_NEW(m_degree, newRoot.getPageID(), false,
+                              B_NODE(currPageID).leaf());
+        auto &n_cells = newNode.cells();
+        auto &n_children = newNode.children();
         // set right half of cells to new node
         n_cells.assign(cells.begin() + median, cells.end());
         // set left half of cells to old node (resizing is quicker)
@@ -172,7 +174,7 @@ void Btree<T>::split(u32 currPageID) {
         p_children.push_back(newNode.getPageID());
     }
 
-//    4. call split on parent (if not root)
+    //    4. call split on parent (if not root)
     if (!node.root())
         split(node.parent());
 
@@ -182,5 +184,7 @@ template<typename T>
 void Btree<T>::remove(Vari key) {
 
 }
+
+} // namespace backend
 
 #endif //KNDB_BTREE_TPP

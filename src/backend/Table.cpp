@@ -14,18 +14,21 @@
 
 #define T_PAGE m_pager.getPage<TablePage>(m_tablePageID)
 
+namespace backend {
+
 Table::Table(string name, Pager &pgr, const u32 tablePageId) : m_pager(pgr), m_tablePageID
         (tablePageId), m_name(std::move(name)) {
     u16 deg = calculateDegree(T_PAGE.getTypes()[0], T_PAGE.getTypes());
     m_btree = std::make_unique<Btree<Vec<Vari>>>(T_PAGE.getBtreePageID(), pgr, deg);
 }
 
-Table::Table(string name, Pager &pgr, const Vec<Vari>& types) : m_pager(pgr), m_name(std::move(name)){
+Table::Table(string name, Pager &pgr, const Vec<Vari> &types) : m_pager(pgr),
+                                                                m_name(std::move(name)) {
     m_tablePageID = m_pager.createNewPage<TablePage>(types, cts::U32_INVALID).getPageID();
     u16 deg = calculateDegree(T_PAGE.getTypes()[0], T_PAGE.getTypes());
     u32 btree_pg = m_pager.createNewPage<BtreeNodePage<Vec<Vari>>>(
-                deg, cts::U32_INVALID, true, true
-        ).getPageID();
+            deg, cts::U32_INVALID, true, true
+    ).getPageID();
     T_PAGE.setBtreePageID(btree_pg);
     m_btree = std::make_unique<Btree<Vec<Vari>>>(T_PAGE.getBtreePageID(), m_pager, deg);
 }
@@ -62,7 +65,7 @@ void Table::insertTuple(Vec<Vari> values) const {
         T_PAGE.setBtreePageID(m_btree->getRootPage());
 }
 
-Vec<Vari> Table::readTuple(const Vari& key) const {
+Vec<Vari> Table::readTuple(const Vari &key) const {
     if (variant_to_type_id(T_PAGE.getTypes()[0]) != variant_to_type_id(key))
         throw std::runtime_error("Key is incorrect type.");
 
@@ -95,3 +98,5 @@ void Table::deleteTuple(const Vari &key) const {
     if (m_btree->getRootPage() != og_root)
         T_PAGE.setBtreePageID(m_btree->getRootPage());
 }
+
+} // namespace backend

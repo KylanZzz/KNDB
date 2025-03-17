@@ -6,6 +6,8 @@
 
 #include "utility.hpp"
 
+using namespace backend;
+
 TEST(UtilityTest, sizeOfVariantsWorks) {
     Vari s = int();
     ASSERT_EQ(db_sizeof(s), sizeof(int));
