@@ -30,7 +30,7 @@ RowPos Btree<T>::searchRowPtr(Vari targ_key, u32 currPageID) {
     auto &children = node.children();
     bool leaf = B_NODE(currPageID).leaf();
 
-    assert (B_NODE(currPageID).leaf() || cells.size() == 0 || cells.size() == children.size() - 1);
+    assert(leaf || cells.size() == 0 || cells.size() == children.size() - 1);
 
     u32 idx = 0;
     while (idx < cells.size() && cells[idx].key < targ_key)

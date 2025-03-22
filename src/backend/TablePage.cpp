@@ -101,7 +101,7 @@ void TablePage::toBytes(std::span<byte> buf) {
     // serialize num tuples
     db_serialize(m_numTuples, buf, offset);
 
-    assert (offset <= cts::PG_SZ);
+    assert (offset < cts::PG_SZ);
 }
 
 } // namespace backend

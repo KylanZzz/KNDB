@@ -20,9 +20,6 @@ namespace backend {
  * to disk for persistence.
  */
 class Page {
-protected:
-    u32 m_pageID;
-
 public:
     /**
      * @brief Constructs a Page with a given ID.
@@ -43,6 +40,14 @@ public:
     virtual void toBytes(std::span<byte> buffer) = 0;
 
     virtual ~Page() = default;
+    Page& operator=(const Page& other) = delete;
+    Page& operator=(Page&& other) = delete;
+    Page (Page&& other) = delete;
+    Page (const Page& other) = delete;
+
+protected:
+    u32 m_pageID;
+
 };
 
 } // namespace backend

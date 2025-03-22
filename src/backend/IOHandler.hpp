@@ -70,6 +70,11 @@ public:
 
     ~IOHandler();
 
+    IOHandler& operator=(IOHandler&& other) = delete;
+    IOHandler& operator=(const IOHandler& other) = delete;
+    IOHandler(const IOHandler& other) = delete;
+    IOHandler(IOHandler&&) = delete;
+
 private:
 #ifdef _WIN32
     HANDLE m_handle;

@@ -96,6 +96,11 @@ public:
      */
     ~Pager();
 
+    Pager& operator=(Pager&& other) = delete;
+    Pager& operator=(const Pager& other) = delete;
+    Pager(Pager&& other) = delete;
+    Pager(const Pager& other) = delete;
+
 private:
     // helper functions to manipulate the free space bitmap
     void freePageBit(u32 pageID);

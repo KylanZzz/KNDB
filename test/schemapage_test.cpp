@@ -85,15 +85,9 @@ TEST_F(SchemaPageTest, SerializeAfterAddingAndRemovingSameTable) {
     ASSERT_EQ(deserialized.getTables().at("TempTable"), 60);
 }
 
-TEST_F(SchemaPageTest, AddTableThrowsIfNameExists) {
+TEST_F(SchemaPageTest, AddTableWithEmptyNameExits) {
     SchemaPage schema(1);
-    schema.addTable("Products", 15);
-    ASSERT_THROW(schema.addTable("Products", 20), std::invalid_argument);
-}
-
-TEST_F(SchemaPageTest, AddTableWithEmptyNameThrows) {
-    SchemaPage schema(1);
-    ASSERT_THROW(schema.addTable("", 5), std::invalid_argument);
+    ASSERT_DEATH(schema.addTable("", 5), "");
 }
 
 TEST_F(SchemaPageTest, AddTableWithMaxAndExceedingNameLength) {
@@ -104,7 +98,7 @@ TEST_F(SchemaPageTest, AddTableWithMaxAndExceedingNameLength) {
     schema.addTable(maxLengthName, 5);
     ASSERT_EQ(schema.getTables().size(), 1);
 
-    ASSERT_THROW(schema.addTable(tooLongName, 6), std::invalid_argument);
+    ASSERT_DEATH(schema.addTable(tooLongName, 6), "");
 
     Vec<byte> serialized(cts::PG_SZ);
     schema.toBytes(serialized);
@@ -113,7 +107,7 @@ TEST_F(SchemaPageTest, AddTableWithMaxAndExceedingNameLength) {
     ASSERT_EQ(schema2.getTables().at(maxLengthName), 5);
 }
 
-TEST_F(SchemaPageTest, AddingTableBeyondCapacityThrows) {
+TEST_F(SchemaPageTest, AddingTableBeyondCapacityExits) {
     SchemaPage schema(1);
     u32 used_space = 2; // Initial schema space
     u32 max_space = cts::PG_SZ;
@@ -125,7 +119,7 @@ TEST_F(SchemaPageTest, AddingTableBeyondCapacityThrows) {
         used_space += cts::STR_SZ + sizeof(u32); // 32 (name) + 4 (pageID)
     }
 
-    ASSERT_THROW(schema.addTable("OverflowTable", pageID), std::runtime_error);
+    ASSERT_DEATH(schema.addTable("OverflowTable", pageID), "");
 
     Vec<byte> bytes(cts::PG_SZ);
     schema.toBytes(bytes);

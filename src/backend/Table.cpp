@@ -45,7 +45,7 @@ u32 Table::getTablePageID() const {
     return m_tablePageID;
 }
 
-string Table::getName() {
+string Table::getName() const {
     return m_name;
 }
 

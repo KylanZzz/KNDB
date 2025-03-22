@@ -31,18 +31,11 @@ FSMPage::FSMPage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
 
     u8 page_type_id;
     db_deserialize(page_type_id, bytes, offset);
+    assert(page_type_id == cts::pg_type_id::FSM_PAGE);
 
-    // check if page type is correct
-    if (page_type_id != cts::pg_type_id::FSM_PAGE)
-        throw std::runtime_error("page type id is incorrect");
-
-    // deserialize next Page id
     db_deserialize(m_nextPageID, bytes, offset);
-
-    // deserialize free blocks count
     db_deserialize(m_freeBlocks, bytes, offset);
 
-    // rest of the page is for bitmap
     m_bitmap.resize(cts::PG_SZ - offset);
     memcpy(m_bitmap.data(), bytes.data() + offset, m_bitmap.size());
     offset += m_bitmap.size();
@@ -58,26 +51,25 @@ FSMPage::FSMPage(u32 pageID) : Page(pageID) {
 }
 
 void FSMPage::allocBit(u32 idx) {
-    if (!isFree(idx))
-        throw std::invalid_argument("that bit is already in use");
+    assert(idx < (m_bitmap.size() * 8));
+    assert(isFree(idx));
+    assert(m_freeBlocks > 0);
 
-    assert(m_freeBlocks-- > 0);
-
+    --m_freeBlocks;
     m_bitmap[idx / 8] ^= 1 << (idx % 8);
 }
 
 bool FSMPage::isFree(u32 idx) {
-    if (idx >= (m_bitmap.size() * 8))
-        throw std::invalid_argument("idx is out of bounds");
+    assert(idx < (m_bitmap.size() * 8));
 
     return !(m_bitmap[idx / 8] & 1 << (idx % 8));
 }
 
 u32 FSMPage::findNextFree() {
+    assert(getSpaceLeft() > 0);
     for (int i = 0; i < m_bitmap.size() * 8; i++)
         if (isFree(i)) return i;
-
-    throw std::invalid_argument("There are no more free nodes");
+    assert(false);
 }
 
 u32 FSMPage::getSpaceLeft() const {
@@ -85,11 +77,10 @@ u32 FSMPage::getSpaceLeft() const {
 }
 
 void FSMPage::freeBit(u32 idx) {
-    if (isFree(idx))
-        throw std::invalid_argument("that bit is already free");
+    assert(!isFree(idx));
+    assert(m_freeBlocks <= m_bitmap.size() * 8);
 
-    assert(m_freeBlocks++ <= m_bitmap.size() * 8);
-
+    m_freeBlocks++;
     m_bitmap[idx / 8] ^= 1 << (idx % 8);
 }
 
@@ -111,17 +102,12 @@ void FSMPage::toBytes(std::span<byte> buf) {
 
     u16 offset = 0;
 
-    // serialize page_type_id
     u8 page_type_id = cts::pg_type_id::FSM_PAGE;
     db_serialize(page_type_id, buf, offset);
 
-    // serialize next page ID
     db_serialize(m_nextPageID, buf, offset);
-
-    // serialize free blocks count
     db_serialize(m_freeBlocks, buf, offset);
 
-    // serialize bitmap
     memcpy(buf.data() + offset, m_bitmap.data(), m_bitmap.size());
     offset += m_bitmap.size();
 }

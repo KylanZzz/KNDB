@@ -27,17 +27,17 @@ TEST_F(PagerTest, PagerThrowsWhenNotSchemaPage) {
     ASSERT_THROW(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID), std::bad_cast);
 }
 
-TEST_F(PagerTest, PagerThrowsWhenNoSchemaPage) {
+TEST_F(PagerTest, PagerDeathWhenNoSchemaPage) {
     IOHandler ioHandler("testfile.db");
     Pager pager(ioHandler);
-    ASSERT_THROW(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID), std::invalid_argument);
+    ASSERT_DEATH(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID), "");
 }
 
 TEST_F(PagerTest, PagerCreatesSchemaPage) {
     IOHandler ioHandler("testfile.db");
     Pager pager(ioHandler);
     pager.createNewPage<SchemaPage>();
-    ASSERT_NO_THROW(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID));
+    ASSERT_NO_FATAL_FAILURE(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID));
     ASSERT_EQ(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID).getNumTables(), 0);
     std::unordered_map<string, u32> mp;
     ASSERT_EQ(pager.getPage<SchemaPage>(cts::pgid::SCHEMA_ID).getTables(), mp);
@@ -159,7 +159,7 @@ TEST_F(PagerTest, FreePageAllowsReallocation) {
     }
 }
 
-TEST_F(PagerTest, GetPageThrowsForFreedPage) {
+TEST_F(PagerTest, GetPageDeathForFreedPage) {
     IOHandler ioHandler("testfile.db");
 
     u32 pageID;
@@ -171,7 +171,7 @@ TEST_F(PagerTest, GetPageThrowsForFreedPage) {
 
         pager.freePage<SchemaPage>(pageID);
 
-        ASSERT_THROW(pager.getPage<SchemaPage>(pageID), std::invalid_argument);
+        ASSERT_DEATH(pager.getPage<SchemaPage>(pageID), "");
     }
 }
 
@@ -268,12 +268,12 @@ TEST_F(PagerTest, FreeAllPagesAndReallocate) {
     }
 }
 
-TEST_F(PagerTest, GetPageThrowsForUnallocatedPage) {
+TEST_F(PagerTest, GetPageExitsForUnallocatedPage) {
     IOHandler ioHandler("testfile.db");
 
     Pager pager(ioHandler);
 
-    ASSERT_THROW(pager.getPage<SchemaPage>(100), std::invalid_argument);
+    ASSERT_DEATH(pager.getPage<SchemaPage>(100), "");
 }
 
 TEST_F(PagerTest, FreePagesInReverseOrder) {

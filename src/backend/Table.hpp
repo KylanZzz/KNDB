@@ -46,7 +46,7 @@ public:
      * @brief Retrieves the table name.
      * @return The name of the table.
      */
-    string getName();
+    string getName() const;
 
     /**
      * @brief Retrieves the number of tuples in the table.

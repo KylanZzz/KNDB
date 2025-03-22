@@ -12,8 +12,8 @@ protected:
     uint16_t defaultPageID = 3;
 
     // Helper: Serializes a node and returns a new node constructed from the bytes.
-    template <typename T>
-    BtreeNodePage<T> roundTrip(BtreeNodePage<T>& node) {
+    template<typename T>
+    BtreeNodePage<T> roundTrip(BtreeNodePage<T> &node) {
         Vec<byte> bytes(cts::PG_SZ);
         node.toBytes(bytes);
         return BtreeNodePage<T>(bytes, defaultPageID);
@@ -75,7 +75,8 @@ TEST_F(BtreeNodePageTestFixture, AddingMultipleCellsWorks) {
 
     for (int i = 0; i < node.maxKeys(); i++) {
         Vari cellKey = "Cell #" + std::to_string(i);
-        Vec<Vari> tuple = {"val1 #" + std::to_string(i), "val2 #" + std::to_string(i + 100), i + 200};
+        Vec<Vari> tuple = {"val1 #" + std::to_string(i), "val2 #" + std::to_string(i + 100),
+                           i + 200};
         node.cells().push_back({cellKey, tuple});
         expectedKeys.push_back(cellKey);
         expectedValues.push_back(tuple);
@@ -140,7 +141,7 @@ TEST_F(BtreeNodePageTestFixture, InsertingManyRowPtrWorks) {
     }
 }
 
-TEST_F(BtreeNodePageTestFixture, InvalidDeserializationThrows) {
-    Vec<byte> invalidBytes(10, static_cast<byte>(0)); // Intentionally too short
-    ASSERT_THROW(BtreeNodePage<Vec<Vari>> invalidNode(invalidBytes, defaultPageID), std::runtime_error);
+TEST_F(BtreeNodePageTestFixture, InvalidDeserializationDeath) {
+    Vec<byte> invalidBytes(cts::PG_SZ, static_cast<byte>(0)); // Intentionally too short
+    ASSERT_DEATH(BtreeNodePage<Vec<Vari>> invalidNode(invalidBytes, defaultPageID),"");
 }

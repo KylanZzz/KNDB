@@ -22,18 +22,13 @@ int main() {
     backend::Pager pager(ioHandler);
 
     // Check if db file exists. If not, create one
-    try {
-        pager.getPage<backend::SchemaPage>(backend::cts::pgid::SCHEMA_ID);
-    } catch (std::invalid_argument& e) {
-        DEBUG(e.what());
-        DEBUG("Creating schema page for database");
+    DEBUG(ioHandler.getNumBlocks());
+    if (ioHandler.getNumBlocks() <= backend::cts::pgid::SCHEMA_ID) {
         if (pager.createNewPage<backend::SchemaPage>().getPageID() != backend::cts::pgid::SCHEMA_ID)
             throw std::runtime_error("Error while creating schema page");
-    } catch (std::exception& e) {
-        DEBUG(e.what());
     }
-
-
+    DEBUG(ioHandler.getNumBlocks());
+    DEBUG(pager.getPage<backend::SchemaPage>(backend::cts::pgid::SCHEMA_ID).getPageID());
 
     return 0;
 }

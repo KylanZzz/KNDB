@@ -30,9 +30,9 @@ TEST(FSMPageTest, FreeingABitMakesItFreeAgain) {
     ASSERT_TRUE(page.isFree(10));
 }
 
-TEST(FSMPageTest, OutOfBoundsCheckThrowsException) {
+TEST(FSMPageTest, OutOfBoundsCheckAsserts) {
     FSMPage page(1);
-    ASSERT_THROW(page.isFree(FSMPage::getBlocksInPage()), std::invalid_argument);
+    ASSERT_DEATH(page.isFree(FSMPage::getBlocksInPage()), "");
 }
 
 TEST(FSMPageTest, DefaultPageHasNoNextPage) {
@@ -65,10 +65,10 @@ TEST(FSMPageTest, AllocBitMarksBitAsUsed) {
     ASSERT_FALSE(page.isFree(5));
 }
 
-TEST(FSMPageTest, AllocBitThrowsIfAlreadyAllocated) {
+TEST(FSMPageTest, AllocBitExitsIfAlreadyAllocated) {
     FSMPage page(1);
     page.allocBit(5);
-    ASSERT_THROW(page.allocBit(5), std::invalid_argument);
+    ASSERT_DEATH(page.allocBit(5), "");
 }
 
 TEST(FSMPageTest, SerializationPreservesAllocatedBits) {
@@ -90,14 +90,15 @@ TEST(FSMPageTest, FindNextFreeReturnsFirstAvailableBit) {
     ASSERT_EQ(page.findNextFree(), 2);
 }
 
-TEST(FSMPageTest, FindNextFreeThrowsIfNoFreeBits) {
+TEST(FSMPageTest, FindNextFreeExitsIfNoFreeBits) {
     FSMPage page(1);
 
+    // first block is for FSM page itself, so we omit
     for (int i = 1; i < FSMPage::getBlocksInPage(); ++i) {
         page.allocBit(i);
     }
     ASSERT_EQ(0, page.getSpaceLeft());
-    ASSERT_THROW(page.findNextFree(), std::invalid_argument);
+    ASSERT_DEATH(page.findNextFree(), "");
 }
 
 TEST(FSMPageTest, SerializationPreservesFindNextFree) {
@@ -120,7 +121,6 @@ TEST(FSMPageTest, AllocateAllBitsThenFreeAndReallocate) {
         page.allocBit(i);
         ASSERT_FALSE(page.isFree(i));
     }
-    ASSERT_THROW(page.findNextFree(), std::invalid_argument);
 
     // Free all bits
     for (int i = 1; i < FSMPage::getBlocksInPage(); ++i) {
