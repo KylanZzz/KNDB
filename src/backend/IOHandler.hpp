@@ -43,14 +43,14 @@ public:
      *
      * @return The number of blocks currently allocated.
      */
-    u32 getNumBlocks() const;
+    pgid_t getNumBlocks() const;
 
     /**
      * @brief Creates a new block in the file.
      *
      * @return The Block No of the newly created block (0-indexed).
      */
-    u32 createNewBlock();
+    pgid_t createNewBlock();
 
     /**
      * @brief Writes data to a block in the file.
@@ -58,7 +58,7 @@ public:
      * @param arr Pointer to the data to be written.
      * @param BlockNo The ID of the block to write to (0-indexed).
      */
-    void writeBlock(void *arr, u32 BlockNo) const;
+    void writeBlock(void *arr, pgid_t BlockNo) const;
 
     /**
      * @brief Reads data from a block in the file.
@@ -66,7 +66,7 @@ public:
      * @param arr Pointer to the buffer where data will be read into.
      * @param BlockNo The ID of the block to read from (0-indexed).
      */
-    void readBlock(void *arr, u32 BlockNo) const;
+    void readBlock(void *arr, pgid_t BlockNo) const;
 
     ~IOHandler();
 
@@ -81,7 +81,7 @@ private:
 #else
     int m_fd;
 #endif // _WIN32
-    u32 m_blocks;
+    pgid_t m_blocks;
 };
 
 } // namespace backend

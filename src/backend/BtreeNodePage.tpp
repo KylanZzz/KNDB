@@ -4,11 +4,9 @@
 #ifndef KNDB_BTREENODEPAGE_TPP
 #define KNDB_BTREENODEPAGE_TPP
 
-#include <cassert>
-#include <iostream>
-
 #include "BtreeNodePage.hpp"
 #include "utility.hpp"
+#include "assume.h"
 
 namespace backend {
 
@@ -28,27 +26,27 @@ namespace backend {
 //    }
 
 template<typename T>
-BtreeNodePage<T>::BtreeNodePage(u16 deg, u32 parentID, bool is_root, bool is_leaf, u32 pageID)
+BtreeNodePage<T>::BtreeNodePage(u16 deg, pgid_t parentID, bool is_root, bool is_leaf, pgid_t pageID)
         : Page(pageID), m_leaf(is_leaf), m_root(is_root), m_degree(deg), m_parentID(parentID),
           m_children(0), m_cells(0) {
 }
 
 template<typename T>
-BtreeNodePage<T>::BtreeNodePage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
+BtreeNodePage<T>::BtreeNodePage(std::span<const byte> bytes, pgid_t pageID) : Page(pageID) {
     static_assert(std::is_trivially_copyable_v<T> || std::is_same_v<Vec<Vari>, T>);
-    assert(bytes.size() == cts::PG_SZ);
-    u16 offset = 0;
+    ASSUME_S(bytes.size() == cts::PG_SZ, "Buffer is incorrectly sized");
+    offset_t offset = 0;
 
     u8 page_type_id;
     db_deserialize(page_type_id, bytes, offset);
-    assert(page_type_id == cts::pg_type_id::BTREE_NODE_PAGE);
+    ASSUME_S(page_type_id == cts::pg_type_id::BTREE_NODE_PAGE, "Page_type_id is incorrect type");
 
     db_deserialize(m_degree, bytes, offset);
     db_deserialize(m_parentID, bytes, offset);
     db_deserialize(m_leaf, bytes, offset);
     db_deserialize(m_root, bytes, offset);
 
-    u32 numCells;
+    cellid_t numCells;
     u8 numTypes, key_type_id;
 
     db_deserialize(numCells, bytes, offset);
@@ -89,19 +87,25 @@ BtreeNodePage<T>::BtreeNodePage(std::span<const byte> bytes, u32 pageID) : Page(
     // serialize children
     if (!m_leaf)
         for (int i = 0; i < numCells + 1; i++) {
-            u32 child_id;
+            childid_t child_id;
             db_deserialize(child_id, bytes, offset);
             m_children.push_back(child_id);
         }
 
-    assert(offset <= cts::PG_SZ);
+    ASSUME_S(offset <= cts::PG_SZ, "Offset out of bounds");
 }
 
 template<typename T>
 void BtreeNodePage<T>::toBytes(std::span<byte> buf) {
-    assert(buf.size() == cts::PG_SZ);
-    assert(m_leaf || m_cells.empty() || m_children.size() == m_cells.size() + 1);
-    u16 offset = 0;
+    ASSUME_S(buf.size() == cts::PG_SZ, "Buffer is incorrectly sized");
+    ASSUME({
+        if (m_leaf)
+            return m_cells.empty() && m_children.empty();
+        else
+            return m_children.size() == cells.size() + 1 && !cells.empty();
+    }, "Leaf node has incorrect number of cells/children");
+
+    offset_t offset = 0;
 
     u8 page_type_id = cts::pg_type_id::BTREE_NODE_PAGE;
     db_serialize(page_type_id, buf, offset);
@@ -111,7 +115,7 @@ void BtreeNodePage<T>::toBytes(std::span<byte> buf) {
     db_serialize(m_leaf, buf, offset);
     db_serialize(m_root, buf, offset);
 
-    u32 numCells = m_cells.size();
+    cellid_t numCells = m_cells.size();
     db_serialize(numCells, buf, offset);
     if (numCells == 0) return;
 
@@ -144,6 +148,8 @@ void BtreeNodePage<T>::toBytes(std::span<byte> buf) {
     if (!m_leaf)
         for (int i = 0; i < numCells + 1; i++)
             db_serialize(m_children[i], buf, offset);
+
+    ASSUME_S(offset <= cts::PG_SZ, "Offset out of bounds");
 }
 
 } // namespace backend

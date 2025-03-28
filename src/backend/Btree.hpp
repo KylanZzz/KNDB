@@ -12,7 +12,7 @@ namespace backend {
 template<typename T>
 class Btree {
 public:
-    Btree(u32 rootPageId, Pager &pgr, u16 degree);
+    Btree(pgid_t rootPageId, Pager &pgr, u16 degree);
 
     T search(const Vari &key);
 
@@ -22,15 +22,15 @@ public:
 
     void update(T values, const Vari &key);
 
-    u32 getRootPage() const { return m_rootPageID; }
+    pgid_t getRootPage() const { return m_rootPageID; }
 
 private:
-    RowPos searchRowPtr(Vari targ_key, u32 currPageID);
+    RowPos searchRowPtr(Vari targ_key, pgid_t currPageID);
 
-    void split(u32 currPageID);
+    void split(pgid_t currPageID);
 
     Pager &m_pager;
-    u32 m_rootPageID;
+    pgid_t m_rootPageID;
     u16 m_degree;
 };
 

@@ -35,7 +35,7 @@ void StorageEngine::createTable(const string &name, const Vec<Vari> &types) {
     S_PAGE.addTable(m_tables.back()->getName(), m_tables.back()->getTablePageID());
 }
 
-Vec<Vari> StorageEngine::getTableTypes(const string &table) {
+Vec<Vari> StorageEngine::getTableTypes(const string &table) const {
     for (const auto &tab: m_tables)
         if (tab->getName() == table) return tab->getTypes();
 

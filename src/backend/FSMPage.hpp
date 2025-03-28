@@ -21,6 +21,7 @@
 
 namespace backend {
     class FSMPage : public Page {
+        using bitmapid_t = u32;
     public:
         /**
          * @brief Constructs an FSMPage from existing serialized data.
@@ -28,13 +29,13 @@ namespace backend {
          * @param pageID The ID of the page.
          * @param bytes serialized data
          */
-        FSMPage(std::span<const byte> bytes, u32 pageID);
+        FSMPage(std::span<const byte> bytes, pgid_t pageID);
 
         /**
         * @brief Constructs a new, empty FSMPage.
         * @param pageID The ID of the page.
         */
-        FSMPage(u32 pageID);
+        FSMPage(pgid_t pageID);
 
         /**
          * @brief Checks if a specific bit (block) in the bitmap is free.

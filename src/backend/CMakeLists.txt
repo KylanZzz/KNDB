@@ -9,3 +9,4 @@ add_library(backend STATIC
 )
 
 target_include_directories(backend PUBLIC ${CMAKE_SOURCE_DIR}/src/backend)
+target_include_directories(backend PUBLIC ${CMAKE_SOURCE_DIR}/src)

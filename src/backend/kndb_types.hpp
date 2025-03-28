@@ -47,12 +47,16 @@ using u8 = uint8_t;
 using u16 = uint16_t;
 using u32 = uint32_t;
 using u64 = uint64_t;
+using pgid_t = uint32_t;
+using cellid_t = uint32_t;
+using childid_t = uint32_t;
+using offset_t = uint16_t;
 
 struct RowPos {
     u32 pageID;
-    u32 cellID; // could potentially change to 16 bytes if we need extra space eventually
+    cellid_t cellID;
 };
-//
+
 //    struct SecIdxVal {
 //        size_t indexes[5];
 //        size_t numIndexes;

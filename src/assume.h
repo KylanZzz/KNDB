@@ -1,0 +1,32 @@
+//
+// Created by kylan on 3/26/2025.
+//
+
+#ifndef ASSUME_H
+#define ASSUME_H
+
+#ifdef NDEBUG
+#define ASSUME(code, msg)
+
+#else
+#include <iostream>
+#define ASSUME(block, msg) \
+    do { \
+        bool __assert_result = ([&]() -> bool block)(); \
+        if (!__assert_result) { \
+            std::cerr << "Assertion failed: " << (msg) << "\n"; \
+            std::abort(); \
+        } \
+    } while (0)
+// short for assume_statement.
+#define ASSUME_S(statement, msg) \
+    do { \
+        if (!(statement)) { \
+            std::cerr << "Assertion failed: " << (msg) << "\n"; \
+            std::abort(); \
+        } \
+    } while (0)
+#endif
+
+
+#endif //ASSUME_H

@@ -2,9 +2,9 @@
 // Created by Kylan Chen on 2/28/25.
 //
 
-#include <cassert>
 #include "FSMPage.hpp"
 #include "utility.hpp"
+#include "assume.h"
 
 namespace backend {
 
@@ -27,11 +27,12 @@ namespace backend {
 //----------------------------------------
 //----------------------------------------
 FSMPage::FSMPage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
+    ASSUME_S(bytes.size() == cts::PG_SZ, "Buffer is incorrectly sized");
     u16 offset = 0;
 
     u8 page_type_id;
     db_deserialize(page_type_id, bytes, offset);
-    assert(page_type_id == cts::pg_type_id::FSM_PAGE);
+    ASSUME_S(page_type_id == cts::pg_type_id::FSM_PAGE, "Page_type_id is incorrect type");
 
     db_deserialize(m_nextPageID, bytes, offset);
     db_deserialize(m_freeBlocks, bytes, offset);
@@ -40,10 +41,10 @@ FSMPage::FSMPage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
     memcpy(m_bitmap.data(), bytes.data() + offset, m_bitmap.size());
     offset += m_bitmap.size();
 
-    assert(offset <= cts::PG_SZ);
+    ASSUME_S(offset <= cts::PG_SZ, "Offset out of bounds");
 }
 
-FSMPage::FSMPage(u32 pageID) : Page(pageID) {
+FSMPage::FSMPage(pgid_t pageID) : Page(pageID) {
     m_nextPageID = cts::U32_INVALID;
     m_bitmap.resize(cts::PG_SZ - db_sizeof<u32>() * 3);
     m_freeBlocks = m_bitmap.size() * 8;
@@ -51,25 +52,26 @@ FSMPage::FSMPage(u32 pageID) : Page(pageID) {
 }
 
 void FSMPage::allocBit(u32 idx) {
-    assert(idx < (m_bitmap.size() * 8));
-    assert(isFree(idx));
-    assert(m_freeBlocks > 0);
+    ASSUME_S(idx < (m_bitmap.size() * 8), "Index is out of bounds");
+    ASSUME_S(getSpaceLeft() > 0, "This bitmap page is already completely filled");
+    ASSUME_S(isFree(idx), "That block is already being used");
 
     --m_freeBlocks;
     m_bitmap[idx / 8] ^= 1 << (idx % 8);
 }
 
 bool FSMPage::isFree(u32 idx) {
-    assert(idx < (m_bitmap.size() * 8));
+    ASSUME_S(idx < (m_bitmap.size() * 8), "Index is out of bounds");
 
     return !(m_bitmap[idx / 8] & 1 << (idx % 8));
 }
 
 u32 FSMPage::findNextFree() {
-    assert(getSpaceLeft() > 0);
+    ASSUME_S(getSpaceLeft() > 0, "This bitmap page is already completely filled");
     for (int i = 0; i < m_bitmap.size() * 8; i++)
         if (isFree(i)) return i;
-    assert(false);
+
+    ASSUME_S(false, "No free page has been found");
 }
 
 u32 FSMPage::getSpaceLeft() const {
@@ -77,8 +79,8 @@ u32 FSMPage::getSpaceLeft() const {
 }
 
 void FSMPage::freeBit(u32 idx) {
-    assert(!isFree(idx));
-    assert(m_freeBlocks <= m_bitmap.size() * 8);
+    ASSUME_S(!isFree(idx), "That bit is already free");
+    ASSUME_S(m_freeBlocks < m_bitmap.size() * 8, "Bitmap has more free blocks than feasibly possible");
 
     m_freeBlocks++;
     m_bitmap[idx / 8] ^= 1 << (idx % 8);
@@ -98,7 +100,7 @@ void FSMPage::setNextPageID(u32 pageID) {
 }
 
 void FSMPage::toBytes(std::span<byte> buf) {
-    assert(buf.size() == cts::PG_SZ);
+    ASSUME_S(buf.size() == cts::PG_SZ, "Buffer is incorrectly sized");
 
     u16 offset = 0;
 
@@ -110,6 +112,8 @@ void FSMPage::toBytes(std::span<byte> buf) {
 
     memcpy(buf.data() + offset, m_bitmap.data(), m_bitmap.size());
     offset += m_bitmap.size();
+
+    ASSUME_S(offset <= cts::PG_SZ, "Offset out of bounds");
 }
 
 } // namespace backend

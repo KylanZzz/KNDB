@@ -10,7 +10,6 @@
 #include <limits>
 #include <string>
 
-
 namespace backend::cts { // constants
 
 // configuration
@@ -34,12 +33,15 @@ enum {
 };
 }
 
-// other
 constexpr size_t SIZE_T_INVALID = std::numeric_limits<size_t>::max();
 constexpr uint8_t U8_INVALID = std::numeric_limits<uint8_t>::max();
 constexpr uint16_t U16_INVALID = std::numeric_limits<uint16_t>::max();
 constexpr uint32_t U32_INVALID = std::numeric_limits<uint32_t>::max();
 constexpr uint64_t U64_INVALID = std::numeric_limits<uint64_t>::max();
+constexpr uint32_t PGID_INVALID = std::numeric_limits<uint32_t>::max();
+constexpr uint32_t CELLID_INVALID = std::numeric_limits<uint32_t>::max();
+constexpr uint32_t CHILDID_INVALID = std::numeric_limits<uint32_t>::max();
+
 } // namespace constants
 
 #endif //KNDB_CONSTANTS_HPP

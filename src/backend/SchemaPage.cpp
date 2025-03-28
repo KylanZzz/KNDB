@@ -28,7 +28,7 @@ Format:
     table2PageId --- etc.
 
 */
-SchemaPage::SchemaPage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
+SchemaPage::SchemaPage(std::span<const byte> bytes, pgid_t pageID) : Page(pageID) {
     assert(bytes.size() == cts::PG_SZ);
     u16 offset = 0;
 
@@ -50,14 +50,14 @@ SchemaPage::SchemaPage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
     assert (offset < cts::PG_SZ);
 }
 
-SchemaPage::SchemaPage(u32 pageID) : Page(pageID), m_tables(0) {}
+SchemaPage::SchemaPage(pgid_t pageID) : Page(pageID), m_tables(0) {}
 
 u8 SchemaPage::getNumTables() const {
     return m_tables.size();
 }
 
-std::unordered_map<string, u32> SchemaPage::getTables() {
-    std::unordered_map<string, u32> res;
+std::unordered_map<string, pgid_t> SchemaPage::getTables() {
+    std::unordered_map<string, pgid_t> res;
     for (const auto &table: m_tables)
         res[table.name] = table.pageID;
     return res;
@@ -68,15 +68,15 @@ u16 SchemaPage::freeSpace() {
 
     used += db_sizeof<u8>(); // page_type_id
     used += db_sizeof<u8>(); // # tables
-    used += m_tables.size() * (db_sizeof<string>() + db_sizeof<u32>());
+    used += m_tables.size() * (db_sizeof<string>() + db_sizeof<pgid_t>());
 
     return cts::PG_SZ - used;
 }
 
-void SchemaPage::addTable(string name, u32 pageID) {
+void SchemaPage::addTable(string name, pgid_t pageID) {
     assert(name.length() < db_sizeof<string>());
     assert(!name.empty());
-    assert(freeSpace() >= db_sizeof<string>() + db_sizeof<u32>());
+    assert(freeSpace() >= db_sizeof<string>() + db_sizeof<pgid_t>());
 
     m_tables.push_back({std::move(name), pageID});
 }

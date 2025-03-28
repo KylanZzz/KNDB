@@ -63,7 +63,7 @@ public:
      * @param table The name of the table.
      * @return A list of column types.
      */
-    Vec<Vari> getTableTypes(const string& table);
+    Vec<Vari> getTableTypes(const string& table) const;
 
     /**
      * Retrieves the number of tuples stored in a table.
