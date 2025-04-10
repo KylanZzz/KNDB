@@ -46,7 +46,7 @@ namespace backend {
          *
          * @return True if the bit is free, false otherwise.
          */
-        bool isFree(u32 idx);
+        bool isFree(u32 idx) const;
 
         /**
          * @brief Checks if this FSM_ID page has a reference to the next FSM_ID page.
@@ -87,7 +87,7 @@ namespace backend {
          *
          * @throws std::invalid_argument If no free bits are available.
          */
-        u32 findNextFree();
+        u32 findNextFree() const;
 
         /**
          * @brief Retrieves the ID of the next FSM_ID page.

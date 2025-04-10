@@ -7,7 +7,7 @@
 
 #include "Btree.hpp"
 #include "BtreeNodePage.hpp"
-#include "assume.h"
+#include "assume.hpp"
 
 #define B_NODE(id) m_pager.getPage<BtreeNodePage<T>>(id)
 #define B_NEW(deg, par, root, leaf) m_pager.createNewPage<BtreeNodePage<T>>(deg, par, root, leaf);
@@ -29,14 +29,25 @@ RowPos Btree<T>::searchRowPtr(Vari targ_key, pgid_t currPageID) {
     auto &node = B_NODE(currPageID);
     auto &cells = node.cells();
     auto &children = node.children();
-    bool leaf = B_NODE(currPageID).leaf();
+    bool leaf = node.leaf();
 
     ASSUME({
         if (leaf)
-            return cells.empty() && children.empty();
-        else
+            return children.empty();
+        return true;
+    }, "Leaf node should have no children");
+
+    ASSUME({
+        if (!leaf && node.root())
+            return cells.empty() || children.size() == cells.size() + 1;
+        return true;
+    }, "Root node has incorrect number of cells");
+
+    ASSUME({
+        if (!leaf && !node.root())
             return children.size() == cells.size() + 1 && !cells.empty();
-    }, "Leaf node has incorrect number of cells/children");
+        return true;
+    }, "Intermediate node has incorrect number of cells, or is empty (intermediate nodes cannot be empty)");
 
     cellid_t idx = 0;
     while (idx < cells.size() && cells[idx].key < targ_key)

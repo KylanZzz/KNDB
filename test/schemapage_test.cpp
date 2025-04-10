@@ -92,8 +92,8 @@ TEST_F(SchemaPageTest, AddTableWithEmptyNameExits) {
 
 TEST_F(SchemaPageTest, AddTableWithMaxAndExceedingNameLength) {
     SchemaPage schema(1);
-    std::string maxLengthName(cts::STR_SZ - 1, 'A'); // 31 characters, should work
-    std::string tooLongName(cts::STR_SZ, 'B');   // 32 characters, should throw
+    std::string maxLengthName(cts::MAX_STR_SZ - 1, 'A'); // 31 characters, should work
+    std::string tooLongName(cts::MAX_STR_SZ, 'B');   // 32 characters, should throw
 
     schema.addTable(maxLengthName, 5);
     ASSERT_EQ(schema.getTables().size(), 1);
@@ -113,10 +113,10 @@ TEST_F(SchemaPageTest, AddingTableBeyondCapacityExits) {
     u32 max_space = cts::PG_SZ;
 
     u32 pageID = 5;
-    while (used_space + cts::STR_SZ + sizeof(u32) <= max_space) {
+    while (used_space + cts::MAX_STR_SZ + sizeof(u32) <= max_space) {
         schema.addTable("Table" + std::to_string(pageID), pageID);
         pageID++;
-        used_space += cts::STR_SZ + sizeof(u32); // 32 (name) + 4 (pageID)
+        used_space += cts::MAX_STR_SZ + sizeof(u32); // 32 (name) + 4 (pageID)
     }
 
     ASSERT_DEATH(schema.addTable("OverflowTable", pageID), "");

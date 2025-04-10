@@ -6,7 +6,7 @@
 
 #include "BtreeNodePage.hpp"
 #include "utility.hpp"
-#include "assume.h"
+#include "assume.hpp"
 
 namespace backend {
 
@@ -100,10 +100,21 @@ void BtreeNodePage<T>::toBytes(std::span<byte> buf) {
     ASSUME_S(buf.size() == cts::PG_SZ, "Buffer is incorrectly sized");
     ASSUME({
         if (m_leaf)
-            return m_cells.empty() && m_children.empty();
-        else
-            return m_children.size() == cells.size() + 1 && !cells.empty();
-    }, "Leaf node has incorrect number of cells/children");
+            return m_children.empty();
+        return true;
+    }, "Leaf node should have no children");
+
+    ASSUME({
+        if (!m_leaf && m_root)
+            return m_cells.empty() || m_children.size() == m_cells.size() + 1;
+        return true;
+    }, "Root node has incorrect number of cells");
+
+    ASSUME({
+        if (!m_leaf && !m_root)
+            return m_children.size() == m_cells.size() + 1 && !m_cells.empty();
+        return true;
+    }, "Intermediate node has incorrect number of cells, or is empty (intermediate nodes cannot be empty)");
 
     offset_t offset = 0;
 

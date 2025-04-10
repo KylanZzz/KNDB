@@ -3,6 +3,7 @@
 //
 
 #include "Pager.hpp"
+#include "assume.hpp"
 #include "kndb_types.hpp"
 
 namespace backend{
@@ -12,13 +13,13 @@ Pager::Pager(IOHandler &ioHandler) : m_ioHandler(ioHandler) {
     // pager needs to do
     if (m_ioHandler.getNumBlocks() == 0) {
         // create FSMPage
-        u32 pgid = m_ioHandler.createNewBlock();
-        assert(pgid == cts::pgid::FSM_ID);
+        pgid_t pgid = m_ioHandler.createNewBlock();
+        ASSUME_S(pgid == cts::pgid::FSM_ID, "First page created is not the correct FSM page ID");
         m_cache.emplace(pgid, std::make_unique<FSMPage>(pgid));
     }
 }
 
-u32 Pager::allocPageBit() {
+pgid_t Pager::allocPageBit() {
     FSMPage* currPage = &getPage<FSMPage>(cts::pgid::FSM_ID);
 
     //1. if current there is free bit in bitmap:
@@ -34,12 +35,12 @@ u32 Pager::allocPageBit() {
 
     // free bitmap has been found
     if (currPage->getSpaceLeft() > 0) {
-        u32 localIdx= currPage->findNextFree();
+        pgid_t localIdx= currPage->findNextFree();
         currPage->allocBit(localIdx);
         // need to create new block
         if ((idx * FSMPage::getBlocksInPage()) + localIdx == m_ioHandler.getNumBlocks()) {
-            u32 id = m_ioHandler.createNewBlock();
-            assert(id == ((idx * FSMPage::getBlocksInPage()) + localIdx));
+            pgid_t id = m_ioHandler.createNewBlock();
+            ASSUME_S(id == ((idx * FSMPage::getBlocksInPage()) + localIdx), "New block created is not correct ID");
         }
         return (idx * FSMPage::getBlocksInPage()) + localIdx;
     }
@@ -49,20 +50,20 @@ u32 Pager::allocPageBit() {
     //    - set previous last page->next to new pageNo
     //    - instantiate new page with free bitmap (set first bit to 1, since
     //      first page is for bitmap)
-    u32 newPageID = m_ioHandler.createNewBlock();
+    pgid_t newPageID = m_ioHandler.createNewBlock();
     currPage->setNextPageID(newPageID);
     m_cache.emplace(newPageID, std::make_unique<FSMPage>(newPageID));
     currPage = &getPage<FSMPage>(newPageID);
 
-    u32 localIdx = currPage->findNextFree();
+    pgid_t localIdx = currPage->findNextFree();
     currPage->allocBit(localIdx);
-    u32 new_id = m_ioHandler.createNewBlock();
+    pgid_t new_id = m_ioHandler.createNewBlock();
     idx++;
-    assert(new_id == (idx * FSMPage::getBlocksInPage() + localIdx));
+    ASSUME_S(new_id == (idx * FSMPage::getBlocksInPage() + localIdx), "New block created is not correct ID");
     return (idx * FSMPage::getBlocksInPage()) + localIdx;
 }
 
-void Pager::freePageBit(u32 pageID) {
+void Pager::freePageBit(pgid_t pageID) {
     //Q: if calculated pageID >= total # blocks (IOHandler)
     //    - throw error, out of bounds pageID
     if (pageID >= m_ioHandler.getNumBlocks())
@@ -70,33 +71,33 @@ void Pager::freePageBit(u32 pageID) {
 
     //1. calculate which FSMPageId the target pageID is in
     FSMPage* currPage = &getPage<FSMPage>(cts::pgid::FSM_ID);
-    u32 blocksPerPage = FSMPage::getBlocksInPage();
+    pgid_t blocksPerPage = FSMPage::getBlocksInPage();
 
     //2. get page(maybe using linked-list style search), set the bit to 0
     // the FSMPage (node) that contains the page we want to free
     // 0-indexed
-    u32 nodeNo = pageID / blocksPerPage;
+    pgid_t nodeNo = pageID / blocksPerPage;
     for (int i = 0; i < nodeNo; i++) {
         if (!currPage->hasNextPage())
             throw std::runtime_error("FSMPage has no next page");
         currPage = &getPage<FSMPage>(currPage->getNextPageID());
     }
 
-    u32 localIdx = pageID % blocksPerPage;
+    pgid_t localIdx = pageID % blocksPerPage;
     if (currPage->isFree(localIdx))
         throw std::invalid_argument("page is already free, cannot free");
     currPage->freeBit(localIdx);
 }
 
-bool Pager::isFree(u32 pageID) {
+bool Pager::isFree(pgid_t pageID) {
     FSMPage* currPage = &getPage<FSMPage>(cts::pgid::FSM_ID);
-    u32 pageIdx = pageID / FSMPage::getBlocksInPage();
+    pgid_t pageIdx = pageID / FSMPage::getBlocksInPage();
     for (int i = 0; i < pageIdx; i++) {
         if (!currPage->hasNextPage())
             throw std::runtime_error("FSMPage has no next page");
         currPage = &getPage<FSMPage>(currPage->getNextPageID());
     }
-    u32 localIdx = pageID % FSMPage::getBlocksInPage();
+    pgid_t localIdx = pageID % FSMPage::getBlocksInPage();
     return currPage->isFree(localIdx);
 }
 

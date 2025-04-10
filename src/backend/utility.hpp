@@ -9,6 +9,7 @@
 
 #include "kndb_types.hpp"
 #include "constants.hpp"
+#include "assume.hpp"
 
 namespace backend {
 
@@ -16,7 +17,7 @@ template<typename T>
 inline size_t db_sizeof() { return sizeof(T); }
 
 template<>
-inline size_t db_sizeof<string>() { return cts::STR_SZ; }
+inline size_t db_sizeof<string>() { return cts::MAX_STR_SZ; }
 
 template<typename T>
 inline size_t db_sizeof(T &&) { return db_sizeof<std::decay_t<T> >(); }
@@ -56,7 +57,7 @@ inline Vari type_id_to_variant(const u8 type_id) {
         case variant_conversion_id::DOUBLE:
             return double();
         default:
-            throw std::runtime_error("Invalid type id");
+            ASSUME_S(false, "type_id does not represent a valid type");
     }
 }
 

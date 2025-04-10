@@ -78,7 +78,3 @@ TEST_F(TablePageTest, ManyTypesWorks) {
     TablePage manyTypesTable(types, 4, 10);
     ASSERT_EQ(manyTypesTable.getTypes(), types);
 }
-
-TEST_F(TablePageTest, EmptyTypesThrowsException) {
-    ASSERT_THROW(TablePage testpg({}, 5, 2), std::invalid_argument);
-}

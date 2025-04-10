@@ -18,6 +18,7 @@
             std::abort(); \
         } \
     } while (0)
+
 // short for assume_statement.
 #define ASSUME_S(statement, msg) \
     do { \

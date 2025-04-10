@@ -51,8 +51,6 @@ TEST_F(BtreeTest, BasicSearchWorks) {
     Vec<Vari> tuple = {"kylan", double(3.0), 4.0};
     auto& node = pager->getPage<BtreeNodePage<Vec<Vari>>>(root_id);
     node.cells().push_back({key, tuple});
-    node.children().push_back(3);
-    node.children().push_back(4);
     ASSERT_EQ(btree->search(key), tuple);
 }
 
@@ -61,9 +59,6 @@ TEST_F(BtreeTest, BasicUpdateWorks) {
     Vec<Vari> tuple = {"kylan", double(3.0), 4};
     auto& node = pager->getPage<BtreeNodePage<Vec<Vari>>>(root_id);
     node.cells().push_back({key, tuple});
-    node.children().push_back(3);
-    node.children().push_back(4);
-
     Vec<Vari> tuple2 = {"my other name", double(6.9), 14};
     btree->update(tuple2, key);
     ASSERT_EQ(btree->search(key), tuple2);

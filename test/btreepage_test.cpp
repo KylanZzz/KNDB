@@ -62,7 +62,7 @@ TEST_F(BtreeNodePageTestFixture, AddingSingleCellWorks) {
 }
 
 TEST_F(BtreeNodePageTestFixture, AddingMultipleCellsWorks) {
-    uint16_t MX_SZ = (cts::PG_SZ - 500) / (cts::STR_SZ + cts::STR_SZ + sizeof(int) + cts::STR_SZ);
+    uint16_t MX_SZ = (cts::PG_SZ - 500) / (cts::MAX_STR_SZ + cts::MAX_STR_SZ + sizeof(int) + cts::MAX_STR_SZ);
     uint16_t degree = (MX_SZ + 1) / 2;
     BtreeNodePage<Vec<Vari>> node(degree, 5, true, false, defaultPageID);
 

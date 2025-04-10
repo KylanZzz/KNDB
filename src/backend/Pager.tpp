@@ -5,19 +5,18 @@
 #ifndef KNDB_PAGER_TPP
 #define KNDB_PAGER_TPP
 
-#include <cassert>
-
 #include "Pager.hpp"
 #include "FSMPage.hpp"
 #include "constants.hpp"
+#include "assume.hpp"
 
 namespace backend {
 
 template <typename T>
-T &Pager::getPage(u32 pageID) {
+T &Pager::getPage(pgid_t pageID) {
     static_assert(std::is_base_of<Page, T>::value, "T must be a derived class of Page");
-    assert(pageID < m_ioHandler.getNumBlocks());
-    assert((std::is_same_v<T, FSMPage>) || !isFree(pageID));
+    ASSUME_S(pageID < m_ioHandler.getNumBlocks(), "PageID is out of bounds");
+    ASSUME_S((std::is_same_v<T, FSMPage>) || !isFree(pageID), "That page is freed");
 
     if (m_cache.contains(pageID))
         return dynamic_cast<T &>(*m_cache[pageID]);
@@ -41,7 +40,7 @@ T &Pager::createNewPage(Args&&... args) {
         throw std::runtime_error("Database has reached block limit.");
 
     // create new block in db file
-    u32 new_page_no = allocPageBit();
+    pgid_t new_page_no = allocPageBit();
 
     // create a new page in cache (which is just a list for now)
     m_cache.emplace(new_page_no, std::make_unique<T>(std::forward<Args>(args)..., new_page_no));
@@ -51,12 +50,10 @@ T &Pager::createNewPage(Args&&... args) {
 }
 
 template <typename T>
-void Pager::freePage(u32 pageID) {
+void Pager::freePage(pgid_t pageID) {
     static_assert(std::is_base_of<Page, T>::value, "T must be a derived class of Page");
-    assert (pageID < m_ioHandler.getNumBlocks());
+    ASSUME_S(pageID < m_ioHandler.getNumBlocks(), "PageID is out of bounds");
 
-    // TODO: this is inefficient since we don't really need to wipe the page,
-    //  but doing this for safety.
     PgArr<byte> buf{};
     m_ioHandler.writeBlock(buf.data(), pageID);
 

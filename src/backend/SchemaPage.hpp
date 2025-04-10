@@ -5,8 +5,9 @@
 #ifndef KNDB_SCHEMAPAGE_HPP
 #define KNDB_SCHEMAPAGE_HPP
 
+#include <unordered_map>
+
 #include "Page.hpp"
-#include "unordered_map"
 #include "kndb_types.hpp"
 
 namespace backend {
@@ -25,13 +26,13 @@ public:
      * @param bytes The byte vector containing schema data.
      * @param pageID The on-disk page number of this schema page.
      */
-    SchemaPage(std::span<const byte> bytes, u32 pageID);
+    SchemaPage(std::span<const byte> bytes, pgid_t pageID);
 
     /**
      * @brief Creates a new empty SchemaPage.
      * @param pageID
      */
-    SchemaPage(u32 pageID);
+    SchemaPage(pgid_t pageID);
 
     /**
      * @brief Gets the total number of tables in the schema.
@@ -43,14 +44,14 @@ public:
      * @brief Gets list of all tables in schema.
      * @return Map of table names to pageID of table metadata page.
      */
-    std::unordered_map<string, u32> getTables();
+    const std::unordered_map<string, pgid_t>& getTables();
 
     /**
      * @brief Creates a new table in the schema.
      * @param name The name of the table.
      * @param pageID The page number of the table.
      */
-    void addTable(string name, u32 pageID);
+    void addTable(const string& name, pgid_t pageID);
 
     /**
      * @brief Removes a table from the schema.
@@ -61,15 +62,10 @@ public:
     void toBytes(std::span<byte> buffer) override;
 
 private:
-    struct table_descriptor {
-        string name;
-        u32 pageID;
-    };
-
     // calculates the amount of free space (in bytes) that the page has left
-    u16 freeSpace();
+    offset_t freeSpace() const;
 
-    Vec<table_descriptor> m_tables;
+    std::unordered_map<string, pgid_t> m_tables;
 };
 
 } // namespace backend

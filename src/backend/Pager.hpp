@@ -59,7 +59,7 @@ public:
      * @return a reference to the requested page.
      */
     template<typename T>
-    T &getPage(u32 pageID);
+    T &getPage(pgid_t pageID);
 
     /**
      * @brief Creates a new page
@@ -89,7 +89,7 @@ public:
      * page is already freed.
      */
     template<typename T>
-    void freePage(u32 pageID);
+    void freePage(pgid_t pageID);
 
     /**
      * All pages are guaranteed to be written
@@ -103,19 +103,19 @@ public:
 
 private:
     // helper functions to manipulate the free space bitmap
-    void freePageBit(u32 pageID);
+    void freePageBit(pgid_t pageID);
 
     // allocates a pg in the bitmap and returns the pg id
-    u32 allocPageBit();
+    pgid_t allocPageBit();
 
-    bool isFree(u32 pageID);
+    bool isFree(pgid_t pageID);
 
     IOHandler &m_ioHandler;
 
     // TODO: LRU cache using implementation here: https://leetcode.com/problems/lru-cache/
     //      - but use template for key and val, and make sure val is a unique_ptr<val> instead
     //      - key is page number, val is PagePtr
-    std::unordered_map<u32, Ptr<Page>> m_cache;
+    std::unordered_map<pgid_t, Ptr<Page>> m_cache;
 };
 
 } // namespace backend

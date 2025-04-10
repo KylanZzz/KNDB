@@ -4,7 +4,7 @@
 
 #include "FSMPage.hpp"
 #include "utility.hpp"
-#include "assume.h"
+#include "assume.hpp"
 
 namespace backend {
 
@@ -60,13 +60,13 @@ void FSMPage::allocBit(u32 idx) {
     m_bitmap[idx / 8] ^= 1 << (idx % 8);
 }
 
-bool FSMPage::isFree(u32 idx) {
+bool FSMPage::isFree(u32 idx) const {
     ASSUME_S(idx < (m_bitmap.size() * 8), "Index is out of bounds");
 
     return !(m_bitmap[idx / 8] & 1 << (idx % 8));
 }
 
-u32 FSMPage::findNextFree() {
+u32 FSMPage::findNextFree() const {
     ASSUME_S(getSpaceLeft() > 0, "This bitmap page is already completely filled");
     for (int i = 0; i < m_bitmap.size() * 8; i++)
         if (isFree(i)) return i;
@@ -78,7 +78,7 @@ u32 FSMPage::getSpaceLeft() const {
     return m_freeBlocks;
 }
 
-void FSMPage::freeBit(u32 idx) {
+void FSMPage::freeBit(const u32 idx) {
     ASSUME_S(!isFree(idx), "That bit is already free");
     ASSUME_S(m_freeBlocks < m_bitmap.size() * 8, "Bitmap has more free blocks than feasibly possible");
 

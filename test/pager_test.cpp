@@ -193,7 +193,7 @@ TEST_F(PagerTest, ThrowsIfExceedsMaxBlocks) {
         auto last = std::unique(pageIDs.begin(), pageIDs.end());
         ASSERT_EQ(last, pageIDs.end());
 
-        ASSERT_THROW(pager.createNewPage<SchemaPage>(), std::runtime_error);
+        ASSERT_DEATH(pager.createNewPage<SchemaPage>(), "");
     }
 }
 

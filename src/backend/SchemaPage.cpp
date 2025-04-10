@@ -2,13 +2,11 @@
 // Created by Kylan Chen on 12/20/24.
 //
 
-#include <cassert>
-
 #include "SchemaPage.hpp"
 #include "utility.hpp"
+#include "assume.hpp"
 
 namespace backend {
-
 /*
 Info needed to be stored:
     - # Tables
@@ -29,42 +27,41 @@ Format:
 
 */
 SchemaPage::SchemaPage(std::span<const byte> bytes, pgid_t pageID) : Page(pageID) {
-    assert(bytes.size() == cts::PG_SZ);
+    ASSUME_S(bytes.size() == cts::PG_SZ, "Buffer is not the correct size");
     u16 offset = 0;
 
     u8 page_type_id, num_tables;
     db_deserialize(page_type_id, bytes, offset);
-    assert(page_type_id == cts::pg_type_id::SCHEMA_PAGE);
+    ASSUME_S(page_type_id == cts::pg_type_id::SCHEMA_PAGE, "Page ID is invalid");
 
     db_deserialize(num_tables, bytes, offset);
 
     for (int i = 0; i < num_tables; ++i) {
-        table_descriptor tab_desc;
+        string name;
+        pgid_t pageID;
 
-        db_deserialize(tab_desc.name, bytes, offset);
-        db_deserialize(tab_desc.pageID, bytes, offset);
+        db_deserialize(name, bytes, offset);
+        db_deserialize(pageID, bytes, offset);
 
-        m_tables.push_back(tab_desc);
+        m_tables.emplace(name, pageID);
     }
 
-    assert (offset < cts::PG_SZ);
+    ASSUME_S(offset < cts::PG_SZ, "Offset is out of bounds, an error has occurred during serialization");
 }
 
-SchemaPage::SchemaPage(pgid_t pageID) : Page(pageID), m_tables(0) {}
+SchemaPage::SchemaPage(pgid_t pageID) : Page(pageID), m_tables(0) {
+}
 
 u8 SchemaPage::getNumTables() const {
     return m_tables.size();
 }
 
-std::unordered_map<string, pgid_t> SchemaPage::getTables() {
-    std::unordered_map<string, pgid_t> res;
-    for (const auto &table: m_tables)
-        res[table.name] = table.pageID;
-    return res;
+const std::unordered_map<string, pgid_t>& SchemaPage::getTables() {
+    return m_tables;
 }
 
-u16 SchemaPage::freeSpace() {
-    u16 used = 0;
+offset_t SchemaPage::freeSpace() const {
+    offset_t used = 0;
 
     used += db_sizeof<u8>(); // page_type_id
     used += db_sizeof<u8>(); // # tables
@@ -73,30 +70,25 @@ u16 SchemaPage::freeSpace() {
     return cts::PG_SZ - used;
 }
 
-void SchemaPage::addTable(string name, pgid_t pageID) {
-    assert(name.length() < db_sizeof<string>());
-    assert(!name.empty());
-    assert(freeSpace() >= db_sizeof<string>() + db_sizeof<pgid_t>());
+void SchemaPage::addTable(const string& name, pgid_t pageID) {
+    ASSUME_S(name.length() <= cts::MAX_STR_LEN, "Name is too long");
+    ASSUME_S(!name.empty(), "Name cannot be empty");
+    ASSUME_S(freeSpace() >= db_sizeof<string>() + db_sizeof<pgid_t>(),
+             "There is not enough space in this page to add another table");
 
-    m_tables.push_back({std::move(name), pageID});
+    m_tables.emplace(name, pageID);
 }
 
 void SchemaPage::removeTable(const string &targ_name) {
-    assert(targ_name.length() < db_sizeof<string>());
-    assert(!targ_name.empty());
+    ASSUME_S(targ_name.length() <= cts::MAX_STR_LEN, "Name is too long");
+    ASSUME_S(!targ_name.empty(), "Name cannot be empty");
+    ASSUME_S(m_tables.contains(targ_name), "Table with that name does not exist");
 
-    for (int i = 0; i < m_tables.size(); ++i) {
-        if (m_tables[i].name == targ_name) {
-            m_tables.erase(m_tables.begin() + i);
-            return;
-        }
-    }
-
-    abort();
+    m_tables.erase(targ_name);
 }
 
 void SchemaPage::toBytes(std::span<byte> buf) {
-    assert(buf.size() == cts::PG_SZ);
+    ASSUME_S(buf.size() == cts::PG_SZ, "Buffer is incorrectly sized");
     u16 offset = 0;
 
     u8 page_type_id = cts::pg_type_id::SCHEMA_PAGE;
@@ -105,10 +97,10 @@ void SchemaPage::toBytes(std::span<byte> buf) {
     u8 num_tables = m_tables.size();
     db_serialize(num_tables, buf, offset);
 
-    for (const auto &tab_desc: m_tables) {
-        db_serialize(tab_desc.name, buf, offset);
-        db_serialize(tab_desc.pageID, buf, offset);
+    for (const auto &[name, pageID]: m_tables) {
+        db_serialize(name, buf, offset);
+        db_serialize(pageID, buf, offset);
     }
+    ASSUME_S(offset <= cts::PG_SZ, "Offset out of bounds");
 }
-
 } // namespace backend
