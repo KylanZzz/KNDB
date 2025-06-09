@@ -60,7 +60,7 @@ public:
      *
      * The first index of the tuple will ALWAYS be the primary key, meaning it must be unique.
      */
-    void insertTuple(Vec<Vari> values) const;
+    void insertTuple(const Vec<Vari> &values) const;
 
     /**
      * @brief Reads a tuple from the table using the key.

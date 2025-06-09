@@ -15,9 +15,7 @@ namespace backend {
  * @class StorageEngine
  *
  * The Storage Engine is the core component responsible for managing all tables in the database.
- * It acts as the interface to the backend, handling table creation, deletion, and data operations.
- *
- * The Storage Engine is responsible for:
+ * It acts as the interface to the backend, handling table creation, deletion, and data operations:
  * - Creating and dropping tables.
  * - Inserting, updating, removing, and reading tuples from tables.
  * - Retrieving table metadata, including column types and tuple counts.
@@ -81,7 +79,7 @@ public:
      * @param tableName The name of the table.
      * @param key The primary key value of the tuple to remove.
      */
-    void removeTuple(const string &tableName, const Vari& key);
+    void removeTuple(const string &tableName, const Vari& key) const;
 
     /**
      * Updates an existing tuple in a table.
@@ -90,7 +88,7 @@ public:
      * @param tableName The name of the table.
      * @param values The new values for the tuple.
      */
-    void updateTuple(const string &tableName, const Vec<Vari>& values);
+    void updateTuple(const string &tableName, const Vec<Vari>& values) const;
 
     /**
      * Inserts a new tuple into a table.
@@ -99,7 +97,7 @@ public:
      * @param tableName The name of the table.
      * @param values The values for the new tuple.
      */
-    void insertTuple(const string &tableName, const Vec<Vari>& values);
+    void insertTuple(const string &tableName, const Vec<Vari>& values) const;
 
     /**
      * Retrieves a tuple from a table based on the primary key.
@@ -109,7 +107,7 @@ public:
      * @param key The primary key value of the tuple to retrieve.
      * @return The tuple's values.
      */
-    Vec<Vari> getTuple(const string &tableName, const Vari& key);
+    Vec<Vari> getTuple(const string &tableName, const Vari& key) const;
 
 private:
     /**

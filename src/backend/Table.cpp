@@ -49,7 +49,7 @@ string Table::getName() const {
     return m_name;
 }
 
-void Table::insertTuple(Vec<Vari> values) const {
+void Table::insertTuple(const Vec<Vari> &values) const {
     if (values.size() != T_PAGE.getTypes().size())
         throw std::runtime_error("Tuple has incorrect number of values.");
 

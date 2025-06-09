@@ -11,9 +11,8 @@
 #define S_PAGE m_pager.getPage<SchemaPage>(m_schemaPageID)
 
 namespace backend {
-
 StorageEngine::StorageEngine(Pager &pgr, pgid_t schemaPageID) : m_pager(pgr),
-                                                             m_schemaPageID(schemaPageID) {
+                                                                m_schemaPageID(schemaPageID) {
     // add existing tables
     for (const auto &[name, pageID]: S_PAGE.getTables())
         m_tables.emplace_back(std::make_unique<Table>(name, m_pager, pageID));
@@ -63,22 +62,22 @@ Vec<string> StorageEngine::getTableNames() const {
     return std::move(res);
 }
 
-void StorageEngine::removeTuple(const string &tableName, const Vari &key) {
+void StorageEngine::removeTuple(const string &tableName, const Vari &key) const {
     for (auto &tab: m_tables)
         if (tab->getName() == tableName) return tab->deleteTuple(key);
 
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-void StorageEngine::updateTuple(const string &tableName, const Vec<Vari> &values) {
+void StorageEngine::updateTuple(const string &tableName, const Vec<Vari> &values) const {
     for (const auto &tab: m_tables)
-        if (tab->getName() == table)
-            return tab->tableName(values);
+        if (tab->getName() == tableName)
+            return tab->updateTuple(values);
 
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-void StorageEngine::insertTuple(const string &tableName, const Vec<Vari> &values) {
+void StorageEngine::insertTuple(const string &tableName, const Vec<Vari> &values) const {
     for (auto &tab: m_tables)
         if (tab->getName() == tableName)
             return tab->insertTuple(values);
@@ -86,7 +85,7 @@ void StorageEngine::insertTuple(const string &tableName, const Vec<Vari> &values
     throw std::invalid_argument("Table name not found in schema.");
 }
 
-Vec<Vari> StorageEngine::getTuple(const string &tableName, const Vari &key) {
+Vec<Vari> StorageEngine::getTuple(const string &tableName, const Vari &key) const {
     for (auto &tab: m_tables)
         if (tab->getName() == tableName) return tab->readTuple(key);
 
@@ -99,5 +98,4 @@ u64 StorageEngine::getNumTuples(const string &tableName) const {
 
     throw std::invalid_argument("Table name not found in schema.");
 }
-
 } // namespace backend
