@@ -22,7 +22,7 @@ public:
      * @param bytes The byte vector containing table data.
      * @param pageID The on-disk page number of this table page.
      */
-    TablePage(std::span<const byte> bytes, u32 pageID);
+    TablePage(std::span<const byte> bytes, pgid_t pageID);
 
     /**
      * Creates an empty TablePage.
@@ -31,7 +31,7 @@ public:
      * @param pageID The on-disk page number of this table page.
      * @throws std::invalid_argument if list of types is empty or too long.
      */
-    TablePage(const Vec<Vari> &types, u32 btreePageID, u32 pageID);
+    TablePage(const Vec<Vari> &types, pgid_t btreePageID, pgid_t pageID);
 
     /**
      * Get the types that this table stores.
@@ -42,7 +42,7 @@ public:
     /**
      * @return The pageID of the root node that contains the data for this table.
      */
-    u32 getBtreePageID() const;
+    pgid_t getBtreePageID() const;
 
     /**
      * @return The number of tuples of the table that this page represents.
@@ -63,13 +63,13 @@ public:
      * Changes the page ID of the table's btree root.
      * @param btreePageID the new page ID.
      */
-    void setBtreePageID(u32 btreePageID);
+    void setBtreePageID(pgid_t btreePageID);
 
     void toBytes(std::span<byte> buffer) override;
 
 private:
     Vec<Vari> m_types;
-    u32 m_btreePageID;
+    pgid_t m_btreePageID;
     u64 m_numTuples;
 };
 

@@ -42,7 +42,7 @@ enum {
 };
 }
 
-inline Vari type_id_to_variant(const u8 type_id) {
+inline Vari type_id_to_variant(const pgtypeid_t type_id) {
     switch (type_id) {
         case variant_conversion_id::CHAR:
             return char();
@@ -61,8 +61,8 @@ inline Vari type_id_to_variant(const u8 type_id) {
     }
 }
 
-inline u8 variant_to_type_id(const Vari &v) {
-    u8 res = cts::U8_INVALID;
+inline pgtypeid_t variant_to_type_id(const Vari &v) {
+    pgtypeid_t res = cts::PGTYPEID_INVALID;
 
     std::visit([&res](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
@@ -81,7 +81,7 @@ inline u8 variant_to_type_id(const Vari &v) {
         }
     }, v);
 
-    if (res == cts::U8_INVALID) {
+    if (res == cts::PGTYPEID_INVALID) {
         throw std::runtime_error("Unsupported variant; cannot convert to type id");
     }
 
@@ -89,13 +89,13 @@ inline u8 variant_to_type_id(const Vari &v) {
 }
 
 template<typename T>
-inline void db_deserialize(T &src, std::span<const byte> bytes, u16 &offset) {
+inline void db_deserialize(T &src, std::span<const byte> bytes, offset_t &offset) {
     static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
     memcpy(&src, bytes.data() + offset, db_sizeof<T>());
     offset += db_sizeof<T>();
 }
 
-inline void db_deserialize(string &src, std::span<const byte> bytes, u16 &offset) {
+inline void db_deserialize(string &src, std::span<const byte> bytes, offset_t &offset) {
     char buf[db_sizeof<std::string>()];
     memcpy(buf, bytes.data() + offset, db_sizeof<std::string>());
     src = string(buf);
@@ -103,7 +103,7 @@ inline void db_deserialize(string &src, std::span<const byte> bytes, u16 &offset
 }
 
 inline void
-db_deserialize(Vari &src, std::span<const byte> bytes, u16 &offset, const Vari &type) {
+db_deserialize(Vari &src, std::span<const byte> bytes, offset_t &offset, const Vari &type) {
     std::visit([&bytes, &offset, &src](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         T buf;
@@ -113,18 +113,18 @@ db_deserialize(Vari &src, std::span<const byte> bytes, u16 &offset, const Vari &
 }
 
 template<typename T>
-inline void db_serialize(const T &val, std::span<byte> bytes, u16 &offset) {
+inline void db_serialize(const T &val, std::span<byte> bytes, offset_t &offset) {
     static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
     memcpy(bytes.data() + offset, &val, db_sizeof<T>());
     offset += db_sizeof<T>();
 }
 
-inline void db_serialize(const std::string &val, std::span<byte> bytes, u16 &offset) {
+inline void db_serialize(const std::string &val, std::span<byte> bytes, offset_t &offset) {
     memcpy(bytes.data() + offset, val.data(), db_sizeof<std::string>());
     offset += db_sizeof<std::string>();
 }
 
-inline void db_serialize(const Vari &val, std::span<byte> bytes, u16 &offset) {
+inline void db_serialize(const Vari &val, std::span<byte> bytes, offset_t &offset) {
     std::visit([&bytes, &offset](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         db_serialize(arg, bytes, offset);
@@ -132,16 +132,16 @@ inline void db_serialize(const Vari &val, std::span<byte> bytes, u16 &offset) {
 }
 
 template<typename KeyType>
-inline u16 calculateDegree(const KeyType &key, const Vec<Vari> &values) {
-    static constexpr u16 metadataBuffer = 100;
-    constexpr u16 free_space = cts::PG_SZ - metadataBuffer;
+inline degree_t calculateDegree(const KeyType &key, const Vec<Vari> &values) {
+    static constexpr offset_t metadataBuffer = 100;
+    constexpr offset_t free_space = cts::PG_SZ - metadataBuffer;
 
-    u16 cell_size = 0;
+    offset_t cell_size = 0;
     cell_size += db_sizeof(key);
     for (const auto &value: values) {
         cell_size += db_sizeof(value);
     }
-    const u16 page_ptr_size = db_sizeof<u32>();
+    const offset_t page_ptr_size = db_sizeof<u32>();
 
     return (free_space + cell_size) / (2 * (cell_size + page_ptr_size));
 }

@@ -31,9 +31,6 @@ using PgArr = std::array<T, cts::PG_SZ>;
 template<typename T>
 using Ptr = std::unique_ptr<T>;
 
-template<typename T>
-using PgArrPtr = std::unique_ptr<PgArr<T>>;
-
 using Vari = std::variant<int, char, bool, float, double, std::string>;
 using string = std::string;
 
@@ -47,13 +44,19 @@ using u8 = uint8_t;
 using u16 = uint16_t;
 using u32 = uint32_t;
 using u64 = uint64_t;
-using pgid_t = uint32_t;
-using cellid_t = uint32_t;
-using childid_t = uint32_t;
-using offset_t = uint16_t;
+
+using pgid_t = u32;
+using cellid_t = u32;
+using childid_t = u32;
+using offset_t = u16;
+using degree_t = u16;
+using pgtypeid_t = u8;
+using typeid_t = u8;
+using bitmapidx_t = u32;
+using blockid_t = u32;
 
 struct RowPos {
-    u32 pageID;
+    pgid_t pageID;
     cellid_t cellID;
 };
 

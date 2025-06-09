@@ -21,7 +21,6 @@
 
 namespace backend {
     class FSMPage : public Page {
-        using bitmapid_t = u32;
     public:
         /**
          * @brief Constructs an FSMPage from existing serialized data.
@@ -42,11 +41,9 @@ namespace backend {
          *
          * @param idx The index of the bit to check.
          *
-         * @throws std::runtime_error If idx is out of bounds.
-         *
          * @return True if the bit is free, false otherwise.
          */
-        bool isFree(u32 idx) const;
+        bool isFree(bitmapidx_t idx) const;
 
         /**
          * @brief Checks if this FSM_ID page has a reference to the next FSM_ID page.
@@ -60,34 +57,28 @@ namespace backend {
          *
          * @return The count of free blocks in this FSM_ID page.
          */
-        u32 getSpaceLeft() const;
+        bitmapidx_t getSpaceLeft() const;
 
         /**
          * @brief Allocates a bit (block) in the bitmap.
          *
          * @param idx The index of the bit to allocate.
-         *
-         * @throws std::invalid_argument If the bit is already allocated.
          */
-        void allocBit(u32 idx);
+        void allocBit(bitmapidx_t idx);
 
         /**
         * @brief Frees a previously allocated bit (block) in the bitmap.
-         *
+        *
         * @param idx The index of the bit to free.
-         *
-        * @throws std::invalid_argument If the bit is already free.
         */
-        void freeBit(u32 idx);
+        void freeBit(bitmapidx_t idx);
 
         /**
          * @brief Finds the next available free block.
          *
          * @return The index of the next free bit.
-         *
-         * @throws std::invalid_argument If no free bits are available.
          */
-        u32 findNextFree() const;
+        bitmapidx_t findNextFree() const;
 
         /**
          * @brief Retrieves the ID of the next FSM_ID page.
@@ -96,28 +87,28 @@ namespace backend {
          *
          * @throws std::invalid_argument If there is no next page.
          */
-        u32 getNextPageID() const;
+        pgid_t getNextPageID() const;
 
         /**
          * @brief Sets the next FSM_ID page ID.
          *
          * @param pageID The ID of the next FSM_ID page.
          */
-        void setNextPageID(u32 pageID);
+        void setNextPageID(pgid_t pageID);
 
         /**
          * @brief Get the max number of blocks that a single FSMPage can represent.
          *
          * @return The number of blocks (or pages).
          */
-        static u32 getBlocksInPage() { return (cts::PG_SZ - sizeof(u32) * 3) * 8; }
+        static bitmapidx_t getBlocksInPage() { return (cts::PG_SZ - sizeof(u32) * 3) * 8; }
 
         void toBytes(std::span<byte> buf) override;
 
     private:
         Vec<u8> m_bitmap;
-        u32 m_nextPageID;
-        u32 m_freeBlocks;
+        pgid_t m_nextPageID;
+        bitmapidx_t m_freeBlocks;
     };
 }
 

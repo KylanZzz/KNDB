@@ -54,7 +54,7 @@ public:
      * @brief Retrieves child node IDs of this Btree node.
      * @return A list of pageIDs to children nodes.
      */
-    Vec<childid_t> &children() { return m_children; }
+    Vec<childid_t> &getChildren() { return m_children; }
 
     /**
      * @brief Retrieves all the stored key-tuple cells in the node.
@@ -72,13 +72,13 @@ public:
      * @brief Retrieves the minimum number of keys a node can contain.
      * @return The min number of keys.
      */
-    u16 minKeys() const { return m_degree - 1; }
+    degree_t minKeys() const { return m_degree - 1; }
 
     /**
      * @brief Retrieves the maximum number of keys a node can contain.
      * @return The max number of keys.
      */
-    u16 maxKeys() const { return 2 * m_degree - 1; }
+    degree_t maxKeys() const { return 2 * m_degree - 1; }
 
     /**
      * @brief Checks if the node is a leaf.
@@ -117,7 +117,7 @@ public:
     void toBytes(std::span<byte> buffer) override;
 
 private:
-    u16 m_degree;
+    degree_t m_degree;
     pgid_t m_parentID;
     bool m_leaf;
     bool m_root;

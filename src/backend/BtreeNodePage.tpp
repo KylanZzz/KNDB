@@ -37,7 +37,7 @@ BtreeNodePage<T>::BtreeNodePage(std::span<const byte> bytes, pgid_t pageID) : Pa
     ASSUME_S(bytes.size() == cts::PG_SZ, "Buffer is incorrectly sized");
     offset_t offset = 0;
 
-    u8 page_type_id;
+    pgtypeid_t page_type_id;
     db_deserialize(page_type_id, bytes, offset);
     ASSUME_S(page_type_id == cts::pg_type_id::BTREE_NODE_PAGE, "Page_type_id is incorrect type");
 
@@ -47,7 +47,8 @@ BtreeNodePage<T>::BtreeNodePage(std::span<const byte> bytes, pgid_t pageID) : Pa
     db_deserialize(m_root, bytes, offset);
 
     cellid_t numCells;
-    u8 numTypes, key_type_id;
+    u8 numTypes;
+    typeid_t key_type_id;
 
     db_deserialize(numCells, bytes, offset);
     m_cells.resize(numCells);
@@ -63,7 +64,7 @@ BtreeNodePage<T>::BtreeNodePage(std::span<const byte> bytes, pgid_t pageID) : Pa
         db_deserialize(numTypes, bytes, offset);
 
         for (int i = 0; i < numTypes; ++i) {
-            u8 type_id;
+            typeid_t type_id;
             db_deserialize(type_id, bytes, offset);
             types.push_back(type_id_to_variant(type_id));
         }
@@ -118,7 +119,7 @@ void BtreeNodePage<T>::toBytes(std::span<byte> buf) {
 
     offset_t offset = 0;
 
-    u8 page_type_id = cts::pg_type_id::BTREE_NODE_PAGE;
+    pgtypeid_t page_type_id = cts::pg_type_id::BTREE_NODE_PAGE;
     db_serialize(page_type_id, buf, offset);
 
     db_serialize(m_degree, buf, offset);
@@ -130,14 +131,14 @@ void BtreeNodePage<T>::toBytes(std::span<byte> buf) {
     db_serialize(numCells, buf, offset);
     if (numCells == 0) return;
 
-    u8 key_type_id = variant_to_type_id(m_cells[0].key);
+    typeid_t key_type_id = variant_to_type_id(m_cells[0].key);
     db_serialize(key_type_id, buf, offset);
 
     if constexpr (std::is_same<T, Vec<Vari> >::value) {
         u8 numTypes = m_cells[0].value.size();
         db_serialize(numTypes, buf, offset);
 
-        u8 type_id;
+        typeid_t type_id;
         for (int i = 0; i < m_cells[0].value.size(); i++) {
             type_id = variant_to_type_id(m_cells[0].value[i]);
             db_serialize(type_id, buf, offset);

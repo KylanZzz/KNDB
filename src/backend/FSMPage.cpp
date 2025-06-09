@@ -26,11 +26,11 @@ namespace backend {
 //----------------------------------------
 //----------------------------------------
 //----------------------------------------
-FSMPage::FSMPage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
+FSMPage::FSMPage(std::span<const byte> bytes, pgid_t pageID) : Page(pageID) {
     ASSUME_S(bytes.size() == cts::PG_SZ, "Buffer is incorrectly sized");
-    u16 offset = 0;
+    offset_t offset = 0;
 
-    u8 page_type_id;
+    pgtypeid_t page_type_id;
     db_deserialize(page_type_id, bytes, offset);
     ASSUME_S(page_type_id == cts::pg_type_id::FSM_PAGE, "Page_type_id is incorrect type");
 
@@ -45,13 +45,13 @@ FSMPage::FSMPage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
 }
 
 FSMPage::FSMPage(pgid_t pageID) : Page(pageID) {
-    m_nextPageID = cts::U32_INVALID;
+    m_nextPageID = cts::PGID_INVALID;
     m_bitmap.resize(cts::PG_SZ - db_sizeof<u32>() * 3);
     m_freeBlocks = m_bitmap.size() * 8;
     allocBit(0);
 }
 
-void FSMPage::allocBit(u32 idx) {
+void FSMPage::allocBit(bitmapidx_t idx) {
     ASSUME_S(idx < (m_bitmap.size() * 8), "Index is out of bounds");
     ASSUME_S(getSpaceLeft() > 0, "This bitmap page is already completely filled");
     ASSUME_S(isFree(idx), "That block is already being used");
@@ -60,13 +60,13 @@ void FSMPage::allocBit(u32 idx) {
     m_bitmap[idx / 8] ^= 1 << (idx % 8);
 }
 
-bool FSMPage::isFree(u32 idx) const {
+bool FSMPage::isFree(bitmapidx_t idx) const {
     ASSUME_S(idx < (m_bitmap.size() * 8), "Index is out of bounds");
 
     return !(m_bitmap[idx / 8] & 1 << (idx % 8));
 }
 
-u32 FSMPage::findNextFree() const {
+bitmapidx_t FSMPage::findNextFree() const {
     ASSUME_S(getSpaceLeft() > 0, "This bitmap page is already completely filled");
     for (int i = 0; i < m_bitmap.size() * 8; i++)
         if (isFree(i)) return i;
@@ -74,11 +74,11 @@ u32 FSMPage::findNextFree() const {
     ASSUME_S(false, "No free page has been found");
 }
 
-u32 FSMPage::getSpaceLeft() const {
+bitmapidx_t FSMPage::getSpaceLeft() const {
     return m_freeBlocks;
 }
 
-void FSMPage::freeBit(const u32 idx) {
+void FSMPage::freeBit(const bitmapidx_t idx) {
     ASSUME_S(!isFree(idx), "That bit is already free");
     ASSUME_S(m_freeBlocks < m_bitmap.size() * 8, "Bitmap has more free blocks than feasibly possible");
 
@@ -87,24 +87,24 @@ void FSMPage::freeBit(const u32 idx) {
 }
 
 bool FSMPage::hasNextPage() const {
-    return m_nextPageID != cts::U32_INVALID;
+    return m_nextPageID != cts::PGID_INVALID;
 }
 
-u32 FSMPage::getNextPageID() const {
+pgid_t FSMPage::getNextPageID() const {
     if (!hasNextPage()) throw std::invalid_argument("Has no next page");
     return m_nextPageID;
 }
 
-void FSMPage::setNextPageID(u32 pageID) {
+void FSMPage::setNextPageID(pgid_t pageID) {
     m_nextPageID = pageID;
 }
 
 void FSMPage::toBytes(std::span<byte> buf) {
     ASSUME_S(buf.size() == cts::PG_SZ, "Buffer is incorrectly sized");
 
-    u16 offset = 0;
+    offset_t offset = 0;
 
-    u8 page_type_id = cts::pg_type_id::FSM_PAGE;
+    pgtypeid_t page_type_id = cts::pg_type_id::FSM_PAGE;
     db_serialize(page_type_id, buf, offset);
 
     db_serialize(m_nextPageID, buf, offset);

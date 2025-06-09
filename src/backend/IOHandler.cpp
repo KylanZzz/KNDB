@@ -7,7 +7,7 @@
 
 namespace backend {
 
-u32 IOHandler::getNumBlocks() const {
+blockid_t IOHandler::getNumBlocks() const {
     return m_blocks;
 }
 
@@ -51,7 +51,7 @@ IOHandler::IOHandler(std::string_view fileName) {
 #endif //_WIN32
 }
 
-u32 IOHandler::createNewBlock() {
+blockid_t IOHandler::createNewBlock() {
 #ifdef _WIN32
     LARGE_INTEGER newPos;
     newPos.QuadPart = ++m_blocks * cts::PG_SZ;
@@ -61,7 +61,7 @@ u32 IOHandler::createNewBlock() {
     if (!SetEndOfFile(m_handle))
         throw std::runtime_error("Failed to truncate file");
 #else
-    u32 new_sz = ++m_blocks * cts::PG_SZ;
+    blockid_t new_sz = ++m_blocks * cts::PG_SZ;
     if (ftruncate(m_fd, new_sz) == -1)
         throw std::runtime_error("Failed to increase file size");
 #endif //_WIN32
@@ -69,7 +69,7 @@ u32 IOHandler::createNewBlock() {
     return m_blocks - 1;
 }
 
-void IOHandler::writeBlock(void *arr, u32 BlockNo) const {
+void IOHandler::writeBlock(void *arr, blockid_t BlockNo) const {
     if (BlockNo >= m_blocks)
         throw std::runtime_error("BlockNo out of bounds");
 #ifdef _WIN32
@@ -99,7 +99,7 @@ void IOHandler::writeBlock(void *arr, u32 BlockNo) const {
 #endif
 }
 
-void IOHandler::readBlock(void *arr, u32 BlockNo) const {
+void IOHandler::readBlock(void *arr, blockid_t BlockNo) const {
     if (BlockNo >= m_blocks)
         throw std::runtime_error("BlockNo out of bounds");
 #ifdef _WIN32

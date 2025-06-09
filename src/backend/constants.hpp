@@ -42,6 +42,7 @@ constexpr uint64_t U64_INVALID = std::numeric_limits<uint64_t>::max();
 constexpr uint32_t PGID_INVALID = std::numeric_limits<uint32_t>::max();
 constexpr uint32_t CELLID_INVALID = std::numeric_limits<uint32_t>::max();
 constexpr uint32_t CHILDID_INVALID = std::numeric_limits<uint32_t>::max();
+constexpr uint32_t PGTYPEID_INVALID = std::numeric_limits<uint8_t>::max();
 
 } // namespace constants
 

@@ -28,9 +28,10 @@ Format:
 */
 SchemaPage::SchemaPage(std::span<const byte> bytes, pgid_t pageID) : Page(pageID) {
     ASSUME_S(bytes.size() == cts::PG_SZ, "Buffer is not the correct size");
-    u16 offset = 0;
+    offset_t offset = 0;
 
-    u8 page_type_id, num_tables;
+    u8 num_tables;
+    pgtypeid_t page_type_id;
     db_deserialize(page_type_id, bytes, offset);
     ASSUME_S(page_type_id == cts::pg_type_id::SCHEMA_PAGE, "Page ID is invalid");
 
@@ -89,9 +90,9 @@ void SchemaPage::removeTable(const string &targ_name) {
 
 void SchemaPage::toBytes(std::span<byte> buf) {
     ASSUME_S(buf.size() == cts::PG_SZ, "Buffer is incorrectly sized");
-    u16 offset = 0;
+    offset_t offset = 0;
 
-    u8 page_type_id = cts::pg_type_id::SCHEMA_PAGE;
+    pgtypeid_t page_type_id = cts::pg_type_id::SCHEMA_PAGE;
     db_serialize(page_type_id, buf, offset);
 
     u8 num_tables = m_tables.size();

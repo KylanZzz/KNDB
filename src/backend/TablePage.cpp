@@ -8,11 +8,12 @@
 
 namespace backend {
 
-TablePage::TablePage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
+TablePage::TablePage(std::span<const byte> bytes, pgid_t pageID) : Page(pageID) {
     ASSUME_S(bytes.size() == cts::PG_SZ, "Buffer is incorrectly sized");
     offset_t offset = 0;
 
-    u8 page_type_id, type_id;
+    pgtypeid_t page_type_id;
+    typeid_t type_id;
     u16 num_types;
     db_deserialize(page_type_id, bytes, offset);
 
@@ -40,17 +41,17 @@ TablePage::TablePage(std::span<const byte> bytes, u32 pageID) : Page(pageID) {
     ASSUME_S(offset <= cts::PG_SZ, "Offset is out of bounds");
 }
 
-TablePage::TablePage(const Vec<Vari> &types, u32 btreePageID, u32 pageID)
+TablePage::TablePage(const Vec<Vari> &types, pgid_t btreePageID, pgid_t pageID)
         : Page(pageID), m_types(types), m_btreePageID(btreePageID), m_numTuples(0) {
     ASSUME_S(!types.empty(), "There cannot be 0 types in a TablePage");
-    ASSUME_S(types.size() <= (cts::PG_SZ - 100) / db_sizeof<u8>(), "TablePage cannot support that many types");
+    ASSUME_S(types.size() <= (cts::PG_SZ - 100) / db_sizeof<typeid_t>(), "TablePage cannot support that many types");
 }
 
-u32 TablePage::getBtreePageID() const {
+pgid_t TablePage::getBtreePageID() const {
     return m_btreePageID;
 }
 
-void TablePage::setBtreePageID(u32 btreePageID) {
+void TablePage::setBtreePageID(pgid_t btreePageID) {
     m_btreePageID = btreePageID;
 }
 
@@ -77,7 +78,7 @@ void TablePage::toBytes(std::span<byte> buf) {
     offset_t offset = 0;
 
     // serialize page_type_id
-    u8 page_type_id = cts::pg_type_id::TABLE_PAGE;
+    pgtypeid_t page_type_id = cts::pg_type_id::TABLE_PAGE;
     db_serialize(page_type_id, buf, offset);
 
     // serialize # of types
@@ -86,7 +87,7 @@ void TablePage::toBytes(std::span<byte> buf) {
 
     // serialize list of types in each table
     for (int j = 0; j < numTypes; ++j) {
-        u8 type_id = variant_to_type_id(m_types[j]);
+        typeid_t type_id = variant_to_type_id(m_types[j]);
         db_serialize(type_id, buf, offset);
     }
 

@@ -108,6 +108,7 @@ private:
     // allocates a pg in the bitmap and returns the pg id
     pgid_t allocPageBit();
 
+    // checks if a page is free in bitmap
     bool isFree(pgid_t pageID);
 
     IOHandler &m_ioHandler;

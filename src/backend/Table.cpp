@@ -16,18 +16,18 @@
 
 namespace backend {
 
-Table::Table(string name, Pager &pgr, const u32 tablePageId) : m_pager(pgr), m_tablePageID
+Table::Table(string name, Pager &pgr, const pgid_t tablePageId) : m_pager(pgr), m_tablePageID
         (tablePageId), m_name(std::move(name)) {
-    u16 deg = calculateDegree(T_PAGE.getTypes()[0], T_PAGE.getTypes());
+    degree_t deg = calculateDegree(T_PAGE.getTypes()[0], T_PAGE.getTypes());
     m_btree = std::make_unique<Btree<Vec<Vari>>>(T_PAGE.getBtreePageID(), pgr, deg);
 }
 
 Table::Table(string name, Pager &pgr, const Vec<Vari> &types) : m_pager(pgr),
                                                                 m_name(std::move(name)) {
-    m_tablePageID = m_pager.createNewPage<TablePage>(types, cts::U32_INVALID).getPageID();
-    u16 deg = calculateDegree(T_PAGE.getTypes()[0], T_PAGE.getTypes());
-    u32 btree_pg = m_pager.createNewPage<BtreeNodePage<Vec<Vari>>>(
-            deg, cts::U32_INVALID, true, true
+    m_tablePageID = m_pager.createNewPage<TablePage>(types, cts::PGID_INVALID).getPageID();
+    degree_t deg = calculateDegree(T_PAGE.getTypes()[0], T_PAGE.getTypes());
+    pgid_t btree_pg = m_pager.createNewPage<BtreeNodePage<Vec<Vari>>>(
+            deg, cts::PGID_INVALID, true, true
     ).getPageID();
     T_PAGE.setBtreePageID(btree_pg);
     m_btree = std::make_unique<Btree<Vec<Vari>>>(T_PAGE.getBtreePageID(), m_pager, deg);
@@ -41,7 +41,7 @@ Vec<Vari> Table::getTypes() const {
     return T_PAGE.getTypes();
 }
 
-u32 Table::getTablePageID() const {
+pgid_t Table::getTablePageID() const {
     return m_tablePageID;
 }
 
@@ -57,7 +57,7 @@ void Table::insertTuple(Vec<Vari> values) const {
         if (variant_to_type_id(values[i]) != variant_to_type_id(T_PAGE.getTypes()[i]))
             throw std::runtime_error("Tuple has one or more incorrect types.");
 
-    u32 og_root = m_btree->getRootPage();
+    pgid_t og_root = m_btree->getRootPage();
     m_btree->insert(values, values[0]);
     T_PAGE.addTuple();
 
@@ -91,7 +91,7 @@ void Table::deleteTuple(const Vari &key) const {
     if (variant_to_type_id(T_PAGE.getTypes()[0]) != variant_to_type_id(key))
         throw std::runtime_error("Key is incorrect type.");
 
-    u32 og_root = m_btree->getRootPage();
+    pgid_t og_root = m_btree->getRootPage();
     m_btree->remove(key);
     T_PAGE.removeTuple();
 

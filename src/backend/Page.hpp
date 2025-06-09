@@ -25,13 +25,13 @@ public:
      * @brief Constructs a Page with a given ID.
      * @param pageID The unique page ID.
      */
-    explicit Page(u32 pageID) : m_pageID(pageID) {};
+    explicit Page(pgid_t pageID) : m_pageID(pageID) {};
 
     /**
      * @brief Gets the page ID.
      * @return The page ID.
      */
-    u32 getPageID() const { return m_pageID; }
+    pgid_t getPageID() const { return m_pageID; }
 
     /**
      * @brief Serializes the page into a byte vector.
@@ -46,7 +46,7 @@ public:
     Page (const Page& other) = delete;
 
 protected:
-    u32 m_pageID;
+    pgid_t m_pageID;
 
 };
 

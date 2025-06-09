@@ -30,24 +30,24 @@ public:
      * @param schemaPageID The page ID containing the metadata for the Storage Engine.
      * @param pgr The Pager responsible for managing disk I/O.
      */
-    StorageEngine(Pager& pgr, u32 schemaPageID);
+    StorageEngine(Pager& pgr, pgid_t schemaPageID);
 
     /**
      * Creates a new table in the Storage Engine.
      *
      * @throws std::invalid_argument if the name is empty, too long, or already exists.
-     * @param name The name of the table (case-sensitive).
+     * @param tableName The name of the table (case-sensitive).
      * @param types The list of column types for the table.
      */
-    void createTable(const string &name, const Vec<Vari>& types);
+    void createTable(const string &tableName, const Vec<Vari>& types);
 
     /**
      * Drops an existing table from the Storage Engine.
      *
      * @throws std::invalid_argument if the table does not exist.
-     * @param name The name of the table to drop (case-sensitive).
+     * @param tableName The name of the table to drop (case-sensitive).
      */
-    void dropTable(const string& name);
+    void dropTable(const string& tableName);
 
     /**
      * Retrieves the names of all tables in the Storage Engine.
@@ -60,56 +60,56 @@ public:
      * Retrieves the column types of a specified table.
      *
      * @throws std::invalid_argument if the table does not exist.
-     * @param table The name of the table.
+     * @param tableName The name of the table.
      * @return A list of column types.
      */
-    Vec<Vari> getTableTypes(const string& table) const;
+    Vec<Vari> getTableTypes(const string& tableName) const;
 
     /**
      * Retrieves the number of tuples stored in a table.
      *
      * @throws std::invalid_argument if the table does not exist.
-     * @param table The name of the table.
+     * @param tableName The name of the table.
      * @return The number of tuples in the table.
      */
-    u64 getNumTuples(const string &table);
+    u64 getNumTuples(const string &tableName) const;
 
     /**
      * Removes a tuple from a table.
      *
      * @throws std::invalid_argument if the table does not exist.
-     * @param table The name of the table.
+     * @param tableName The name of the table.
      * @param key The primary key value of the tuple to remove.
      */
-    void removeTuple(const string &table, const Vari& key);
+    void removeTuple(const string &tableName, const Vari& key);
 
     /**
      * Updates an existing tuple in a table.
      *
      * @throws std::invalid_argument if the table does not exist.
-     * @param table The name of the table.
+     * @param tableName The name of the table.
      * @param values The new values for the tuple.
      */
-    void updateTuple(const string &table, const Vec<Vari>& values);
+    void updateTuple(const string &tableName, const Vec<Vari>& values);
 
     /**
      * Inserts a new tuple into a table.
      *
      * @throws std::invalid_argument if the table does not exist.
-     * @param table The name of the table.
+     * @param tableName The name of the table.
      * @param values The values for the new tuple.
      */
-    void insertTuple(const string &table, const Vec<Vari>& values);
+    void insertTuple(const string &tableName, const Vec<Vari>& values);
 
     /**
      * Retrieves a tuple from a table based on the primary key.
      *
      * @throws std::invalid_argument if the table does not exist.
-     * @param table The name of the table.
+     * @param tableName The name of the table.
      * @param key The primary key value of the tuple to retrieve.
      * @return The tuple's values.
      */
-    Vec<Vari> getTuple(const string &table, const Vari& key);
+    Vec<Vari> getTuple(const string &tableName, const Vari& key);
 
 private:
     /**
@@ -123,7 +123,7 @@ private:
 
     Pager& m_pager;  ///< Reference to the Pager handling disk operations.
     Vec<std::unique_ptr<Table>> m_tables;  ///< List of tables managed by the Storage Engine.
-    u32 m_schemaPageID;  ///< The hardcoded page ID where Storage Engine metadata is stored.
+    pgid_t m_schemaPageID;  ///< The hardcoded page ID where Storage Engine metadata is stored.
 };
 
 } // namespace backend

@@ -26,7 +26,7 @@ public:
      * @param pgr Reference to the Pager.
      * @param tablePageId Page ID of the table's metadata page.
      */
-    Table(string name, Pager &pgr, u32 tablePageId);
+    Table(string name, Pager &pgr, pgid_t tablePageId);
 
     /**
      * @brief Constructs a new Table.
@@ -93,12 +93,12 @@ public:
      * Get the Table PageID.
      * @return The ID of the page that stores metadata about the table.
      */
-    u32 getTablePageID() const;
+    pgid_t getTablePageID() const;
 
 private:
     Pager &m_pager;
     std::unique_ptr<Btree<Vec<Vari>>> m_btree;
-    u32 m_tablePageID;
+    pgid_t m_tablePageID;
     string m_name;
 };
 

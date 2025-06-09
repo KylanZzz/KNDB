@@ -12,7 +12,7 @@ namespace backend {
 template<typename T>
 class Btree {
 public:
-    Btree(pgid_t rootPageId, Pager &pgr, u16 degree);
+    Btree(pgid_t rootPageId, Pager &pgr, degree_t degree);
 
     T search(const Vari &key);
 
@@ -31,7 +31,7 @@ private:
 
     Pager &m_pager;
     pgid_t m_rootPageID;
-    u16 m_degree;
+    degree_t m_degree;
 };
 
 } // namespace backend
