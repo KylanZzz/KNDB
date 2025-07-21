@@ -45,15 +45,6 @@ T &Pager::createNewPage(Args&&... args) {
     return getPage<T>(newPageNo);
 }
 
-template <typename T>
-void Pager::freePage(pgid_t pageID) {
-    static_assert(std::is_base_of<Page, T>::value, "T must be a derived class of Page");
-    ASSUME_S(pageID < m_ioHandler.getNumBlocks(), "PageID is out of bounds");
-    ASSUME_S(!m_freeSpaceMap.isFree(pageID), "That page is freed already");
-
-    m_freeSpaceMap.freeBit(pageID);
-}
-
 } // namespace backend
 
 #endif //KNDB_PAGER_TPP

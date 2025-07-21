@@ -51,19 +51,34 @@ protected:
     string getDBFileName() {return kTestFile;};
 };
 
+TEST_F(PagerTest, IsFreeWorksAfterAllocation) {
+    auto& page = pager->createNewPage<FSMPage>();
+    auto pageID = page.getPageID();
+
+    ASSERT_FALSE(pager->isFree(pageID));
+    pager->freePage(pageID);
+    ASSERT_TRUE(pager->isFree(pageID));
+}
+
+TEST_F(PagerTest, IsFreeWorksForOutOfBounds) {
+    for (int i = 2; i < 1000; i++) {
+        ASSERT_TRUE(pager->isFree(i));
+    }
+}
+
 TEST_F(PagerTest, PagerThrowsWhenNotSchemaPage) {
-    pager->createNewPage<FSMPage>();
-    ASSERT_THROW(pager->getPage<SchemaPage>(cts::pgid::SCHEMA_ID), std::bad_cast);
+    auto pgid = pager->createNewPage<FSMPage>().getPageID();
+    ASSERT_THROW(pager->getPage<SchemaPage>(pgid), std::bad_cast);
 }
 
 TEST_F(PagerTest, PagerDeathWhenNoSchemaPage) {
-    ASSERT_DEATH(pager->getPage<SchemaPage>(cts::pgid::SCHEMA_ID), "");
+    ASSERT_DEATH(pager->getPage<SchemaPage>(cts::SCHEMA_ID), "");
 }
 
 TEST_F(PagerTest, PagerCreatesSchemaPage) {
     pager->createNewPage<SchemaPage>();
-    ASSERT_NO_FATAL_FAILURE(pager->getPage<SchemaPage>(cts::pgid::SCHEMA_ID));
-    ASSERT_EQ(pager->getPage<SchemaPage>(cts::pgid::SCHEMA_ID).getPageID(), cts::pgid::SCHEMA_ID);
+    ASSERT_NO_FATAL_FAILURE(pager->getPage<SchemaPage>(cts::SCHEMA_ID));
+    ASSERT_EQ(pager->getPage<SchemaPage>(cts::SCHEMA_ID).getPageID(), cts::SCHEMA_ID);
 }
 
 TEST_F(PagerTest, SchemaPageWorksAfterSerializing) {
@@ -110,14 +125,14 @@ TEST_F(PagerTest, GetPageReturnsSameDataOnRepeatedCalls) {
 
 TEST_F(PagerTest, FreePageAllowsReallocation) {
     u32 freedPageID = pager->createNewPage<SchemaPage>().getPageID();
-    pager->freePage<SchemaPage>(freedPageID);
+    pager->freePage(freedPageID);
     u32 reallocatedPageID = pager->createNewPage<SchemaPage>().getPageID();
     ASSERT_EQ(freedPageID, reallocatedPageID);
 }
 
 TEST_F(PagerTest, GetPageDeathForFreedPage) {
     u32 pageID = pager->createNewPage<SchemaPage>().getPageID();
-    pager->freePage<SchemaPage>(pageID);
+    pager->freePage(pageID);
     ASSERT_DEATH(pager->getPage<SchemaPage>(pageID), "");
 }
 
@@ -144,7 +159,7 @@ TEST_F(PagerTest, RepeatedFreeAndReallocateSamePage) {
     for (int i = 0; i < (FSMPage::getBlocksInPage() * 2) * cts::MAX_FSMPAGES; ++i) {
         auto& page = pager->createNewPage<SchemaPage>();
         u32 pageID = page.getPageID();
-        pager->freePage<SchemaPage>(pageID);
+        pager->freePage(pageID);
     }
 }
 
@@ -157,7 +172,7 @@ TEST_F(PagerTest, FreeAllPagesAndReallocate) {
     }
 
     for (int pageID : pageIDs) {
-        pager->freePage<SchemaPage>(pageID);
+        pager->freePage(pageID);
     }
 
     for (int i = 0; i < (FSMPage::getBlocksInPage() - 1) * cts::MAX_FSMPAGES; ++i) {
@@ -180,7 +195,7 @@ TEST_F(PagerTest, FreePagesInReverseOrder) {
         pageIDs.push_back(schemaPage.getPageID());
     }
     for (auto it = pageIDs.rbegin(); it != pageIDs.rend(); ++it) {
-        pager->freePage<SchemaPage>(*it);
+        pager->freePage(*it);
     }
 }
 

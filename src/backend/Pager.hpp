@@ -76,15 +76,23 @@ public:
     /**
      * @brief Frees a page
      *
-     * @tparam T The type of the page that is expected.
-     *
      * @param pageID the page id to be freed.
      *
      * @throw std::invalid_argument if the pageID is out of bounds or if the
      * page is already freed.
      */
-    template<typename T>
-    void freePage(pgid_t pageID);
+    void freePage(pgid_t pageID) const;
+
+    /**
+     * Checks whether a page is currently being used.
+     * 
+     * @param pageID the page id of the Page.
+     * @return true if the page is not used and false otherwise.
+     *
+     * If the pageID passed in is out of bounds (larger than the
+     * .db file), then it will return true.
+     */
+    bool isFree(pgid_t pageID) const;
 
     /**
      * All pages are guaranteed to be written
