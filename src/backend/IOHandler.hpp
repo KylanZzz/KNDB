@@ -53,6 +53,15 @@ public:
     blockid_t createNewBlock();
 
     /**
+     * @brief Creates multiple new blocks in the file.
+     *
+     * @param numBlocks Number of blocks to allocate. Must be positive number.
+     *
+     * @return The Block No of the first newly created block (0-indexed).
+     */
+    blockid_t createMultipleBlocks(int numBlocks);
+
+    /**
      * @brief Writes data to a block in the file.
      *
      * @param arr Pointer to the data to be written.

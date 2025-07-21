@@ -91,7 +91,6 @@ bool FSMPage::hasNextPage() const {
 }
 
 pgid_t FSMPage::getNextPageID() const {
-    if (!hasNextPage()) throw std::invalid_argument("Has no next page");
     return m_nextPageID;
 }
 

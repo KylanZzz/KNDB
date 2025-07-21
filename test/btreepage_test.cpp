@@ -7,11 +7,11 @@
 
 using namespace backend;
 
-class BtreeNodePageTestFixture : public ::testing::Test {
+class BtreeNodePageTest : public ::testing::Test {
 protected:
     uint16_t defaultPageID = 3;
 
-    // Helper: Serializes a node and returns a new node constructed from the bytes.
+    // serializes a node and returns a new node constructed from the bytes.
     template<typename T>
     BtreeNodePage<T> roundTrip(BtreeNodePage<T> &node) {
         Vec<byte> bytes(cts::PG_SZ);
@@ -20,7 +20,7 @@ protected:
     }
 };
 
-TEST_F(BtreeNodePageTestFixture, PageInitializationIsCorrect) {
+TEST_F(BtreeNodePageTest, PageInitializationIsCorrect) {
     BtreeNodePage<Vec<Vari>> node(6, 5, true, false, defaultPageID);
 
     ASSERT_TRUE(node.getChildren().empty());
@@ -30,7 +30,7 @@ TEST_F(BtreeNodePageTestFixture, PageInitializationIsCorrect) {
     ASSERT_EQ(5, node.parent());
 }
 
-TEST_F(BtreeNodePageTestFixture, PageInitializationAndSerialization) {
+TEST_F(BtreeNodePageTest, PageInitializationAndSerialization) {
     BtreeNodePage<Vec<Vari>> node(6, 5, true, false, defaultPageID);
     BtreeNodePage<Vec<Vari>> node2 = roundTrip(node);
 
@@ -43,7 +43,7 @@ TEST_F(BtreeNodePageTestFixture, PageInitializationAndSerialization) {
     ASSERT_EQ(2 * 6 - 1, node2.maxKeys());
 }
 
-TEST_F(BtreeNodePageTestFixture, AddingSingleCellWorks) {
+TEST_F(BtreeNodePageTest, AddingSingleCellWorks) {
     BtreeNodePage<Vec<Vari>> node(6, 5, true, false, defaultPageID);
     node.cells().push_back({33, {string("Kylan"), 3.1144, 10}});
     node.getChildren().push_back(100);
@@ -61,7 +61,7 @@ TEST_F(BtreeNodePageTestFixture, AddingSingleCellWorks) {
     ASSERT_EQ(101, node2.getChildren()[1]);
 }
 
-TEST_F(BtreeNodePageTestFixture, AddingMultipleCellsWorks) {
+TEST_F(BtreeNodePageTest, AddingMultipleCellsWorks) {
     uint16_t MX_SZ = (cts::PG_SZ - 500) / (cts::MAX_STR_SZ + cts::MAX_STR_SZ + sizeof(int) + cts::MAX_STR_SZ);
     uint16_t degree = (MX_SZ + 1) / 2;
     BtreeNodePage<Vec<Vari>> node(degree, 5, true, false, defaultPageID);
@@ -93,7 +93,7 @@ TEST_F(BtreeNodePageTestFixture, AddingMultipleCellsWorks) {
     }
 }
 
-TEST_F(BtreeNodePageTestFixture, RowPtrBtreeNodeWorks) {
+TEST_F(BtreeNodePageTest, RowPtrBtreeNodeWorks) {
     BtreeNodePage<RowPos> node(6, 5, true, false, defaultPageID);
     node.cells().push_back({3, {4, 10}});
     node.getChildren().push_back(100);
@@ -110,7 +110,7 @@ TEST_F(BtreeNodePageTestFixture, RowPtrBtreeNodeWorks) {
     ASSERT_EQ(101, node2.getChildren()[1]);
 }
 
-TEST_F(BtreeNodePageTestFixture, InsertingManyRowPtrWorks) {
+TEST_F(BtreeNodePageTest, InsertingManyRowPtrWorks) {
     uint16_t MX_SZ = cts::PG_SZ / 30;
     uint16_t degree = (MX_SZ + 1) / 2;
     BtreeNodePage<RowPos> node(degree, 5, false, false, defaultPageID);
@@ -141,7 +141,7 @@ TEST_F(BtreeNodePageTestFixture, InsertingManyRowPtrWorks) {
     }
 }
 
-TEST_F(BtreeNodePageTestFixture, InvalidDeserializationDeath) {
+TEST_F(BtreeNodePageTest, InvalidDeserializationDeath) {
     Vec<byte> invalidBytes(cts::PG_SZ, static_cast<byte>(0)); // Intentionally too short
     ASSERT_DEATH(BtreeNodePage<Vec<Vari>> invalidNode(invalidBytes, defaultPageID),"");
 }

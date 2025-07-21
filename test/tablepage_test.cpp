@@ -11,15 +11,8 @@
 using namespace backend;
 
 struct TablePageTest : testing::Test {
-    Ptr<Vec<byte>> vec;
     std::unique_ptr<TablePage> table;
     Vec<Vari> types = {string(), int(), double(), double(), float()};
-
-    TablePageTest() {
-        vec = std::make_unique<Vec<byte>>(cts::PG_SZ);
-        u8 pageType = cts::pg_type_id::TABLE_PAGE;
-        memcpy(vec->data(), &pageType, sizeof(u8));
-    }
 
     void SetUp() override {
         table = std::make_unique<TablePage>(types, 5, 3);

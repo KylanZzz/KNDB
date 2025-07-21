@@ -7,7 +7,6 @@
 
 #include "kndb_types.hpp"
 #include "Page.hpp"
-#include "constants.hpp"
 
 /**
  * @class FSMPage
@@ -20,96 +19,99 @@
  */
 
 namespace backend {
-    class FSMPage : public Page {
-    public:
-        /**
-         * @brief Constructs an FSMPage from existing serialized data.
-         *
-         * @param pageID The ID of the page.
-         * @param bytes serialized data
-         */
-        FSMPage(std::span<const byte> bytes, pgid_t pageID);
 
-        /**
-        * @brief Constructs a new, empty FSMPage.
-        * @param pageID The ID of the page.
-        */
-        FSMPage(pgid_t pageID);
+class FSMPage : public Page {
+public:
+    /**
+     * @brief Constructs an FSMPage from existing serialized data.
+     *
+     * @param pageID The ID of the page.
+     * @param bytes serialized data
+     */
+    FSMPage(std::span<const byte> bytes, pgid_t pageID);
 
-        /**
-         * @brief Checks if a specific bit (block) in the bitmap is free.
-         *
-         * @param idx The index of the bit to check.
-         *
-         * @return True if the bit is free, false otherwise.
-         */
-        bool isFree(bitmapidx_t idx) const;
+    /**
+    * @brief Constructs a new, empty FSMPage. The first bit will be allocated
+    *       for itself
+    * @param pageID The ID of the page.
+    */
+    FSMPage(pgid_t pageID);
 
-        /**
-         * @brief Checks if this FSM_ID page has a reference to the next FSM_ID page.
-         *
-         * @return True if there is a next FSM_ID page, false otherwise.
-         */
-        bool hasNextPage() const;
+    /**
+     * @brief Checks if a specific bit (block) in the bitmap is free.
+     *
+     * @param idx The index of the bit to check.
+     *
+     * @return True if the bit is free, false otherwise.
+     */
+    bool isFree(bitmapidx_t idx) const;
 
-        /**
-         * @brief Gets the number of free blocks remaining in the bitmap.
-         *
-         * @return The count of free blocks in this FSM_ID page.
-         */
-        bitmapidx_t getSpaceLeft() const;
+    /**
+     * @brief Checks if this FSM_ID page has a reference to the next FSM_ID page.
+     *
+     * @return True if there is a next FSM_ID page, false otherwise.
+     */
+    bool hasNextPage() const;
 
-        /**
-         * @brief Allocates a bit (block) in the bitmap.
-         *
-         * @param idx The index of the bit to allocate.
-         */
-        void allocBit(bitmapidx_t idx);
+    /**
+     * @brief Gets the number of free blocks remaining in the bitmap.
+     *
+     * @return The count of free blocks in this FSM_ID page.
+     */
+    bitmapidx_t getSpaceLeft() const;
 
-        /**
-        * @brief Frees a previously allocated bit (block) in the bitmap.
-        *
-        * @param idx The index of the bit to free.
-        */
-        void freeBit(bitmapidx_t idx);
+    /**
+     * @brief Allocates a bit (block) in the bitmap.
+     *
+     * @param idx The index of the bit to allocate.
+     */
+    void allocBit(bitmapidx_t idx);
 
-        /**
-         * @brief Finds the next available free block.
-         *
-         * @return The index of the next free bit.
-         */
-        bitmapidx_t findNextFree() const;
+    /**
+    * @brief Frees a previously allocated bit (block) in the bitmap.
+    *
+    * @param idx The index of the bit to free.
+    */
+    void freeBit(bitmapidx_t idx);
 
-        /**
-         * @brief Retrieves the ID of the next FSM_ID page.
-         *
-         * @return The PageID of the next FSM_ID page.
-         *
-         * @throws std::invalid_argument If there is no next page.
-         */
-        pgid_t getNextPageID() const;
+    /**
+     * @brief Finds the next available free block.
+     *
+     * @return The index of the next free bit.
+     */
+    bitmapidx_t findNextFree() const;
 
-        /**
-         * @brief Sets the next FSM_ID page ID.
-         *
-         * @param pageID The ID of the next FSM_ID page.
-         */
-        void setNextPageID(pgid_t pageID);
+    /**
+     * @brief Retrieves the ID of the next FSM_ID page.
+     *
+     * @return The PageID of the next FSM_ID page.
+     *
+     * @throws std::invalid_argument If there is no next page.
+     */
+    pgid_t getNextPageID() const;
 
-        /**
-         * @brief Get the max number of blocks that a single FSMPage can represent.
-         *
-         * @return The number of blocks (or pages).
-         */
-        static bitmapidx_t getBlocksInPage() { return (cts::PG_SZ - sizeof(u32) * 3) * 8; }
+    /**
+     * @brief Sets the next FSM_ID page ID.
+     *
+     * @param pageID The ID of the next FSM_ID page.
+     */
+    void setNextPageID(pgid_t pageID);
 
-        void toBytes(std::span<byte> buf) override;
+    /**
+     * @brief Get the max number of blocks that a single FSMPage can represent.
+     *
+     * @return The number of blocks (or pages).
+     */
+    static bitmapidx_t getBlocksInPage() { return (cts::PG_SZ - sizeof(u32) * 3) * 8; }
 
-    private:
-        Vec<u8> m_bitmap;
-        pgid_t m_nextPageID;
-        bitmapidx_t m_freeBlocks;
-    };
+    void toBytes(std::span<byte> buf) override;
+
+private:
+    Vec<u8> m_bitmap;
+    pgid_t m_nextPageID;
+    bitmapidx_t m_freeBlocks;
+};
+
 }
 
 #endif //KNDB_FSMPAGE_HPP

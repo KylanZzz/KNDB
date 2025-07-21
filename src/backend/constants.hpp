@@ -19,7 +19,7 @@ constexpr uint8_t MAX_STR_LEN = MAX_STR_SZ - 1;
 constexpr uint8_t MAX_TABLES = 100;
 constexpr uint16_t PG_SZ = 4096; // 4kb pg size
 constexpr uint32_t CACHE_SZ = 100000; // ≈ 400 mb cache
-constexpr uint32_t MAX_BLOCKS = 1000000; // ≈ 4 gb data
+constexpr uint32_t MAX_FSMPAGES = 2; // ≈ 134 mb * 10 = 1.34 gb
 
 // DB page numbers
 namespace pgid {

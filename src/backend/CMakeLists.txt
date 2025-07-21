@@ -6,6 +6,8 @@ add_library(backend STATIC
         FSMPage.cpp
         TablePage.cpp
         Pager.cpp
+        FreeSpaceMap.cpp
+        PageCache.cpp
 )
 
 target_include_directories(backend PUBLIC ${CMAKE_SOURCE_DIR}/src/backend)

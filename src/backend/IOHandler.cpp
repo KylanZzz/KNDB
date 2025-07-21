@@ -69,6 +69,27 @@ blockid_t IOHandler::createNewBlock() {
     return m_blocks - 1;
 }
 
+blockid_t IOHandler::createMultipleBlocks(int numBlocks) {
+    ASSUME_S(numBlocks > 0, "Cannot allocate non-positive number of blocks");
+
+#ifdef _WIN32
+    LARGE_INTEGER newPos;
+    newPos.QuadPart = (m_blocks + numBlocks) * cts::PG_SZ;
+    if (!SetFilePointerEx(m_handle, newPos, nullptr, FILE_BEGIN))
+        throw std::runtime_error("Failed to move file pointer");
+
+    if (!SetEndOfFile(m_handle))
+        throw std::runtime_error("Failed to truncate file");
+#else
+    blockid_t new_sz = (m_blocks + numBlocks) * cts::PG_SZ;
+    if (ftruncate(m_fd, new_sz) == -1)
+        throw std::runtime_error("Failed to increase file size");
+#endif //_WIN32
+    m_blocks += numBlocks;
+
+    return m_blocks - numBlocks;
+}
+
 void IOHandler::writeBlock(void *arr, blockid_t BlockNo) const {
     if (BlockNo >= m_blocks)
         throw std::runtime_error("BlockNo out of bounds");

@@ -11,31 +11,46 @@
 
 using namespace backend;
 
-class BtreeTest : public ::testing::Test {
+class BtreeTest : public testing::Test {
 protected:
     static constexpr int SEED = 152;
     static constexpr u16 DEGREE = 60;
-    std::string filename = "testfile.db";
+    const std::string kTestFile = "testfile.db";
     u32 root_id;
-    IOHandler* ioHandler;
-    Pager* pager;
-    Btree<Vec<Vari>>* btree;
+
+    std::unique_ptr<IOHandler> ioHandler;
+    std::unique_ptr<PageCache> pageCache;
+    std::unique_ptr<FreeSpaceMap> fsm;
+    std::unique_ptr<Pager> pager;
+    std::unique_ptr<Btree<Vec<Vari>>> btree;
 
     void SetUp() override {
-        std::ofstream file(filename, std::ios::trunc);
-        file.close();
-        ioHandler = new IOHandler(filename);
-        pager = new Pager(*ioHandler);
-        root_id = pager->createNewPage<BtreeNodePage<Vec<Vari>>>(
-                DEGREE, cts::U32_INVALID, true, true
-        ).getPageID();
-        btree = new Btree<Vec<Vari>>(root_id, *pager, DEGREE);
+        std::remove(kTestFile.c_str());
+        initEnv();
     }
 
     void TearDown() override {
-        delete btree;
-        delete pager;
-        delete ioHandler;
+        resetEnv();
+        std::remove(kTestFile.c_str());
+    }
+
+    void initEnv() {
+        ioHandler = std::make_unique<IOHandler>(kTestFile);
+        pageCache = std::make_unique<PageCache>(*ioHandler);
+        fsm = std::make_unique<FreeSpaceMap>(*pageCache);
+        pager = std::make_unique<Pager>(*fsm, *ioHandler, *pageCache);
+        root_id = pager->createNewPage<BtreeNodePage<Vec<Vari>>>(
+            DEGREE, cts::U32_INVALID, true, true
+        ).getPageID();
+        btree = std::make_unique<Btree<Vec<Vari>>>(root_id, *pager, DEGREE);
+    }
+
+    void resetEnv() {
+        btree.reset();
+        pager.reset();
+        pageCache.reset();
+        fsm.reset();
+        ioHandler.reset();
     }
 };
 
@@ -64,8 +79,8 @@ TEST_F(BtreeTest, BasicUpdateWorks) {
     ASSERT_EQ(btree->search(key), tuple2);
 }
 
-TEST_F(BtreeTest, StressTestInsertAndSearchFiveMillion) {
-    Vec<int> keys(5000);
+TEST_F(BtreeTest, StressTestInsertAndSearchOneHundredThousand) {
+    Vec<int> keys(100000);
     std::iota(keys.begin(), keys.end(), 1); // Fill with 1..5000000
     std::shuffle(keys.begin(), keys.end(), std::mt19937(SEED));
 

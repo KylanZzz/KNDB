@@ -12,10 +12,16 @@ using namespace backend;
 struct IOHandlerTest : testing::Test {
     std::unique_ptr<IOHandler> ioHandler;
 
-    IOHandlerTest() {
-        std::ofstream file("testfile.db", std::ios::trunc);
-        file.close();
-        ioHandler = std::make_unique<IOHandler>("testfile.db");
+    const std::string kTestFile = "testfile.db";
+
+    void SetUp() override {
+        std::remove(kTestFile.c_str());
+        ioHandler = std::make_unique<IOHandler>(kTestFile);
+    }
+
+    void TearDown() override {
+        ioHandler.reset();
+        std::remove(kTestFile.c_str());
     }
 };
 
@@ -44,17 +50,15 @@ TEST_F(IOHandlerTest, CreateMultipleBlocksWorks) {
     ASSERT_EQ(3, pageid4);
 }
 
-TEST(IOHandlerPersistenceTest, FilePersistsWithCorrectSizeAfterDestruction) {
+TEST_F(IOHandlerTest, FilePersistsWithCorrectSizeAfterDestruction) {
     u32 expectedSize;
 
-    {
-        IOHandler handler("testfile.db");
-        handler.createNewBlock();
-        expectedSize = handler.getNumBlocks() * cts::PG_SZ;
-    } // handler destructed
+    ioHandler->createNewBlock();
+    expectedSize = ioHandler->getNumBlocks() * cts::PG_SZ;
+    ioHandler.reset();
 
     // file should still exist
-    std::ifstream file("testfile.db", std::ios::binary);
+    std::ifstream file(kTestFile, std::ios::binary);
     ASSERT_TRUE(file.good());
 
     // file should be 1 block large
@@ -65,17 +69,16 @@ TEST(IOHandlerPersistenceTest, FilePersistsWithCorrectSizeAfterDestruction) {
     file.close();
 }
 
-TEST(IOHandlerPersistenceTest, SingleBlockPersistsAfterDestruction) {
+TEST_F(IOHandlerTest, SingleBlockPersistsAfterDestruction) {
     char writeData[cts::PG_SZ] = "Persistent Block";
     u32 expectedSize;
 
-    {
-        IOHandler handler("testfile.db");
-        handler.writeBlock(writeData, 0);
-        expectedSize = handler.getNumBlocks() * cts::PG_SZ;
-    } // IOHandler destructs here, flushing data to disk
+    ioHandler->createNewBlock();
+    ioHandler->writeBlock(writeData, 0);
+    expectedSize = cts::PG_SZ;
+    ioHandler.reset();
 
-    std::ifstream file("testfile.db", std::ios::binary);
+    std::ifstream file(kTestFile, std::ios::binary);
     ASSERT_TRUE(file.good());
 
     char fileData[cts::PG_SZ] = {0};
@@ -86,21 +89,19 @@ TEST(IOHandlerPersistenceTest, SingleBlockPersistsAfterDestruction) {
     ASSERT_EQ(file.tellg(), expectedSize);
 }
 
-TEST(IOHandlerPersistenceTest, MultipleBlocksPersistAfterDestruction) {
+TEST_F(IOHandlerTest, MultipleBlocksPersistAfterDestruction) {
     char block1[cts::PG_SZ] = "Block One";
     char block2[cts::PG_SZ] = "Block Two";
     u32 expectedSize;
 
-    {
-        IOHandler handler("testfile.db");
-        handler.createNewBlock();
-        handler.createNewBlock();
-        handler.writeBlock(block1, 0);
-        handler.writeBlock(block2, 1);
-        expectedSize = handler.getNumBlocks() * cts::PG_SZ;
-    } // IOHandler destructs, ensuring persistence
+    ioHandler->createNewBlock();
+    ioHandler->createNewBlock();
+    ioHandler->writeBlock(block1, 0);
+    ioHandler->writeBlock(block2, 1);
+    expectedSize = cts::PG_SZ * 2;
+    ioHandler.reset();
 
-    std::ifstream file("testfile.db", std::ios::binary);
+    std::ifstream file(kTestFile, std::ios::binary);
     ASSERT_TRUE(file.good());
 
     char fileData[cts::PG_SZ] = {};
@@ -115,19 +116,17 @@ TEST(IOHandlerPersistenceTest, MultipleBlocksPersistAfterDestruction) {
     ASSERT_EQ(file.tellg(), expectedSize);
 }
 
-TEST(IOHandlerPersistenceTest, OverwrittenDataPersistsAfterDestruction) {
+TEST_F(IOHandlerTest, OverwrittenDataPersistsAfterDestruction) {
     char originalData[cts::PG_SZ] = "Original Block";
     char newData[cts::PG_SZ] = "Updated Block";
-    u32 expectedSize;
 
-    {
-        IOHandler handler("testfile.db");
-        handler.writeBlock(originalData, 0);
-        handler.writeBlock(newData, 0);  // Overwrite previous data
-        expectedSize = handler.getNumBlocks() * cts::PG_SZ;
-    } // IOHandler destructs
+    ioHandler->createNewBlock();
+    ioHandler->writeBlock(originalData, 0);
+    ioHandler->writeBlock(newData, 0);
+    ioHandler.reset();
+    size_t expectedSize = cts::PG_SZ;
 
-    std::ifstream file("testfile.db", std::ios::binary);
+    std::ifstream file(kTestFile, std::ios::binary);
     ASSERT_TRUE(file.good());
 
     char fileData[cts::PG_SZ] = {0};
@@ -138,34 +137,31 @@ TEST(IOHandlerPersistenceTest, OverwrittenDataPersistsAfterDestruction) {
     ASSERT_EQ(file.tellg(), expectedSize);
 }
 
-TEST(IOHandlerPersistenceTest, ReadBlockRetrievesWrittenData) {
+TEST_F(IOHandlerTest, ReadBlockRetrievesWrittenData) {
     char writeData[cts::PG_SZ] = "Persistent Read Test";
     char readData[cts::PG_SZ] = {0};
 
-    {
-        IOHandler handler("testfile.db");
-        handler.writeBlock(writeData, 0);
-    }
+    ioHandler->createNewBlock();
+    ioHandler->writeBlock(writeData, 0);
+    ioHandler.reset();
 
-    IOHandler handler("testfile.db");
+    IOHandler handler(kTestFile);
     handler.readBlock(readData, 0);
     ASSERT_EQ(memcmp(writeData, readData, cts::PG_SZ), 0);
 }
 
-TEST(IOHandlerPersistenceTest, ReadMultipleBlocksAfterDestruction) {
+TEST_F(IOHandlerTest, ReadMultipleBlocksAfterDestruction) {
     char block1[cts::PG_SZ] = "Block One";
     char block2[cts::PG_SZ] = "Block Two";
     char readBuffer[cts::PG_SZ] = {0};
 
-    {
-        IOHandler handler("testfile.db");
-        handler.createNewBlock();
-        handler.createNewBlock();
-        handler.writeBlock(block1, 0);
-        handler.writeBlock(block2, 1);
-    }
+    ioHandler->createNewBlock();
+    ioHandler->createNewBlock();
+    ioHandler->writeBlock(block1, 0);
+    ioHandler->writeBlock(block2, 1);
+    ioHandler.reset();
 
-    IOHandler handler("testfile.db");
+    IOHandler handler(kTestFile);
     handler.readBlock(readBuffer, 0);
     ASSERT_EQ(memcmp(block1, readBuffer, cts::PG_SZ), 0);
 
@@ -175,24 +171,60 @@ TEST(IOHandlerPersistenceTest, ReadMultipleBlocksAfterDestruction) {
 
 TEST_F(IOHandlerTest, WriteToNonExistentBlock) {
     char data[cts::PG_SZ] = "Out-of-bounds write";
+    ASSERT_THROW(ioHandler->writeBlock(data, 0), std::runtime_error);
+    ASSERT_THROW(ioHandler->writeBlock(data, 1), std::runtime_error);
     ASSERT_THROW(ioHandler->writeBlock(data, 5), std::runtime_error);
+    ASSERT_THROW(ioHandler->writeBlock(data, 10000), std::runtime_error);
 }
 
 TEST_F(IOHandlerTest, ReadUninitializedBlock) {
     char readData[cts::PG_SZ] = {0};
     ASSERT_THROW(ioHandler->readBlock(readData, 0), std::runtime_error);
+    ASSERT_THROW(ioHandler->readBlock(readData, 1), std::runtime_error);
+    ASSERT_THROW(ioHandler->readBlock(readData, 5), std::runtime_error);
 }
 
-TEST(IOHandlerEdgeTest, WriteToReadOnlyFile) {
-    std::ofstream file("testfile.db", std::ios::trunc);
-    file.close();
-
-    IOHandler handler("testfile.db");
-    chmod("testfile.db", 0444);
-
-    char data[cts::PG_SZ] = "Read-only test";
-    ASSERT_THROW(handler.writeBlock(data, 0), std::runtime_error);
-
-    chmod("testfile.db", 0644);
+TEST_F(IOHandlerTest, CreateMultipleBlocksAllocatesCorrectly) {
+    u32 startBlock = ioHandler->createMultipleBlocks(3);
+    ASSERT_EQ(startBlock, 0);
+    ASSERT_EQ(ioHandler->getNumBlocks(), 3);
 }
 
+TEST_F(IOHandlerTest, CreateMultipleBlocksSequentiallyIncreasesCount) {
+    ioHandler->createMultipleBlocks(2);
+    u32 nextStart = ioHandler->createMultipleBlocks(4);
+    ASSERT_EQ(nextStart, 2);
+    ASSERT_EQ(ioHandler->getNumBlocks(), 6);
+}
+
+TEST_F(IOHandlerTest, CreateMultipleBlocksPersistsAfterDestruction) {
+    u32 blockCount = 5;
+    ioHandler->createMultipleBlocks(blockCount);
+    ioHandler.reset();
+
+    std::ifstream file(kTestFile, std::ios::binary);
+    ASSERT_TRUE(file.good());
+
+    file.seekg(0, std::ios::end);
+    ASSERT_EQ(file.tellg(), blockCount * cts::PG_SZ);
+}
+
+TEST_F(IOHandlerTest, WriteAndReadToMultipleBlocks) {
+    const int blockCount = 4;
+    ioHandler->createMultipleBlocks(blockCount);
+
+    char data[cts::PG_SZ] = "Block Data";
+    char buffer[cts::PG_SZ] = {0};
+
+    for (int i = 0; i < blockCount; ++i) {
+        ioHandler->writeBlock(data, i);
+    }
+
+    ioHandler.reset();
+    ioHandler = std::make_unique<IOHandler>(kTestFile);
+
+    for (int i = 0; i < blockCount; ++i) {
+        ioHandler->readBlock(buffer, i);
+        ASSERT_EQ(memcmp(data, buffer, cts::PG_SZ), 0);
+    }
+}

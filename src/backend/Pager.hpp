@@ -8,9 +8,9 @@
 #include <unordered_map>
 
 #include "kndb_types.hpp"
-#include "Page.hpp"
 #include "IOHandler.hpp"
-
+#include "FreeSpaceMap.hpp"
+#include "PageCache.hpp"
 
 /**
  * @class Pager
@@ -27,9 +27,11 @@ public:
     /**
      * @brief Constructs a Pager.
      *
+     * @param freeSpaceMap tracks pages with free space.
      * @param ioHandler handles disk I/O requests.
+     * @param pageCache caches frequently used pages.
      */
-    Pager(IOHandler &ioHandler);
+    Pager(FreeSpaceMap& freeSpaceMap, IOHandler& ioHandler, PageCache &pageCache);
 
     /**
      * @brief Retrieves a page.
@@ -40,6 +42,8 @@ public:
      *
      * @param pageID the requested page's id.
      *
+     * @return a reference to the requested page.
+     *
      * Note: This function call is non-owning and the page is not guaranteed to
      * still exist after out of scope. The returned page is meant to be used
      * immediately after and not stored elsewhere. Ownership of the page is
@@ -47,16 +51,6 @@ public:
      * of page writes to disk is also not deterministically defined. In other
      * words, the pager will flush pages to disk as it sees fit and users of
      * this class should not rely on specific write timings.
-     *
-     * @throw std::invalid_argument if the pageID is out of bounds or if the
-     * page is not currently used right now (freed).
-     *
-     * @throw std::runtime_error if the pageID does not correspond with the
-     * correct page type T. IE: If a page with ID 3 has been constructed with
-     * createPage of type Btree Page, you can only call getPage(3) with type
-     * Btree page from now on. if you dont, it will throw a runtime error.
-     *
-     * @return a reference to the requested page.
      */
     template<typename T>
     T &getPage(pgid_t pageID);
@@ -72,8 +66,9 @@ public:
      *
      * @return the new page that was created.
      *
-     * Note: The returned page will ALWAYS be 0-initialized besides the start
-     * of the page, which contains the page_type_id.
+     * Note: This function will call the default constructor of whatever page
+     * type it has created, which is the constructor with only one pageid_t
+     * page id as the parameter.
      */
     template<typename T, typename ...Args>
     T &createNewPage(Args &&... args);
@@ -94,7 +89,7 @@ public:
     /**
      * All pages are guaranteed to be written
      */
-    ~Pager();
+    ~Pager() = default;
 
     Pager& operator=(Pager&& other) = delete;
     Pager& operator=(const Pager& other) = delete;
@@ -102,21 +97,9 @@ public:
     Pager(const Pager& other) = delete;
 
 private:
-    // helper functions to manipulate the free space bitmap
-    void freePageBit(pgid_t pageID);
-
-    // allocates a pg in the bitmap and returns the pg id
-    pgid_t allocPageBit();
-
-    // checks if a page is free in bitmap
-    bool isFree(pgid_t pageID);
-
-    IOHandler &m_ioHandler;
-
-    // TODO: LRU cache using implementation here: https://leetcode.com/problems/lru-cache/
-    //      - but use template for key and val, and make sure val is a unique_ptr<val> instead
-    //      - key is page number, val is PagePtr
-    std::unordered_map<pgid_t, Ptr<Page>> m_cache;
+    PageCache& m_pageCache;
+    FreeSpaceMap& m_freeSpaceMap;
+    IOHandler& m_ioHandler;
 };
 
 } // namespace backend

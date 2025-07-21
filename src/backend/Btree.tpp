@@ -19,32 +19,37 @@ Btree<T>::Btree(pgid_t rootPageId, Pager &pgr, degree_t degree) : m_rootPageID(r
 }
 
 template<typename T>
+void Btree<T>::deleteTree() {
+    // implement
+}
+
+template<typename T>
 RowPos Btree<T>::searchRowPtr(Vari targ_key, pgid_t currPageID) {
     // 1. iterate through keys (linearly, for now) to look for key
     //      - if key == targ, return
     //      - if we have passed the key amount at cells[idx], we look at child[idx]
     //      - if reached end of node, search for rightmost child
-    // how do we know if its out of bounds? if leaf, and not found
+    // how do we know if doesnt exist? if leaf, and not found
 
     auto &node = B_NODE(currPageID);
     auto &cells = node.cells();
     auto &children = node.getChildren();
-    bool leaf = node.leaf();
+    bool isLeaf = node.leaf();
 
     ASSUME({
-        if (leaf)
+        if (isLeaf)
             return children.empty();
         return true;
     }, "Leaf node should have no children");
 
     ASSUME({
-        if (!leaf && node.root())
+        if (!isLeaf && node.root())
             return cells.empty() || children.size() == cells.size() + 1;
         return true;
     }, "Root node has incorrect number of cells");
 
     ASSUME({
-        if (!leaf && !node.root())
+        if (!isLeaf && !node.root())
             return children.size() == cells.size() + 1 && !cells.empty();
         return true;
     }, "Intermediate node has incorrect number of cells, or is empty (intermediate nodes cannot be empty)");
@@ -56,7 +61,7 @@ RowPos Btree<T>::searchRowPtr(Vari targ_key, pgid_t currPageID) {
     if (idx < cells.size() && targ_key == cells[idx].key)
         return {currPageID, idx};
 
-    if (leaf) // leaf, and target key has not been found, so doesn't exist
+    if (isLeaf) // this node is leaf, and target key has not been found, so doesn't exist
         return {currPageID, cts::CELLID_INVALID};
 
     // non-leaf node, so we search the children
@@ -85,7 +90,7 @@ void Btree<T>::insert(T values, Vari key) {
     //      1b. if node already contains the key, throw error
     RowPos row = searchRowPtr(key, m_rootPageID);
     if (row.cellID != cts::CELLID_INVALID)
-        throw std::invalid_argument("Tuple with that key already exists");
+        throw std::invalid_argument("Row with that key already exists");
 
     ASSUME_S(B_NODE(row.pageID).leaf(), "Attempting to insert into non-leaf node");
 

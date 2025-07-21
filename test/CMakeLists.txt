@@ -18,6 +18,8 @@ add_executable(backend_test
         utility_test.cpp
         btreepage_test.cpp
         btree_test.cpp
+        freespacemap_test.cpp
+        pagecache_test.cpp
 )
 
 # Link against backend library

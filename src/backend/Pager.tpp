@@ -16,52 +16,42 @@ template <typename T>
 T &Pager::getPage(pgid_t pageID) {
     static_assert(std::is_base_of<Page, T>::value, "T must be a derived class of Page");
     ASSUME_S(pageID < m_ioHandler.getNumBlocks(), "PageID is out of bounds");
-    ASSUME_S((std::is_same_v<T, FSMPage>) || !isFree(pageID), "That page is freed");
+    ASSUME_S(!m_freeSpaceMap.isFree(pageID), "That page is freed");
 
-    if (m_cache.contains(pageID))
-        return dynamic_cast<T &>(*m_cache[pageID]);
-
-    // if not in cache, load it into cache
-    PgArr<byte> buf;
-    m_ioHandler.readBlock(buf.data(), pageID);
-
-    // create a new page in cache (which is just a list for now)
-    m_cache.emplace(pageID, std::make_unique<T>(buf, pageID));
-
-    // dynamic cast to catch potential type safety issues
-    return dynamic_cast<T &>(*m_cache[pageID]);
+    return m_pageCache.retrievePage<T>(pageID);
 }
 
 template<typename T, typename ...Args>
 T &Pager::createNewPage(Args&&... args) {
     static_assert(std::is_base_of<Page, T>::value, "T must be a derived class of Page");
 
-    if (m_ioHandler.getNumBlocks() >= cts::MAX_BLOCKS)
-        throw std::runtime_error("Database has reached block limit.");
+    // new FSMPage needed
+    if (m_ioHandler.getNumBlocks() == 0 || m_freeSpaceMap.isFull()) {
+        auto numFSMPages = m_ioHandler.getNumBlocks() / FSMPage::getBlocksInPage();
+        if (numFSMPages == cts::MAX_FSMPAGES)
+            throw std::runtime_error("DB has reached maximum size limit");
 
-    // create new block in db file
-    pgid_t new_page_no = allocPageBit();
+        pgid_t newFsmPageNo = m_ioHandler.createMultipleBlocks(FSMPage::getBlocksInPage());
+        auto newFsmPage = std::make_unique<FSMPage>(newFsmPageNo);
+        m_pageCache.insertPage(std::move(newFsmPage));
 
-    // create a new page in cache (which is just a list for now)
-    m_cache.emplace(new_page_no, std::make_unique<T>(std::forward<Args>(args)..., new_page_no));
+        if (newFsmPageNo != 0 ) m_freeSpaceMap.linkFSMPage(newFsmPageNo);
+    }
 
-    // dynamic cast to catch potential type safety issues
-    return dynamic_cast<T &>(*m_cache[new_page_no]);
+    pgid_t newPageNo = m_freeSpaceMap.allocBit();
+    auto newPage = std::make_unique<T>(std::forward<Args>(args)..., newPageNo);
+    m_pageCache.insertPage(std::move(newPage));
+
+    return getPage<T>(newPageNo);
 }
 
 template <typename T>
 void Pager::freePage(pgid_t pageID) {
     static_assert(std::is_base_of<Page, T>::value, "T must be a derived class of Page");
     ASSUME_S(pageID < m_ioHandler.getNumBlocks(), "PageID is out of bounds");
+    ASSUME_S(!m_freeSpaceMap.isFree(pageID), "That page is freed already");
 
-    PgArr<byte> buf{};
-    m_ioHandler.writeBlock(buf.data(), pageID);
-
-    // mark page as free in bitmap
-    freePageBit(pageID);
-
-    // remove from cache
-    m_cache.erase(pageID);
+    m_freeSpaceMap.freeBit(pageID);
 }
 
 } // namespace backend

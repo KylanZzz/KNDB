@@ -7,7 +7,7 @@
 
 #ifdef NDEBUG
 #define ASSUME(code, msg)
-
+#define ASSUME_S(code, msg)
 #else
 #include <iostream>
 #define ASSUME(block, msg) \
