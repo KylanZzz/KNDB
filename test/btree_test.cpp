@@ -36,7 +36,7 @@ protected:
 
     void initEnv() {
         ioHandler = std::make_unique<IOHandler>(kTestFile);
-        pageCache = std::make_unique<PageCache>(*ioHandler);
+        pageCache = std::make_unique<PageCache>(*ioHandler, cts::CACHE_SZ);
         fsm = std::make_unique<FreeSpaceMap>(*pageCache);
         pager = std::make_unique<Pager>(*fsm, *ioHandler, *pageCache);
         root_id = pager->createNewPage<BtreeNodePage<Vec<Vari>>>(
@@ -81,7 +81,7 @@ TEST_F(BtreeTest, BasicUpdateWorks) {
 
 TEST_F(BtreeTest, StressTestInsertAndSearchOneHundredThousand) {
     Vec<int> keys(100000);
-    std::iota(keys.begin(), keys.end(), 1); // Fill with 1..5000000
+    std::iota(keys.begin(), keys.end(), 1); // Fill with 1..100000
     std::shuffle(keys.begin(), keys.end(), std::mt19937(SEED));
 
     std::shuffle(keys.begin(), keys.end(), std::mt19937(SEED + 1));

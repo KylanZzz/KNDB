@@ -31,7 +31,7 @@ protected:
         io = std::make_unique<IOHandler>(kTestFile);
         io->createMultipleBlocks(FSMPage::getBlocksInPage());
 
-        cache = std::make_unique<PageCache>(*io);
+        cache = std::make_unique<PageCache>(*io, cts::CACHE_SZ);
 
         auto fsmPage = std::make_unique<FSMPage>(0);
         cache->insertPage(std::move(fsmPage));

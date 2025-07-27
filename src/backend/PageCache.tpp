@@ -9,20 +9,17 @@ namespace backend {
 
 template <typename T>
 T& PageCache::retrievePage(pgid_t pageID) {
-    if (m_cache.contains(pageID))
-        return dynamic_cast<T &>(*m_cache[pageID]);
+    if (m_map.contains(pageID)) {
+        updateLRU(std::move(*m_map[pageID]));
+    } else {
+        PgArr<byte> buf;
+        m_ioHandler.readBlock(buf.data(), pageID);
+        Ptr<Page> page = std::make_unique<T>(buf, pageID);
+        updateLRU(std::move(page));
+    }
 
-    // if not in cache, load it into cache
-    PgArr<byte> buf;
-    m_ioHandler.readBlock(buf.data(), pageID);
-
-    // create a new page in cache (which is just a list for now)
-    m_cache.emplace(pageID, std::make_unique<T>(buf, pageID));
-
-    // dynamic cast to catch potential type safety issues
-    return dynamic_cast<T &>(*m_cache[pageID]);
+    return dynamic_cast<T &>(**m_map[pageID]);
 }
-
 
 }
 

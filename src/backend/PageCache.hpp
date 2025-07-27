@@ -8,6 +8,7 @@
 #include "IOHandler.hpp"
 #include "kndb_types.hpp"
 #include "Page.hpp"
+#include "list"
 #include "unordered_map"
 
 namespace backend {
@@ -25,8 +26,9 @@ public:
      * @brief Constructs a PageCache with a reference to the underlying IOHandler.
      *
      * @param ioHandler Reference to the IOHandler used for disk I/O.
+     * @param capacity Max cache size.
      */
-    PageCache(IOHandler& ioHandler);
+    PageCache(IOHandler& ioHandler, size_t capacity);
 
     /**
      * @brief Retrieves a typed reference to a cached page, or loads it from disk if not cached.
@@ -48,7 +50,7 @@ public:
      * If there was a previous page with the same pageID,
      * then it will be overwritten.
      */
-    void insertPage(std::unique_ptr<Page> page);
+    void insertPage(Ptr<Page> page);
 
     /**
      * @brief Writes the given page to disk via the IOHandler.
@@ -63,8 +65,14 @@ public:
     ~PageCache();
 
 private:
+    using list_it = std::list<Ptr<Page>>::iterator;
+
     IOHandler& m_ioHandler;
-    std::unordered_map<pgid_t, Ptr<Page>> m_cache;
+    size_t m_capacity;
+    std::list<Ptr<Page>> m_list;
+    std::unordered_map<pgid_t, list_it> m_map;
+
+    void updateLRU(Ptr<Page> page);
 };
 
 }

@@ -10,11 +10,14 @@
 #define ASSUME_S(code, msg)
 #else
 #include <iostream>
+#define DEBUG_BREAK() __builtin_trap()
+
 #define ASSUME(block, msg) \
     do { \
         bool __assert_result = ([&]() -> bool block)(); \
         if (!__assert_result) { \
             std::cerr << "Assertion failed: " << (msg) << "\n"; \
+            DEBUG_BREAK(); \
             std::abort(); \
         } \
     } while (0)
@@ -24,6 +27,7 @@
     do { \
         if (!(statement)) { \
             std::cerr << "Assertion failed: " << (msg) << "\n"; \
+            DEBUG_BREAK(); \
             std::abort(); \
         } \
     } while (0)

@@ -22,7 +22,7 @@ struct PageCacheTest : testing::Test {
 
     void init() {
         ioHandler = std::make_unique<IOHandler>(kTestFile);
-        cache = std::make_unique<PageCache>(*ioHandler);
+        cache = std::make_unique<PageCache>(*ioHandler, 100);
     }
 
     void reset() {

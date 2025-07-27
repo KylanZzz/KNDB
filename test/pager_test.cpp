@@ -36,7 +36,7 @@ protected:
 
     void initEnv() {
         ioHandler = std::make_unique<IOHandler>(kTestFile);
-        pageCache = std::make_unique<PageCache>(*ioHandler);
+        pageCache = std::make_unique<PageCache>(*ioHandler, cts::CACHE_SZ);
         fsm = std::make_unique<FreeSpaceMap>(*pageCache);
         pager = std::make_unique<Pager>(*fsm, *ioHandler, *pageCache);
     }

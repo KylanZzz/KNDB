@@ -19,26 +19,24 @@ int main() {
     std::remove(std::string(backend::cts::DATABASE_NAME).c_str());
 
     backend::IOHandler ioHandler(backend::cts::DATABASE_NAME);
-    backend::PageCache pageCache(ioHandler);
+    backend::PageCache pageCache(ioHandler, backend::cts::CACHE_SZ);
     backend::FreeSpaceMap freeSpaceMap(pageCache);
     backend::Pager pager(freeSpaceMap, ioHandler, pageCache);
 
-    // Check if db file exists. If not, create one
-    if (!std::filesystem::exists(backend::cts::DATABASE_NAME)) {
-        if (pager.createNewPage<backend::SchemaPage>().getPageID() != backend::cts::SCHEMA_ID)
-            throw std::runtime_error("Error while creating schema page");
-        DEBUG("Created DB page");
-    }
+    // Create DB file
+    if (pager.createNewPage<backend::SchemaPage>().getPageID() != backend::cts::SCHEMA_ID)
+        throw std::runtime_error("Error while creating schema page");
+    DEBUG("Created DB page");
 
     backend::StorageEngine storage_engine(pager, backend::cts::SCHEMA_ID);
-    storage_engine.createTable("Students", {std::string(), int(), double()});
-    storage_engine.insertTuple("Students", {std::string("Kylan"), 20, 100.0});
-    auto tuple = storage_engine.getTuple("Students", "Kylan");
-    for (const auto& variant: tuple) {
-        std::visit([](auto&& val) {
-            std::cout << val << std::endl;
-        }, variant);
+
+    // run some test queries on it.
+    storage_engine.createTable("Students", {int(), int(), double()});
+    for (int i = 0; i < 1000000; ++i) {
+        storage_engine.insertTuple("Students", {i, i * 2, i * 3.0 / 0.5});
     }
+    ASSUME_S(storage_engine.getNumTuples("Students") == 1000000, "There should be 1 million tuples");
+    DEBUG("Passed Test");
 
     return 0;
 }
