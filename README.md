@@ -65,4 +65,4 @@ int tupleCount = storage_engine.getNumTuples("Students");
 
 ## Development Status
 
-This project is still growing! Right now it handles the storage engine basics with CRUD operations, but the plan is to build a full SQL language with a query processor on top. The goal is to make KNDB a complete database system, not just a storage layer.
+This project is still growing! Right now it handles the storage engine basics with CRUD operations, but the plan is to build a full SQL language with a query processor on top.
