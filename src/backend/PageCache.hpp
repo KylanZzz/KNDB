@@ -36,8 +36,6 @@ public:
      * @tparam T Derived type of Page expected by the caller.
      * @param pageID ID of the page to retrieve.
      * @return Reference to the loaded or cached page of type T.
-     * @throws std::bad_cast if the cached page cannot be cast to T.
-     * @throws std::runtime_error if the page does not exist on disk.
      */
     template <typename T>
     T& retrievePage(pgid_t pageID);

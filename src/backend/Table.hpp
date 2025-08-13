@@ -8,6 +8,7 @@
 #include "Pager.hpp"
 #include "Btree.hpp"
 #include "kndb_types.hpp"
+#include <optional>
 
 namespace backend {
 
@@ -57,31 +58,38 @@ public:
     /**
      * @brief Inserts a new tuple into the table.
      * @param values The values to insert as a tuple.
+     * @return true if insertion was successful, false if key already exists.
      *
      * The first index of the tuple will ALWAYS be the primary key, meaning it must be unique.
+     * @throws std::runtime_error if tuple has incorrect number of values or incorrect types.
      */
-    void insertTuple(const Vec<Vari> &values) const;
+    bool insertTuple(const Vec<Vari> &values) const;
 
     /**
      * @brief Reads a tuple from the table using the key.
      * @param key The key to look up.
-     * @return The tuple associated with the key.
+     * @return Optional tuple values, or std::nullopt if key not found.
+     * @throws std::runtime_error if key has incorrect type.
      */
-    Vec<Vari> readTuple(const Vari &key) const;
+    std::optional<Vec<Vari>> readTuple(const Vari &key) const;
 
     /**
      * @brief Updates an existing tuple in the table.
      * @param values The updated tuple values.
+     * @return true if update was successful, false if key not found.
      *
      * The first index of the tuple will ALWAYS be the primary key, meaning it must be unique.
+     * @throws std::runtime_error if tuple has incorrect number of values or incorrect types.
      */
-    void updateTuple(const Vec<Vari> &values) const;
+    bool updateTuple(const Vec<Vari> &values) const;
 
     /**
      * @brief Deletes a tuple from the table using the key.
      * @param key The key of the tuple to delete.
+     * @return true if deletion was successful, false if key not found.
+     * @throws std::runtime_error if key has incorrect type.
      */
-    void deleteTuple(const Vari &key) const;
+    bool deleteTuple(const Vari &key) const;
 
     /**
      * @brief Retrieves the column types of the table.

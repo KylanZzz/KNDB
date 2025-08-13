@@ -49,7 +49,7 @@ string Table::getName() const {
     return m_name;
 }
 
-void Table::insertTuple(const Vec<Vari> &values) const {
+bool Table::insertTuple(const Vec<Vari> &values) const {
     if (values.size() != T_PAGE.getTypes().size())
         throw std::runtime_error("Tuple has incorrect number of values.");
 
@@ -58,14 +58,16 @@ void Table::insertTuple(const Vec<Vari> &values) const {
             throw std::runtime_error("Tuple has one or more incorrect types.");
 
     pgid_t og_root = m_btree->getRootPage();
-    m_btree->insert(values, values[0]);
-    T_PAGE.addTuple();
-
-    if (m_btree->getRootPage() != og_root)
-        T_PAGE.setBtreePageID(m_btree->getRootPage());
+    bool success = m_btree->insert(values, values[0]);
+    if (success) {
+        T_PAGE.addTuple();
+        if (m_btree->getRootPage() != og_root)
+            T_PAGE.setBtreePageID(m_btree->getRootPage());
+    }
+    return success;
 }
 
-Vec<Vari> Table::readTuple(const Vari &key) const {
+std::optional<Vec<Vari>> Table::readTuple(const Vari &key) const {
     if (variant_to_type_id(T_PAGE.getTypes()[0]) != variant_to_type_id(key))
         throw std::runtime_error("Key is incorrect type.");
 
@@ -76,7 +78,7 @@ void Table::drop() {
     // ???
 }
 
-void Table::updateTuple(const Vec<Vari> &values) const {
+bool Table::updateTuple(const Vec<Vari> &values) const {
     if (values.size() != T_PAGE.getTypes().size())
         throw std::runtime_error("Tuple has incorrect number of values.");
 
@@ -84,19 +86,21 @@ void Table::updateTuple(const Vec<Vari> &values) const {
         if (variant_to_type_id(values[i]) != variant_to_type_id(T_PAGE.getTypes()[i]))
             throw std::runtime_error("Tuple has one or more incorrect types.");
 
-    m_btree->update(values, values[0]);
+    return m_btree->update(values, values[0]);
 }
 
-void Table::deleteTuple(const Vari &key) const {
+bool Table::deleteTuple(const Vari &key) const {
     if (variant_to_type_id(T_PAGE.getTypes()[0]) != variant_to_type_id(key))
         throw std::runtime_error("Key is incorrect type.");
 
     pgid_t og_root = m_btree->getRootPage();
-    m_btree->remove(key);
-    T_PAGE.removeTuple();
-
-    if (m_btree->getRootPage() != og_root)
-        T_PAGE.setBtreePageID(m_btree->getRootPage());
+    bool success = m_btree->remove(key);
+    if (success) {
+        T_PAGE.removeTuple();
+        if (m_btree->getRootPage() != og_root)
+            T_PAGE.setBtreePageID(m_btree->getRootPage());
+    }
+    return success;
 }
 
 } // namespace backend

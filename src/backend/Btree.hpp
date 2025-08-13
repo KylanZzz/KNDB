@@ -6,6 +6,7 @@
 #define KNDB_BTREE_HPP
 
 #include "Pager.hpp"
+#include <optional>
 
 namespace backend {
 
@@ -17,7 +18,7 @@ namespace backend {
  * storing key-value pairs persistently. Keys are of type 'variant' and values are of type 'T'.
  *
  * All keys must be unique within the B-tree. Duplicate insertions or operations on missing keys
- * will result in exceptions being thrown.
+ * will result in operation failures rather than exceptions.
  *
  * @tparam T The type of values stored in the B-tree. This can be any standard type (e.g., int, double, std::string),
  * or a 'vector<variant>' representing a row of structured values. The supported variant types
@@ -37,33 +38,32 @@ public:
     /**
      * @brief Searches for a key in the B-tree.
      * @param key The key to search for.
-     * @return The value associated with the key.
-     * @throws std::invalid_argument if the key does not exist in the tree.
+     * @return Optional value associated with the key, or std::nullopt if not found.
      */
-    T search(const Vari &key);
+    std::optional<T> search(const Vari &key);
 
     /**
      * @brief Inserts a key-value pair into the B-tree.
      * @param values The value to associate with the key.
      * @param key The key to insert.
-     * @throws std::invalid_argument if the key already exists in the tree.
+     * @return true if insertion was successful, false if key already exists.
      */
-    void insert(T values, Vari key);
+    bool insert(T values, Vari key);
 
     /**
      * @brief Removes a key-value pair from the B-tree.
      * @param key The key to remove.
-     * @throws std::invalid_argument if the key does not exist in the tree.
+     * @return true if removal was successful, false if key doesn't exist.
      */
-    void remove(Vari key);
+    bool remove(Vari key);
 
     /**
      * @brief Updates the value associated with an existing key.
      * @param values The new value to assign.
      * @param key The key to update.
-     * @throws std::invalid_argument if the key does not exist in the tree.
+     * @return true if update was successful, false if key doesn't exist.
      */
-    void update(T values, const Vari &key);
+    bool update(T values, const Vari &key);
 
     /**
      * @brief Returns the root page ID of the B-tree.

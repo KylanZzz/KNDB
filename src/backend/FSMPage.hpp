@@ -85,8 +85,6 @@ public:
      * @brief Retrieves the ID of the next FSM_ID page.
      *
      * @return The PageID of the next FSM_ID page.
-     *
-     * @throws std::invalid_argument If there is no next page.
      */
     pgid_t getNextPageID() const;
 

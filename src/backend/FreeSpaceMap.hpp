@@ -42,7 +42,6 @@ public:
      * Caller must ensure space is available by calling isFull() beforehand and linking a new FSMPage if needed.
      *
      * @return The pgid_t (page ID) of the newly allocated page.
-     * @throws Aborts if no space is available or internal invariant is violated.
      */
     pgid_t allocBit();
 

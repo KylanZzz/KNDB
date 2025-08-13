@@ -35,6 +35,7 @@ public:
      *
      * Opens or creates a file for managing database storage. If
      * the file is created, default size is 0.
+     * @throws std::runtime_error if file operations fail.
      */
     explicit IOHandler(std::string_view fileName);
 
@@ -49,6 +50,7 @@ public:
      * @brief Creates a new block in the file.
      *
      * @return The Block No of the newly created block (0-indexed).
+     * @throws std::runtime_error if file operations fail.
      */
     blockid_t createNewBlock();
 
@@ -58,6 +60,7 @@ public:
      * @param numBlocks Number of blocks to allocate. Must be positive number.
      *
      * @return The Block No of the first newly created block (0-indexed).
+     * @throws std::runtime_error if file operations fail.
      */
     blockid_t createMultipleBlocks(int numBlocks);
 
@@ -66,6 +69,7 @@ public:
      *
      * @param arr Pointer to the data to be written.
      * @param BlockNo The ID of the block to write to (0-indexed).
+     * @throws std::runtime_error if BlockNo is out of bounds or file operations fail.
      */
     void writeBlock(void *arr, blockid_t BlockNo) const;
 
@@ -74,6 +78,7 @@ public:
      *
      * @param arr Pointer to the buffer where data will be read into.
      * @param BlockNo The ID of the block to read from (0-indexed).
+     * @throws std::runtime_error if BlockNo is out of bounds or file operations fail.
      */
     void readBlock(void *arr, blockid_t BlockNo) const;
 

@@ -8,6 +8,7 @@
 #include "Pager.hpp"
 #include "Table.hpp"
 #include "kndb_types.hpp"
+#include <optional>
 
 namespace backend {
 
@@ -57,57 +58,54 @@ public:
     /**
      * Retrieves the column types of a specified table.
      *
-     * @throws std::invalid_argument if the table does not exist.
      * @param tableName The name of the table.
-     * @return A list of column types.
+     * @return Optional list of column types, or std::nullopt if table doesn't exist.
      */
-    Vec<Vari> getTableTypes(const string& tableName) const;
+    std::optional<Vec<Vari>> getTableTypes(const string& tableName) const;
 
     /**
      * Retrieves the number of tuples stored in a table.
      *
-     * @throws std::invalid_argument if the table does not exist.
      * @param tableName The name of the table.
-     * @return The number of tuples in the table.
+     * @return Optional tuple count, or std::nullopt if table doesn't exist.
      */
-    u64 getNumTuples(const string &tableName) const;
+    std::optional<u64> getNumTuples(const string &tableName) const;
 
     /**
      * Removes a tuple from a table.
      *
-     * @throws std::invalid_argument if the table does not exist.
      * @param tableName The name of the table.
      * @param key The primary key value of the tuple to remove.
+     * @return true if removal was successful, false if table doesn't exist.
      */
-    void removeTuple(const string &tableName, const Vari& key) const;
+    bool removeTuple(const string &tableName, const Vari& key) const;
 
     /**
      * Updates an existing tuple in a table.
      *
-     * @throws std::invalid_argument if the table does not exist.
      * @param tableName The name of the table.
      * @param values The new values for the tuple.
+     * @return true if update was successful, false if table doesn't exist.
      */
-    void updateTuple(const string &tableName, const Vec<Vari>& values) const;
+    bool updateTuple(const string &tableName, const Vec<Vari>& values) const;
 
     /**
      * Inserts a new tuple into a table.
      *
-     * @throws std::invalid_argument if the table does not exist.
      * @param tableName The name of the table.
      * @param values The values for the new tuple.
+     * @return true if insertion was successful, false if table doesn't exist.
      */
-    void insertTuple(const string &tableName, const Vec<Vari>& values) const;
+    bool insertTuple(const string &tableName, const Vec<Vari>& values) const;
 
     /**
      * Retrieves a tuple from a table based on the primary key.
      *
-     * @throws std::invalid_argument if the table does not exist.
      * @param tableName The name of the table.
      * @param key The primary key value of the tuple to retrieve.
-     * @return The tuple's values.
+     * @return Optional tuple values, or std::nullopt if table doesn't exist or tuple not found.
      */
-    Vec<Vari> getTuple(const string &tableName, const Vari& key) const;
+    std::optional<Vec<Vari>> getTuple(const string &tableName, const Vari& key) const;
 
 private:
     /**

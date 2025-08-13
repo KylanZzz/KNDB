@@ -21,6 +21,8 @@ public:
      * Loads a TablePage from a byte vector.
      * @param bytes The byte vector containing table data.
      * @param pageID The on-disk page number of this table page.
+     * @note Program terminates if buffer size is incorrect, page type is invalid, 
+     *       or page contains zero types.
      */
     TablePage(std::span<const byte> bytes, pgid_t pageID);
 
@@ -29,7 +31,7 @@ public:
      * @param types List of types that this table contains.
      * @param btreePageID The root node pageID of the btree that stores this table's data.
      * @param pageID The on-disk page number of this table page.
-     * @throws std::invalid_argument if list of types is empty or too long.
+     * @note Program terminates if list of types is empty or too long.
      */
     TablePage(const Vec<Vari> &types, pgid_t btreePageID, pgid_t pageID);
 
@@ -56,6 +58,7 @@ public:
 
     /**
      * Removes a tuple to the count of tuples in this table.
+     * @note Program terminates if called when table has no tuples.
      */
     void removeTuple();
 
@@ -65,6 +68,11 @@ public:
      */
     void setBtreePageID(pgid_t btreePageID);
 
+    /**
+     * Serializes the TablePage into a byte buffer.
+     * @param buffer The byte buffer to serialize into.
+     * @note Program terminates if buffer size is incorrect.
+     */
     void toBytes(std::span<byte> buffer) override;
 
 private:

@@ -61,6 +61,12 @@ inline Vari type_id_to_variant(const pgtypeid_t type_id) {
     }
 }
 
+/**
+ * @brief Converts a variant to its corresponding type ID.
+ * @param v The variant to convert.
+ * @return The type ID corresponding to the variant's type.
+ * @throws std::runtime_error if the variant type is not supported.
+ */
 inline pgtypeid_t variant_to_type_id(const Vari &v) {
     pgtypeid_t res = cts::PGTYPEID_INVALID;
 

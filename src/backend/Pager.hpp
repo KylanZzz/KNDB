@@ -75,11 +75,7 @@ public:
 
     /**
      * @brief Frees a page
-     *
      * @param pageID the page id to be freed.
-     *
-     * @throw std::invalid_argument if the pageID is out of bounds or if the
-     * page is already freed.
      */
     void freePage(pgid_t pageID) const;
 

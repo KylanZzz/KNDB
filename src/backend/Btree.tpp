@@ -69,28 +69,29 @@ RowPos Btree<T>::searchRowPtr(Vari targ_key, pgid_t currPageID) {
 }
 
 template<typename T>
-T Btree<T>::search(const Vari &key) {
+std::optional<T> Btree<T>::search(const Vari &key) {
     RowPos row = searchRowPtr(key, m_rootPageID);
     if (row.cellID == cts::CELLID_INVALID)
-        throw std::invalid_argument("Row was not found in btree");
+        return std::nullopt;
     return B_NODE(row.pageID).cells()[row.cellID].value;
 }
 
 template<typename T>
-void Btree<T>::update(T values, const Vari &key) {
+bool Btree<T>::update(T values, const Vari &key) {
     RowPos row = searchRowPtr(key, m_rootPageID);
     if (row.cellID == cts::CELLID_INVALID)
-        throw std::invalid_argument("Row was not found in btree");
+        return false;
     B_NODE(row.pageID).cells()[row.cellID].value = values;
+    return true;
 }
 
 template<typename T>
-void Btree<T>::insert(T values, Vari key) {
+bool Btree<T>::insert(T values, Vari key) {
     // 1. find node that cell belongs in
-    //      1b. if node already contains the key, throw error
+    //      1b. if node already contains the key, return false
     RowPos row = searchRowPtr(key, m_rootPageID);
     if (row.cellID != cts::CELLID_INVALID)
-        throw std::invalid_argument("Row with that key already exists");
+        return false;
 
     ASSUME_S(B_NODE(row.pageID).leaf(), "Attempting to insert into non-leaf node");
 
@@ -104,6 +105,7 @@ void Btree<T>::insert(T values, Vari key) {
 
     // 3. call split on the leaf we inserted into
     split(row.pageID);
+    return true;
 }
 
 template<typename T>
@@ -206,7 +208,10 @@ void Btree<T>::split(pgid_t currPageID) {
 }
 
 template<typename T>
-void Btree<T>::remove(Vari key) {
+bool Btree<T>::remove(Vari key) {
+    // TODO: Implement B-tree removal logic
+    // For now, return false as removal is not implemented
+    return false;
 }
 } // namespace backend
 

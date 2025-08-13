@@ -33,7 +33,7 @@ int main() {
     // run some test queries on it.
     storage_engine.createTable("Students", {int(), int(), double()});
     for (int i = 0; i < 1000000; ++i) {
-        storage_engine.insertTuple("Students", {i, i * 2, i * 3.0 / 0.5});
+        ASSUME_S(storage_engine.insertTuple("Students", {i, i * 2, i * 3.0 / 0.5}), "Failed to insert tuple");
     }
     ASSUME_S(storage_engine.getNumTuples("Students") == 1000000, "There should be 1 million tuples");
     DEBUG("Passed Test");

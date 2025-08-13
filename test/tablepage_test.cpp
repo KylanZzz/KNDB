@@ -71,3 +71,96 @@ TEST_F(TablePageTest, ManyTypesWorks) {
     TablePage manyTypesTable(types, 4, 10);
     ASSERT_EQ(manyTypesTable.getTypes(), types);
 }
+
+TEST_F(TablePageTest, ConstructorTerminatesOnEmptyTypes) {
+    Vec<Vari> emptyTypes;
+    ASSERT_DEATH(TablePage(emptyTypes, 5, 3), "");
+}
+
+TEST_F(TablePageTest, ConstructorTerminatesOnTooManyTypes) {
+    Vec<Vari> tooManyTypes;
+    // Create a types vector that would exceed reasonable page capacity
+    for (int i = 0; i < 10000; i++) {
+        tooManyTypes.push_back(int());
+    }
+    ASSERT_DEATH(TablePage(tooManyTypes, 5, 3), "");
+}
+
+TEST_F(TablePageTest, RemoveTupleOnEmptyTableCausesDeath) {
+    ASSERT_DEATH(table->removeTuple(), "");
+}
+
+TEST_F(TablePageTest, RemoveTupleBelowZeroCausesDeath) {
+    table->addTuple();
+    table->removeTuple();
+    ASSERT_DEATH(table->removeTuple(), "");
+}
+
+TEST_F(TablePageTest, SetBtreePageIDWorks) {
+    ASSERT_EQ(table->getBtreePageID(), 5);
+    table->setBtreePageID(42);
+    ASSERT_EQ(table->getBtreePageID(), 42);
+}
+
+TEST_F(TablePageTest, SerializationWithNonZeroTupleCount) {
+    table->addTuple();
+    table->addTuple();
+    
+    Vec<byte> buffer(cts::PG_SZ);
+    table->toBytes(buffer);
+    
+    TablePage serialized(buffer, 1);
+    ASSERT_EQ(serialized.getNumTuples(), 2);
+    ASSERT_EQ(serialized.getBtreePageID(), 5);
+    ASSERT_EQ(serialized.getTypes(), types);
+}
+
+TEST_F(TablePageTest, SingleTupleEdgeCase) {
+    table->addTuple();
+    ASSERT_EQ(table->getNumTuples(), 1);
+    
+    Vec<byte> buffer(cts::PG_SZ);
+    table->toBytes(buffer);
+    
+    TablePage serialized(buffer, 1);
+    ASSERT_EQ(serialized.getNumTuples(), 1);
+}
+
+TEST_F(TablePageTest, ComplexAddRemoveCycles) {
+    // Add 10, remove 5, add 3, remove 2, add 1
+    for (int i = 0; i < 10; i++) table->addTuple();
+    for (int i = 0; i < 5; i++) table->removeTuple();
+    for (int i = 0; i < 3; i++) table->addTuple();
+    for (int i = 0; i < 2; i++) table->removeTuple();
+    table->addTuple();
+    
+    ASSERT_EQ(table->getNumTuples(), 7);
+    
+    // Verify serialization preserves this state
+    Vec<byte> buffer(cts::PG_SZ);
+    table->toBytes(buffer);
+    
+    TablePage serialized(buffer, 1);
+    ASSERT_EQ(serialized.getNumTuples(), 7);
+}
+
+TEST_F(TablePageTest, MaximumTupleCount) {
+    // Test with a very large number to check for integer overflow
+    for (int i = 0; i < 1000000; i++) {
+        table->addTuple();
+    }
+    
+    ASSERT_EQ(table->getNumTuples(), 1000000);
+    
+    // Verify serialization works with large counts
+    Vec<byte> buffer(cts::PG_SZ);
+    ASSERT_NO_THROW(table->toBytes(buffer));
+}
+
+TEST_F(TablePageTest, SingleTypeTable) {
+    Vec<Vari> singleType = {string()};
+    TablePage singleTypeTable(singleType, 5, 4);
+    
+    ASSERT_EQ(singleTypeTable.getTypes().size(), 1);
+    ASSERT_EQ(singleTypeTable.getTypes(), singleType);
+}
